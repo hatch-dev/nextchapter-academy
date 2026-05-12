@@ -787,6 +787,48 @@ $path = routePath();
 
 try {
 
+function ensureTeamSchema(): void {
+    getDB()->exec("
+        CREATE TABLE IF NOT EXISTS teams (
+            id VARCHAR(36) PRIMARY KEY,
+            account_id VARCHAR(36) NOT NULL,
+            name VARCHAR(120) NOT NULL,
+            description TEXT,
+            created_by VARCHAR(36) NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,
+            FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+            INDEX idx_account (account_id)
+        )
+    ");
+    getDB()->exec("
+        CREATE TABLE IF NOT EXISTS team_members (
+            id VARCHAR(36) PRIMARY KEY,
+            team_id VARCHAR(36) NOT NULL,
+            user_id VARCHAR(36) NOT NULL,
+            role VARCHAR(50) NOT NULL DEFAULT 'member',
+            joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE KEY unique_team_user (team_id, user_id),
+            INDEX idx_team (team_id),
+            INDEX idx_user (user_id)
+        )
+    ");
+}
+
+function createDefaultTeamForAccount(string $accountId, string $ownerId, string $companyName = ''): string {
+    ensureTeamSchema();
+    $teamId = makeId('team_');
+    $teamName = trim($companyName) !== '' ? trim($companyName) . ' Team' : 'Team';
+    getDB()->prepare("INSERT INTO teams (id, account_id, name, description, created_by) VALUES (?, ?, ?, ?, ?)")
+        ->execute([$teamId, $accountId, $teamName, 'Default team for your workspace.', $ownerId]);
+    getDB()->prepare("INSERT INTO team_members (id, team_id, user_id, role) VALUES (?, ?, ?, 'lead')")
+        ->execute([makeId('tm_'), $teamId, $ownerId]);
+    return $teamId;
+}
+
 if ($method === 'POST' && $path === '/stripe/webhook') {
     $payload = rawBody();
     $signature = $_SERVER['HTTP_STRIPE_SIGNATURE'] ?? '';
@@ -891,6 +933,8 @@ if ($method === 'POST' && $path === '/auth/signup') {
                 role, initials, color, scope, is_account_owner
             ) VALUES (?, ?, NULL, ?, ?, ?, 'Owner', ?, '#1B6B5A', 'All', 1)
         ")->execute([$userId, $accountId, $name, $email, $hash, initialsFor($name)]);
+
+        createDefaultTeamForAccount($accountId, $userId, $company);
 
         $db->commit();
     } catch (Throwable $e) {
@@ -1073,6 +1117,22 @@ if ($method === 'POST' && $path === '/users') {
         colorForUser(false, $nextIndex),
         $scope,
     ]);
+
+    $teamStmt = $db->prepare("SELECT id FROM teams WHERE account_id = ? ORDER BY created_at ASC LIMIT 1");
+    $teamStmt->execute([$owner['account_id']]);
+    $teamId = $teamStmt->fetchColumn();
+    if (!$teamId) {
+        $teamId = createDefaultTeamForAccount($owner['account_id'], $owner['id'], $owner['account']['company_name'] ?? '');
+    }
+    $memberCheck = $db->prepare("SELECT id FROM team_members WHERE team_id = ? AND user_id = ?");
+    $memberCheck->execute([$teamId, $userId]);
+    if (!$memberCheck->fetch()) {
+        $db->prepare("INSERT INTO team_members (id, team_id, user_id, role) VALUES (?, ?, ?, 'member')")->execute([
+            makeId('tm_'),
+            $teamId,
+            $userId,
+        ]);
+    }
 
     ok([
         'users' => allAccountUsers($owner['account_id']),
@@ -1317,9 +1377,248 @@ if (($method === 'PUT' || $method === 'POST') && $path === '/shared-data') {
     ok();
 }
 
+// ============================================================
+// TEAM MANAGEMENT FUNCTIONS
+// ============================================================
+
+function getAllTeams(string $accountId): array {
+    $stmt = getDB()->prepare("
+        SELECT t.id, t.name, t.description, t.created_by, t.created_at,
+               COUNT(tm.user_id) as member_count,
+               GROUP_CONCAT(tm.user_id) as member_ids
+        FROM teams t
+        LEFT JOIN team_members tm ON tm.team_id = t.id
+        WHERE t.account_id = ?
+        GROUP BY t.id
+        ORDER BY t.created_at DESC
+    ");
+    $stmt->execute([$accountId]);
+    return $stmt->fetchAll() ?: [];
+}
+
+function getTeamById(string $teamId): ?array {
+    $stmt = getDB()->prepare("
+        SELECT t.id, t.account_id, t.name, t.description, t.created_by, t.created_at
+        FROM teams t
+        WHERE t.id = ?
+        LIMIT 1
+    ");
+    $stmt->execute([$teamId]);
+    return $stmt->fetch() ?: null;
+}
+
+function getTeamMembers(string $teamId): array {
+    $stmt = getDB()->prepare("
+        SELECT u.id, u.name, u.email, u.initials, u.color, u.role, tm.role as team_role, tm.joined_at
+        FROM team_members tm
+        JOIN users u ON u.id = tm.user_id
+        WHERE tm.team_id = ?
+        ORDER BY tm.joined_at ASC
+    ");
+    $stmt->execute([$teamId]);
+    return $stmt->fetchAll() ?: [];
+}
+
+function userIsTeamMember(string $userId, string $teamId): bool {
+    $stmt = getDB()->prepare("
+        SELECT id FROM team_members
+        WHERE user_id = ? AND team_id = ?
+        LIMIT 1
+    ");
+    $stmt->execute([$userId, $teamId]);
+    return !!$stmt->fetch();
+}
+
+// ============================================================
+// TEAM MANAGEMENT ENDPOINTS
+// ============================================================
+
+if ($method === 'GET' && $path === '/teams') {
+    $user = requireDashboardUser();
+    $teams = getAllTeams($user['account_id']);
+    ok($teams);
+}
+
+if ($method === 'POST' && $path === '/teams') {
+    $user = requireDashboardUser();
+    $body = jsonBody();
+    $name = trim($body['name'] ?? '');
+    $description = trim($body['description'] ?? '');
+
+    if ($name === '') {
+        err('Team name is required');
+    }
+
+    $teamId = makeId('team_');
+    
+    getDB()->prepare("
+        INSERT INTO teams (id, account_id, name, description, created_by)
+        VALUES (?, ?, ?, ?, ?)
+    ")->execute([$teamId, $user['account_id'], $name, $description ?: null, $user['id']]);
+
+    // Add creator as team member
+    $memberId = makeId('tm_');
+    getDB()->prepare("
+        INSERT INTO team_members (id, team_id, user_id, role)
+        VALUES (?, ?, ?, 'lead')
+    ")->execute([$memberId, $teamId, $user['id']]);
+
+    ok([
+        'id' => $teamId,
+        'account_id' => $user['account_id'],
+        'name' => $name,
+        'description' => $description ?: null,
+        'created_by' => $user['id'],
+        'created_at' => date('Y-m-d H:i:s'),
+        'members' => [userPayload($user)]
+    ]);
+}
+
+if ($method === 'DELETE' && $path === '/teams') {
+    $user = requireDashboardUser();
+    $body = jsonBody();
+    $teamId = trim((string)($body['team_id'] ?? ''));
+
+    if ($teamId === '') {
+        err('team_id is required');
+    }
+
+    $team = getTeamById($teamId);
+    if (!$team) {
+        err('Team not found', 404);
+    }
+    if ($team['account_id'] !== $user['account_id']) {
+        err('Unauthorized', 403);
+    }
+    if ($team['created_by'] !== $user['id']) {
+        err('Only team creator can delete teams', 403);
+    }
+
+    getDB()->prepare("DELETE FROM teams WHERE id = ?")->execute([$teamId]);
+    ok();
+}
+
+if ($method === 'GET' && $path === '/teams/members') {
+    $user = requireDashboardUser();
+    $teamId = $_GET['team_id'] ?? '';
+
+    if ($teamId === '') {
+        err('team_id is required');
+    }
+
+    $team = getTeamById($teamId);
+    if (!$team) {
+        err('Team not found', 404);
+    }
+    if ($team['account_id'] !== $user['account_id']) {
+        err('Unauthorized', 403);
+    }
+
+    $members = getTeamMembers($teamId);
+    ok($members);
+}
+
+if ($method === 'POST' && $path === '/teams/members') {
+    $user = requireDashboardUser();
+    $body = jsonBody();
+    $teamId = trim((string)($body['team_id'] ?? ''));
+    $userId = trim((string)($body['user_id'] ?? ''));
+
+    if ($teamId === '' || $userId === '') {
+        err('team_id and user_id are required');
+    }
+
+    $team = getTeamById($teamId);
+    if (!$team) {
+        err('Team not found', 404);
+    }
+    if ($team['account_id'] !== $user['account_id']) {
+        err('Unauthorized', 403);
+    }
+
+    // Verify user belongs to same account
+    $checkUser = getDB()->prepare("SELECT id FROM users WHERE id = ? AND account_id = ?");
+    $checkUser->execute([$userId, $user['account_id']]);
+    if (!$checkUser->fetch()) {
+        err('User must belong to the same account', 403);
+    }
+
+    // Check if already a member
+    $checkMember = getDB()->prepare("SELECT id FROM team_members WHERE team_id = ? AND user_id = ?");
+    $checkMember->execute([$teamId, $userId]);
+    if ($checkMember->fetch()) {
+        err('User is already a team member', 409);
+    }
+
+    $memberId = makeId('tm_');
+    getDB()->prepare("
+        INSERT INTO team_members (id, team_id, user_id, role)
+        VALUES (?, ?, ?, 'member')
+    ")->execute([$memberId, $teamId, $userId]);
+
+    ok([
+        'message' => 'User added to team',
+        'members' => getTeamMembers($teamId)
+    ]);
+}
+
+if ($method === 'DELETE' && $path === '/teams/members') {
+    $user = requireDashboardUser();
+    $body = jsonBody();
+    $teamId = trim((string)($body['team_id'] ?? ''));
+    $userId = trim((string)($body['user_id'] ?? ''));
+
+    if ($teamId === '' || $userId === '') {
+        err('team_id and user_id are required');
+    }
+
+    $team = getTeamById($teamId);
+    if (!$team) {
+        err('Team not found', 404);
+    }
+    if ($team['account_id'] !== $user['account_id']) {
+        err('Unauthorized', 403);
+    }
+
+    // Verify the user exists in team
+    $member = getDB()->prepare("SELECT id, role FROM team_members WHERE team_id = ? AND user_id = ?");
+    $member->execute([$teamId, $userId]);
+    $memberRow = $member->fetch();
+    if (!$memberRow) {
+        err('User is not a team member', 404);
+    }
+
+    // Prevent removing team lead
+    if ($memberRow['role'] === 'lead') {
+        err('Cannot remove team lead', 403);
+    }
+
+    getDB()->prepare("DELETE FROM team_members WHERE team_id = ? AND user_id = ?")->execute([$teamId, $userId]);
+    ok([
+        'message' => 'User removed from team',
+        'members' => getTeamMembers($teamId)
+    ]);
+}
+
 if ($method === 'GET' && $path === '/messages') {
     $user = requireDashboardUser();
     $channel = $_GET['channel'] ?? 'general';
+    
+    // Verify team access if channel is team-based
+    if (str_starts_with($channel, 'team-')) {
+        $teamId = substr($channel, 5);
+        $team = getTeamById($teamId);
+        if (!$team) {
+            err('Team not found', 404);
+        }
+        if ($team['account_id'] !== $user['account_id']) {
+            err('Unauthorized', 403);
+        }
+        if (!userIsTeamMember($user['id'], $teamId)) {
+            err('You are not a member of this team', 403);
+        }
+    }
+    
     $stmt = getDB()->prepare("
         SELECT m.id, m.channel, m.user_id, m.message, m.created_at,
                u.name AS user_name, u.initials, u.color, u.role
@@ -1340,6 +1639,21 @@ if ($method === 'POST' && $path === '/messages') {
     $message = trim($body['message'] ?? '');
     if ($message === '') {
         err('message required');
+    }
+
+    // Verify team access if channel is team-based
+    if (str_starts_with($channel, 'team-')) {
+        $teamId = substr($channel, 5);
+        $team = getTeamById($teamId);
+        if (!$team) {
+            err('Team not found', 404);
+        }
+        if ($team['account_id'] !== $user['account_id']) {
+            err('Unauthorized', 403);
+        }
+        if (!userIsTeamMember($user['id'], $teamId)) {
+            err('You are not a member of this team', 403);
+        }
     }
 
     $db = getDB();

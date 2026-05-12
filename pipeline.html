@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>90-Day AI Innovation Pipeline — Faisal Hoque</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<link href="./api/team-chat.css" rel="stylesheet">
 <style>
 :root{
   --ink:#1A1612;--paper:#F5F2EC;--gold:#B8892A;--gold-light:#D4A84B;--gold-pale:#F0E4C4;
@@ -599,6 +600,10 @@ textarea:focus,input:focus,select:focus{border-color:var(--gold);outline:none}
 <div id="gchatPanel" class="gchat-panel"></div>
 <button class="gchat-fab" id="gchatFab" onclick="toggleGChat()">= Team Chat<span class="gchat-unread" id="gchatUnread" style="display:none">0</span></button>
 
+<!-- Team Chat Panel -->
+<button class="team-chat-fab" id="teamChatFab" style="display:none" onclick="TeamChat.loadTeams(); document.getElementById('teamChatPanel').style.display='flex'">👥 Teams</button>
+<div class="team-chat-panel" id="teamChatPanel"></div>
+
 <button class="notes-fab" id="notesFab" onclick="toggleNotes()">&#9998; Notes<span class="notes-count" id="notesCount">0</span></button>
 <div class="notes-panel" id="notesPanel"></div>
 
@@ -744,14 +749,14 @@ function isStepDone(id){
 }
 
 function syncBillingForm(){billingForm.company_name=(currentAccount&&currentAccount.company_name)||'';billingForm.contact_name=(currentAccount&&currentAccount.contact_name)||(currentUser&&currentUser.name)||'';billingForm.contact_email=(currentAccount&&currentAccount.contact_email)||(currentUser&&currentUser.email)||'';billingForm.contact_phone=(currentAccount&&currentAccount.contact_phone)||'';billingForm.contact_role=(currentAccount&&currentAccount.role)||(currentUser&&currentUser.role)||'';billingForm.billing_notes=(currentAccount&&currentAccount.billing_notes)||'';billingForm.price_id=(currentAccount&&currentAccount.stripe_price_id)||billingForm.price_id||''}
-function hydrateUser(user){currentUser=user||null;currentAccount=user&&user.account?user.account:null;modules=(currentAccount&&currentAccount.modules)||[];workspaceUsers=[];syncBillingForm();if(!currentUser){data=emptyData();return Promise.resolve()}return apiGet('/users').then(function(u){workspaceUsers=Array.isArray(u)?u:[]}).catch(function(){workspaceUsers=[]}).then(function(){if(!hasActiveSubscription()){data=emptyData();return}return apiGet('/modules').then(function(payload){modules=payload.modules||modules;if(payload.account){currentAccount=payload.account;syncBillingForm()}}).catch(function(){}).then(loadSharedData).then(loadData)})}
+function hydrateUser(user){currentUser=user||null;currentAccount=user&&user.account?user.account:null;modules=(currentAccount&&currentAccount.modules)||[];workspaceUsers=[];syncBillingForm();if(typeof refreshTeamChatVisibility==='function')refreshTeamChatVisibility();if(!currentUser){data=emptyData();return Promise.resolve()}return apiGet('/users').then(function(u){workspaceUsers=Array.isArray(u)?u:[]}).catch(function(){workspaceUsers=[]}).then(function(){if(!hasActiveSubscription()){data=emptyData();return}return apiGet('/modules').then(function(payload){modules=payload.modules||modules;if(payload.account){currentAccount=payload.account;syncBillingForm()}}).catch(function(){}).then(loadSharedData).then(loadData)})}
 function refreshAccount(){return apiGet('/account').then(function(account){currentAccount=account;modules=account.modules||modules;syncBillingForm();return account})}
 function enterDashboard(){return apiGet('/users').then(function(u){workspaceUsers=Array.isArray(u)?u:workspaceUsers}).catch(function(){}).then(function(){return apiGet('/modules').then(function(payload){modules=payload.modules||modules;if(payload.account){currentAccount=payload.account;syncBillingForm()}}).catch(function(){})}).then(loadSharedData).then(loadData).then(function(){billingNotice='';currentPage='modules'})}
 function pollCheckoutStatus(attempt){attempt=attempt||0;return refreshAccount().then(function(){if(hasActiveSubscription())return enterDashboard();if(attempt>=12)return;return new Promise(function(resolve){setTimeout(resolve,2500)}).then(function(){return pollCheckoutStatus(attempt+1)})})}
 function initApp(){appReady=false;render();apiGet('/session').then(function(user){if(user&&user.id)return hydrateUser(user)}).catch(function(){}).then(function(){var qs=new URLSearchParams(window.location.search);var checkoutState=qs.get('checkout');if(checkoutState==='success')billingNotice='Checkout returned successfully. Activating your dashboard...';if(qs.get('checkout')==='cancel')billingNotice='Checkout was canceled. Your account is saved and payment can be restarted.';if(qs.get('checkout'))window.history.replaceState({},document.title,window.location.pathname+(window.location.hash||''));appReady=true;if(currentUser&&hasActiveSubscription()){var hp=(window.location.hash||'').replace('#','');currentPage=['modules','home','learn','pipeline','phase5','insights','users','billing'].indexOf(hp)>=0?hp:'modules'}render();if(currentUser&&checkoutState==='success'&&!hasActiveSubscription()){pollCheckoutStatus().then(render).catch(function(){billingNotice='Payment completed, but the dashboard is still waiting for Stripe confirmation. Refresh in a moment.';render()})}else if(currentUser&&checkoutState==='success'&&hasActiveSubscription()){enterDashboard().then(render)}})}
 function setAuthField(key,val){authForm[key]=val}function setBillingField(key,val){billingForm[key]=val}function setUserField(key,val){userForm[key]=val}
 function submitAuth(){authError='';authNotice='';var endpoint=authMode==='login'?'/auth/login':'/auth/signup';var payload=authMode==='login'?{email:authForm.email,password:authForm.password}:{name:authForm.name,email:authForm.email,password:authForm.password,company_name:authForm.company_name,contact_role:authForm.contact_role,contact_phone:authForm.contact_phone};apiPost(endpoint,payload).then(function(res){var user=res.user||res;authNotice=authMode==='login'?'Signed in.':'Account created.';return hydrateUser(user)}).then(function(){currentPage=hasActiveSubscription()?'modules':'billing';render()}).catch(function(e){authError=e.message;render()})}
-function signOut(){flushSaveData().then(function(){return apiDel('/session')}).catch(function(){}).then(function(){currentUser=null;currentAccount=null;workspaceUsers=[];modules=[];products=[];productsLoaded=false;moduleMenuOpen=false;data=emptyData();currentPage='home';authMode='login';render()})}
+function signOut(){flushSaveData().then(function(){return apiDel('/session')}).catch(function(){}).then(function(){currentUser=null;currentAccount=null;workspaceUsers=[];modules=[];products=[];productsLoaded=false;moduleMenuOpen=false;data=emptyData();currentPage='home';authMode='login';if(typeof refreshTeamChatVisibility==='function')refreshTeamChatVisibility();render()})}
 function loadProducts(){if(!currentUser||!currentUser.is_account_owner)return Promise.resolve();return apiGet('/billing/products').then(function(items){products=Array.isArray(items)?items:[];productsLoaded=true;if(products.length&&!billingForm.price_id)billingForm.price_id=products[0].price_id}).catch(function(e){productsLoaded=true;billingError=e.message})}
 function startCheckout(){billingError='';billingNotice='';apiPost('/billing/checkout-session',billingForm).then(function(res){if(res.account){currentAccount=res.account;syncBillingForm()}if(res.checkout_url){window.location.href=res.checkout_url;return}throw new Error('Stripe checkout URL was not returned.')}).catch(function(e){billingError=e.message;render()})}
 function addWorkspaceUser(){apiPost('/users',userForm).then(function(res){workspaceUsers=res.users||workspaceUsers;if(res.account)currentAccount=res.account;userForm={name:'',email:'',password:'',role:'Standard User',scope:'Assigned work'};authNotice='User created.';render()}).catch(function(e){authError=e.message;render()})}
@@ -2750,6 +2755,29 @@ if(matched&&!text.match(/close|stop|cancel/))showVoiceToast('\u2713 '+text,'');
 // Init
 initApp();
 
+</script>
+<script src="./api/team-chat.js"></script>
+<script>
+function refreshTeamChatVisibility() {
+  var fab = document.getElementById('teamChatFab');
+  if (!fab) return;
+  fab.style.display = window.currentUser ? 'flex' : 'none';
+}
+
+function initializeTeamChatOnce() {
+  if (!window.teamChatInitialized && window.currentUser && typeof TeamChat !== 'undefined') {
+    TeamChat.init(window.currentUser);
+    window.teamChatInitialized = true;
+    if (typeof teamChatInitInterval !== 'undefined') {
+      clearInterval(teamChatInitInterval);
+    }
+  }
+}
+
+var teamChatInitInterval = setInterval(function() {
+  refreshTeamChatVisibility();
+  initializeTeamChatOnce();
+}, 200);
 </script>
 </body>
 </html>

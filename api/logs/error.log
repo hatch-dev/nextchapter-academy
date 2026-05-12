@@ -1,0 +1,24 @@
+[2026-05-12T09:01:27+02:00] API error 20260512090127-60e3c159
+{"error_id":"20260512090127-60e3c159","method":"POST","path":"/users","request_uri":"/nextchapter/api/users","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"c77ec36ba96051f3"}
+Error: Call to undefined function ensureTeamSchema() in C:\xampp\htdocs\nextchapter\api\index.php:1079
+Stack trace:
+#0 {main}
+
+[2026-05-12T09:02:38+02:00] API error 20260512090238-287a3be0
+{"error_id":"20260512090238-287a3be0","method":"POST","path":"/users","request_uri":"/nextchapter/api/users","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"c77ec36ba96051f3"}
+Error: Call to undefined function ensureTeamSchema() in C:\xampp\htdocs\nextchapter\api\index.php:1079
+Stack trace:
+#0 {main}
+
+[2026-05-12T09:14:10+02:00] API error 20260512091410-d9fba667
+{"error_id":"20260512091410-d9fba667","method":"POST","path":"/users","request_uri":"/nextchapter/api/users","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"c77ec36ba96051f3"}
+Error: Call to undefined function createDefaultTeamForAccount() in C:\xampp\htdocs\nextchapter\api\index.php:1083
+Stack trace:
+#0 {main}
+
+[2026-05-12T09:22:47+02:00] API error 20260512092247-09d5c409
+{"error_id":"20260512092247-09d5c409","method":"POST","path":"/users","request_uri":"/nextchapter/api/users","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"c77ec36ba96051f3"}
+Error: Call to undefined function createDefaultTeamForAccount() in C:\xampp\htdocs\nextchapter\api\index.php:1083
+Stack trace:
+#0 {main}
+
