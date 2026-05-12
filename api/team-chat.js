@@ -7,16 +7,20 @@ const TeamChat = (function() {
   let state = {
     teams: [],
     activeTeam: null,
+    activeTab: 'messages',
     messages: {},
     members: {},
     loading: false,
     currentUser: null
   };
+  let pollingTimer = null;
 
   // Initialize team chat module
   async function init(user) {
     state.currentUser = user;
-    await loadTeams();
+    const teams = await loadTeams();
+    await setActiveTeam(teams.length > 0 ? teams[0].id : null);
+    startPolling();
   }
 
   // Load all teams for the account
@@ -31,7 +35,7 @@ const TeamChat = (function() {
       if (!response.ok) throw new Error('Failed to load teams');
       const result = await response.json();
       state.teams = result.data || [];
-      render();
+      return state.teams;
     } catch (error) {
       console.error('Error loading teams:', error);
     } finally {
@@ -67,9 +71,48 @@ const TeamChat = (function() {
   // Set active team
   async function setActiveTeam(teamId) {
     state.activeTeam = teamId;
-    await loadTeamMembers(teamId);
-    await loadMessages(teamId);
+    if (teamId) {
+      await loadTeamMembers(teamId);
+      await loadMessages(teamId);
+      startPolling();
+    } else {
+      stopPolling();
+    }
     render();
+  }
+
+  async function refreshMessages() {
+    if (!state.activeTeam) return;
+    await loadMessages(state.activeTeam);
+
+    if (state.activeTab === 'messages' && document.querySelector('.team-chat-messages')) {
+      updateMessagesView();
+      if (typeof renderGChatPanel === 'function' && typeof gchatOpen !== 'undefined' && gchatOpen) {
+        renderGChatPanel();
+      }
+      return;
+    }
+
+    render();
+    if (typeof renderGChatPanel === 'function' && typeof gchatOpen !== 'undefined' && gchatOpen) {
+      renderGChatPanel();
+    }
+  }
+
+  function startPolling() {
+    stopPolling();
+    pollingTimer = setInterval(function() {
+      refreshMessages().catch(function(err) {
+        console.error('TeamChat polling error:', err);
+      });
+    }, 3000);
+  }
+
+  function stopPolling() {
+    if (pollingTimer) {
+      clearInterval(pollingTimer);
+      pollingTimer = null;
+    }
   }
 
   // Load team members
@@ -147,7 +190,7 @@ const TeamChat = (function() {
 
   // Send message to team chat
   async function sendMessage(teamId, message) {
-    if (!message.trim()) return;
+    if (!message.trim()) return false;
     
     try {
       const channel = `team-${teamId}`;
@@ -164,16 +207,17 @@ const TeamChat = (function() {
       if (result.data) {
         if (!state.messages[teamId]) state.messages[teamId] = [];
         state.messages[teamId].push(result.data);
-        render();
-        // Auto scroll to bottom
-        setTimeout(() => {
-          const msgContainer = document.querySelector('.team-chat-messages');
-          if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
-        }, 0);
+        if (state.activeTab === 'messages') {
+          updateMessagesView();
+        } else {
+          render();
+        }
       }
+      return true;
     } catch (error) {
       console.error('Error sending message:', error);
       alert('Failed to send message. Please try again.');
+      return false;
     }
   }
 
@@ -206,6 +250,8 @@ const TeamChat = (function() {
     const panel = document.getElementById('teamChatPanel');
     if (!panel) return;
 
+    const draft = document.querySelector('#teamChatInput') ? document.querySelector('#teamChatInput').value : '';
+
     if (!state.activeTeam) {
       panel.innerHTML = `
         <div class="team-chat-empty">
@@ -224,6 +270,7 @@ const TeamChat = (function() {
     const team = state.teams.find(t => t.id === state.activeTeam);
     const members = state.members[state.activeTeam] || [];
     const messages = state.messages[state.activeTeam] || [];
+    const activeTab = state.activeTab || 'messages';
 
     let html = `
       <div class="team-chat-container">
@@ -236,21 +283,32 @@ const TeamChat = (function() {
         </div>
 
         <div class="team-chat-tabs">
-          <button class="team-chat-tab active" onclick="TeamChat.showMessagesTab()">
+          <button class="team-chat-tab ${activeTab === 'messages' ? 'active' : ''}" onclick="TeamChat.showMessagesTab()">
             Messages
           </button>
-          <button class="team-chat-tab" onclick="TeamChat.showMembersTab()">
+          <button class="team-chat-tab ${activeTab === 'members' ? 'active' : ''}" onclick="TeamChat.showMembersTab()">
             Members (${members.length})
           </button>
         </div>
 
         <div class="team-chat-content" id="teamChatContent">
-          ${renderMessagesTab(team, members, messages)}
+          ${activeTab === 'members' ? renderMembersTab(team, members) : renderMessagesTab(team, members, messages)}
         </div>
       </div>
     `;
 
     panel.innerHTML = html;
+
+    if (activeTab === 'messages') {
+      const input = document.getElementById('teamChatInput');
+      if (input) {
+        input.value = draft;
+      }
+      requestAnimationFrame(() => {
+        const msgContainer = document.querySelector('.team-chat-messages');
+        if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
+      });
+    }
   }
 
   function renderMessagesTab(team, members, messages) {
@@ -281,15 +339,16 @@ const TeamChat = (function() {
             id="teamChatInput" 
             class="team-chat-input" 
             placeholder="Type a message..."
-            onkeypress="if(event.key==='Enter' && !event.shiftKey) { TeamChat.sendMessage(); event.preventDefault(); }"
+            onkeypress="if(event.key==='Enter' && !event.shiftKey) { TeamChat.sendMessageFromInput(); event.preventDefault(); }"
           ></textarea>
-          <button class="team-chat-send-btn" onclick="TeamChat.sendMessage()">Send</button>
+          <button class="team-chat-send-btn" onclick="TeamChat.sendMessageFromInput()">Send</button>
         </div>
       </div>
     `;
   }
 
   function showMessagesTab() {
+    state.activeTab = 'messages';
     const team = state.teams.find(t => t.id === state.activeTeam);
     const members = state.members[state.activeTeam] || [];
     const messages = state.messages[state.activeTeam] || [];
@@ -297,63 +356,109 @@ const TeamChat = (function() {
     const content = document.getElementById('teamChatContent');
     if (content) {
       content.innerHTML = renderMessagesTab(team, members, messages);
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         const msgContainer = document.querySelector('.team-chat-messages');
         if (msgContainer) msgContainer.scrollTop = msgContainer.scrollHeight;
-      }, 0);
+      });
     }
   }
 
+  function updateMessagesView() {
+    const team = state.teams.find(t => t.id === state.activeTeam);
+    const messages = state.messages[state.activeTeam] || [];
+    const messageContainer = document.querySelector('.team-chat-messages');
+    const input = document.getElementById('teamChatInput');
+    const draft = input ? input.value : null;
+    const selectionStart = input ? input.selectionStart : null;
+    const selectionEnd = input ? input.selectionEnd : null;
+
+    if (!messageContainer) {
+      return;
+    }
+
+    messageContainer.innerHTML = messages.length === 0 ?
+      '<div class="team-chat-empty-messages">No messages yet. Start the conversation!</div>' :
+      messages.map(msg => `
+        <div class="team-chat-message ${msg.user_id === state.currentUser?.id ? 'me' : ''}">
+          <div class="team-chat-message-avatar" style="background-color: ${msg.color}">
+            ${msg.initials}
+          </div>
+          <div class="team-chat-message-content">
+            <div class="team-chat-message-header">
+              <span class="team-chat-message-name">${msg.user_name}</span>
+              <span class="team-chat-message-time">${formatTime(msg.created_at)}</span>
+            </div>
+            <div class="team-chat-message-text">${escapeHtml(msg.message)}</div>
+          </div>
+        </div>
+      `).join('');
+
+    if (input && draft !== null) {
+      input.value = draft;
+      if (selectionStart !== null && selectionEnd !== null) {
+        input.setSelectionRange(selectionStart, selectionEnd);
+      }
+    }
+
+    requestAnimationFrame(() => {
+      if (messageContainer) messageContainer.scrollTop = messageContainer.scrollHeight;
+    });
+  }
+
   function showMembersTab() {
+    state.activeTab = 'members';
     const team = state.teams.find(t => t.id === state.activeTeam);
     const members = state.members[state.activeTeam] || [];
 
     const content = document.getElementById('teamChatContent');
     if (content) {
-      content.innerHTML = `
-        <div class="team-chat-members-container">
-          <div class="team-chat-members-list">
-            <h4 style="margin: 0 0 16px; font-size: 14px; color: var(--gold); text-transform: uppercase; font-weight: 700;">Team Members (${members.length})</h4>
-            ${members.map(member => `
-              <div class="team-chat-member-item">
-                <div class="team-chat-member-avatar" style="background-color: ${member.color}">
-                  ${member.initials}
-                </div>
-                <div class="team-chat-member-info">
-                  <div class="team-chat-member-name">${member.name}</div>
-                  <div class="team-chat-member-role">${member.team_role}</div>
-                </div>
-                ${team?.created_by === state.currentUser?.id && member.id !== state.currentUser?.id ? `
-                  <button 
-                    class="team-chat-member-remove" 
-                    onclick="TeamChat.removeMember('${state.activeTeam}', '${member.id}')"
-                    title="Remove member"
-                  >×</button>
-                ` : ''}
-              </div>
-            `).join('')}
-          </div>
-
-          <div class="team-chat-add-member">
-            <h4 style="margin: 0 0 12px; font-size: 14px; color: var(--gold); text-transform: uppercase; font-weight: 700;">Add Team Member</h4>
-            <select id="teamChatMemberSelect" class="team-chat-select">
-              <option value="">Select a user...</option>
-            </select>
-            <button class="btn-gold" onclick="TeamChat.addSelectedMember()" style="width: 100%; margin-top: 8px;">Add Member</button>
-          </div>
-
-          ${team?.created_by === state.currentUser?.id ? `
-            <div class="team-chat-danger-zone">
-              <h4 style="margin: 0 0 12px; font-size: 14px; color: #9B2D3F; text-transform: uppercase; font-weight: 700;">Danger Zone</h4>
-              <button class="action-btn danger" onclick="TeamChat.deleteTeam('${state.activeTeam}')" style="width: 100%;">Delete Team</button>
-            </div>
-          ` : ''}
-        </div>
-      `;
-      
+      content.innerHTML = renderMembersTab(team, members);
       // Populate member select with account users
       loadAccountUsers();
     }
+  }
+
+  function renderMembersTab(team, members) {
+    return `
+      <div class="team-chat-members-container">
+        <div class="team-chat-members-list">
+          <h4 style="margin: 0 0 16px; font-size: 14px; color: var(--gold); text-transform: uppercase; font-weight: 700;">Team Members (${members.length})</h4>
+          ${members.map(member => `
+            <div class="team-chat-member-item">
+              <div class="team-chat-member-avatar" style="background-color: ${member.color}">
+                ${member.initials}
+              </div>
+              <div class="team-chat-member-info">
+                <div class="team-chat-member-name">${member.name}</div>
+                <div class="team-chat-member-role">${member.team_role}</div>
+              </div>
+              ${team?.created_by === state.currentUser?.id && member.id !== state.currentUser?.id ? `
+                <button 
+                  class="team-chat-member-remove" 
+                  onclick="TeamChat.removeMember('${state.activeTeam}', '${member.id}')"
+                  title="Remove member"
+                >×</button>
+              ` : ''}
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="team-chat-add-member">
+          <h4 style="margin: 0 0 12px; font-size: 14px; color: var(--gold); text-transform: uppercase; font-weight: 700;">Add Team Member</h4>
+          <select id="teamChatMemberSelect" class="team-chat-select">
+            <option value="">Select a user...</option>
+          </select>
+          <button class="btn-gold" onclick="TeamChat.addSelectedMember()" style="width: 100%; margin-top: 8px;">Add Member</button>
+        </div>
+
+        ${team?.created_by === state.currentUser?.id ? `
+          <div class="team-chat-danger-zone">
+            <h4 style="margin: 0 0 12px; font-size: 14px; color: #9B2D3F; text-transform: uppercase; font-weight: 700;">Danger Zone</h4>
+            <button class="action-btn danger" onclick="TeamChat.deleteTeam('${state.activeTeam}')" style="width: 100%;">Delete Team</button>
+          </div>
+        ` : ''}
+      </div>
+    `;
   }
 
   async function loadAccountUsers() {
@@ -394,15 +499,17 @@ const TeamChat = (function() {
     addMember(state.activeTeam, select.value);
   }
 
-  function sendMessage() {
+  async function sendMessageFromInput() {
     const input = document.getElementById('teamChatInput');
     if (!input) return;
     
     const message = input.value;
     if (!message.trim()) return;
 
-    sendMessage(state.activeTeam, message);
-    input.value = '';
+    const sent = await sendMessage(state.activeTeam, message);
+    if (sent !== false) {
+      input.value = '';
+    }
   }
 
   function showCreateForm() {
@@ -445,12 +552,17 @@ const TeamChat = (function() {
     };
     return text.replace(/[&<>"']/g, m => map[m]);
   }
+
+  function getGchatMembers() {
+    return state.members[state.activeTeam] || [];
+    }
   
 
   // Public API
   return {
     init,
     loadTeams,
+    loadTeamMembers,
     createTeam,
     setActiveTeam,
     addMember,
@@ -462,6 +574,8 @@ const TeamChat = (function() {
     showMessagesTab,
     showMembersTab,
     addSelectedMember,
+    sendMessageFromInput,
+    getGchatMembers,
     getState: () => state
   };
 })();

@@ -2465,21 +2465,36 @@ coachMsgs.push({role:'ai',text:text});renderCoachPanel();
 
 // === GROUP CHAT ===
 var gchatOpen=false;
-var gchatMsgs=[
-  {who:'L',name:'Lauren H.Z.',ts:'9:14 AM',text:'Good morning everyone — just reviewed the latest draft. The framing in Phase 2 is sharp. The accountability layer especially resonates.'},
-  {who:'E',name:'Erik N.',ts:'9:31 AM',text:'Agreed. Quick thought: should we add a governance escalation path for the red-zone risk flags? Clients keep asking about that.'},
-  {who:'T',name:'Tom D.',ts:'9:47 AM',text:'Good point Erik. I\'d anchor it to the CARE framework — specifically the Catastrophize / Assess loop. That gives it theoretical grounding.'},
-  {who:'L',name:'Lauren H.Z.',ts:'10:02 AM',text:'Yes — and it maps cleanly to what Faisal published in MIT SMR. Easy to reference.'},
-  {who:'E',name:'Erik N.',ts:'10:18 AM',text:'Faisal, can you weigh in when you get a chance? Want to lock this before the IMD session.'}
-];
+var gchatMsgs=[];
 var gchatUnreadCount=0;
 
-var gchatMembers=[
-  {initials:'F',name:'You (Faisal)',color:'#B8892A',online:true},
-  {initials:'L',name:'Lauren H.Z.',color:'#5a7fbc',online:true},
-  {initials:'E',name:'Erik N.',color:'#5c9e78',online:true},
-  {initials:'T',name:'Tom D.',color:'#9b6fa8',online:false}
-];
+function formatChatTimestamp(dateString){
+  if(!dateString)return '';
+  var date=new Date(dateString);
+  if(isNaN(date.getTime()))return dateString;
+  var hours=date.getHours()%12||12;
+  var minutes=(date.getMinutes()<10?'0':'')+date.getMinutes();
+  var ampm=date.getHours()>=12?'PM':'AM';
+  return hours+':'+minutes+' '+ampm;
+}
+
+function getDynamicGChatMessages(){
+  if(typeof TeamChat==='undefined')return gchatMsgs;
+  var state=TeamChat.getState();
+  if(state && state.activeTeam && state.messages && state.messages[state.activeTeam]){
+    return state.messages[state.activeTeam].map(function(msg){
+      return {
+        who: msg.initials?msg.initials.charAt(0):'?',
+        name: msg.user_name || 'Unknown',
+        ts: formatChatTimestamp(msg.created_at),
+        text: msg.message || '',
+        userId: msg.user_id || ''
+      };
+    });
+  }
+  return gchatMsgs;
+}
+
 
 function gchatColor(who){var map={F:'#B8892A',L:'#5a7fbc',E:'#5c9e78',T:'#9b6fa8'};return map[who]||'rgba(138,130,120,.7)'}
 
@@ -2500,35 +2515,62 @@ function toggleGChat(){
 function renderGChatPanel(){
   var panel=document.getElementById('gchatPanel');
   if(!panel)return;
+  var existingInput=document.getElementById('gchatInput');
+  var draft=existingInput?existingInput.value:'';
+  var selectionStart=existingInput?existingInput.selectionStart:null;
+  var selectionEnd=existingInput?existingInput.selectionEnd:null;
+  var gchatMembers = typeof TeamChat !== 'undefined' ? TeamChat.getGchatMembers() : [];
+  var activeTeamName = '';
+  if(typeof TeamChat !== 'undefined'){
+    var state = TeamChat.getState();
+    if(state && state.activeTeam){
+      var activeTeam = state.teams.find(function(t){return t.id === state.activeTeam;});
+      activeTeamName = activeTeam ? activeTeam.name : '';
+    }
+  }
   var avHtml='';
   for(var i=0;i<gchatMembers.length;i++){
-    avHtml+='<div class="gchat-av" style="background:'+gchatMembers[i].color+';color:#fff">'+gchatMembers[i].initials+'</div>';
+    avHtml+='<div class="gchat-av" style="background:'+gchatMembers[i].color+';color:#fff">'+esc(gchatMembers[i].initials||'?')+'</div>';
   }
   var memHtml='';
   for(var i=0;i<gchatMembers.length;i++){
     var m=gchatMembers[i];
-    memHtml+='<div class="gchat-member"><div class="gchat-member-av" style="background:'+m.color+';color:#fff">'+m.initials+'</div>'+m.name+(m.online?'<div class="gchat-online"></div>':'')+'</div>';
+    memHtml+='<div class="gchat-member"><div class="gchat-member-av" style="background:'+m.color+';color:#fff">'+esc(m.initials||'?')+'</div>'+esc(m.name||'Unknown')+(m.online?'<div class="gchat-online"></div>':'')+'</div>';
   }
-  var h='<div class="gchat-header"><div class="gchat-header-title"><div class="gchat-avatars">'+avHtml+'</div> Team Room</div><button class="gchat-close" onclick="toggleGChat()">×</button></div>';
-  h+='<div class="gchat-members">'+memHtml+'</div>';
+  var msgsList = getDynamicGChatMessages();
+  var h='<div class="gchat-header"><div class="gchat-header-title"><div class="gchat-avatars">'+avHtml+'</div>'+(activeTeamName?esc(activeTeamName)+' Team Room':'Team Room')+'</div><button class="gchat-close" onclick="toggleGChat()">×</button></div>';
+  if(gchatMembers.length>0){
+    h+='<div class="gchat-members">'+memHtml+'</div>';
+  }
   h+='<div class="gchat-msgs" id="gchatMsgsEl">';
-  h+='<div class="gchat-day-div">Today</div>';
-  for(var i=0;i<gchatMsgs.length;i++){
-    var msg=gchatMsgs[i];
-    var isMe=(msg.who==='F');
-    var cls=isMe?'me':'them';
-    var col=gchatColor(msg.who);
-    h+='<div class="gchat-msg '+cls+'">';
-    h+='<div class="gchat-msg-av" style="background:'+col+';color:#fff">'+msg.who+'</div>';
-    h+='<div class="gchat-msg-body">';
-    h+='<div class="gchat-msg-meta">'+esc(isMe?'You':msg.name)+' · '+msg.ts+'</div>';
-    h+='<div class="gchat-msg-text">'+esc(msg.text)+'</div>';
-    h+='</div></div>';
+  if(msgsList.length===0){
+    h+='<div class="gchat-day-div">No messages yet. Start the conversation.</div>';
+  } else {
+    h+='<div class="gchat-day-div">Today</div>';
+    for(var i=0;i<msgsList.length;i++){
+      var msg=msgsList[i];
+      var isMe = msg.userId && window.currentUser && msg.userId === window.currentUser.id;
+      var cls=isMe?'me':'them';
+      var col=gchatColor(msg.who);
+      h+='<div class="gchat-msg '+cls+'">';
+      h+='<div class="gchat-msg-av" style="background:'+col+';color:#fff">'+esc(msg.who||'?')+'</div>';
+      h+='<div class="gchat-msg-body">';
+      h+='<div class="gchat-msg-meta">'+esc(isMe?'You':msg.name||'Unknown')+' · '+esc(msg.ts||'')+'</div>';
+      h+='<div class="gchat-msg-text">'+esc(msg.text||'')+'</div>';
+      h+='</div></div>';
+    }
   }
   h+='</div>';
   h+='<div class="gchat-typing" id="gchatTyping"></div>';
   h+='<div class="gchat-input-row"><textarea id="gchatInput" placeholder="Message the team..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendGChat()}"></textarea><button class="gchat-send" onclick="sendGChat()">Send</button></div>';
   panel.innerHTML=h;
+  var restoredInput=document.getElementById('gchatInput');
+  if(restoredInput&&draft){
+    restoredInput.value=draft;
+    if(selectionStart!==null&&selectionEnd!==null){
+      restoredInput.setSelectionRange(selectionStart,selectionEnd);
+    }
+  }
   var msgs=document.getElementById('gchatMsgsEl');
   if(msgs)msgs.scrollTop=msgs.scrollHeight;
 }
@@ -2536,44 +2578,27 @@ function renderGChatPanel(){
 function sendGChat(){
   var inp=document.getElementById('gchatInput');
   if(!inp||!inp.value.trim())return;
-  var text=inp.value.trim();inp.value='';
-  var now=new Date();
-  var ts=(now.getHours()%12||12)+':'+(now.getMinutes()<10?'0':'')+now.getMinutes()+' '+(now.getHours()>=12?'PM':'AM');
-  gchatMsgs.push({who:'F',name:'You',ts:ts,text:text});
-  renderGChatPanel();
-  var typing=document.getElementById('gchatTyping');
-  var responders=[
-    {who:'L',name:'Lauren H.Z.'},
-    {who:'E',name:'Erik N.'},
-    {who:'T',name:'Tom D.'}
-  ];
-  var r=responders[Math.floor(Math.random()*responders.length)];
-  if(typing)typing.textContent=r.name+' is typing...';
-    var sysPrompt="You are "+r.name+", a senior collaborator at SHADOKA. You are a senior collaborator of Faisal Hoque at SHADOKA. The team is working on the 90-Day AI Innovation Pipeline — a five-phase framework covering Diagnose, Organize, Prepare, Ignite, Navigate. Lauren focuses on communications, Erik on product and tech, Tom Davenport on research and strategic framing. Respond in 1-2 short sentences. Tone: smart, direct, collegial. No markdown.";
-  fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:120,
-      messages:[{role:'user',content:sysPrompt+'\n\nFaisal just wrote: "'+text+'"'}]
-    })
-  }).then(function(res){return res.json()}).then(function(j){
-    var reply='';
-    if(j.content)for(var i=0;i<j.content.length;i++)if(j.content[i].text)reply+=j.content[i].text;
-    if(!reply)reply='Good point — let\'s discuss further.';
-    var now2=new Date();
-    var ts2=(now2.getHours()%12||12)+':'+(now2.getMinutes()<10?'0':'')+now2.getMinutes()+' '+(now2.getHours()>=12?'PM':'AM');
-    gchatMsgs.push({who:r.who,name:r.name,ts:ts2,text:reply});
-    if(!gchatOpen){
-      gchatUnreadCount++;
-      var u=document.getElementById('gchatUnread');
-      if(u){u.style.display='';u.textContent=gchatUnreadCount;}
-    }
-    if(gchatOpen)renderGChatPanel();
-    else{var typing2=document.getElementById('gchatTyping');if(typing2)typing2.textContent='';}
-  }).catch(function(){
-    var now3=new Date();
-    var ts3=(now3.getHours()%12||12)+':'+(now3.getMinutes()<10?'0':'')+now3.getMinutes()+' '+(now3.getHours()>=12?'PM':'AM');
-    gchatMsgs.push({who:r.who,name:r.name,ts:ts3,text:'Got it — will follow up shortly.'});
-    if(gchatOpen)renderGChatPanel();
+  var text=inp.value.trim();
+  if(typeof TeamChat==='undefined'){
+    var now=new Date();
+    var ts=formatChatTimestamp(now.toISOString());
+    gchatMsgs.push({who:'F',name:'You',ts:ts,text:text});
+    inp.value='';
+    renderGChatPanel();
+    return;
+  }
+
+  var state=TeamChat.getState();
+  if(!state || !state.activeTeam){
+    alert('Please open a team chat before sending a message.');
+    return;
+  }
+
+  TeamChat.sendMessage(state.activeTeam, text).then(function(sent){
+    if(sent===false)return;
+    var currentInp=document.getElementById('gchatInput');
+    if(currentInp&&currentInp.value.trim()===text)currentInp.value='';
+    renderGChatPanel();
   });
 }
 
@@ -2767,6 +2792,7 @@ function refreshTeamChatVisibility() {
 function initializeTeamChatOnce() {
   if (!window.teamChatInitialized && window.currentUser && typeof TeamChat !== 'undefined') {
     TeamChat.init(window.currentUser);
+
     window.teamChatInitialized = true;
     if (typeof teamChatInitInterval !== 'undefined') {
       clearInterval(teamChatInitInterval);
@@ -2781,4 +2807,3 @@ var teamChatInitInterval = setInterval(function() {
 </script>
 </body>
 </html>
-
