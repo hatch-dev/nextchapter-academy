@@ -1,0 +1,7 @@
+Database
+
+define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
+define('DB_PORT', getenv('DB_PORT') ?: '3306');
+define('DB_NAME', getenv('DB_NAME') ?: 'nextchapter_db');
+define('DB_USER', getenv('DB_USER') ?: 'pipeline_user');
+define('DB_PASS', getenv('DB_PASS') ?: 'StrongPassword123!');
