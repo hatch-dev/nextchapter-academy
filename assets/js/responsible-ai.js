@@ -314,7 +314,14 @@ function toggleProfileMenu() {
 
 function renderProfileMenu() {
     var name = esc(currentUser ? (currentUser.name || currentUser.email || 'Account') : 'Account');
-    return '<div class="profile-menu"><button class="btn-ghost profile-trigger" style="font-size:var(--font-control);padding:8px 18px" onclick="toggleProfileMenu()">Profile</button><div class="profile-panel" id="profilePanel"><div class="profile-name">' + name + '</div><button class="profile-item" onclick="closeProfileMenu();openHelp()">Help</button><button class="profile-item" onclick="closeProfileMenu();clearData()">Reset</button><button class="profile-item" onclick="closeProfileMenu();go(`users`)">Users</button><button class="profile-item" onclick="closeProfileMenu();go(`billing`)">Billing</button><button class="profile-item" onclick="closeProfileMenu();signOut()">Sign Out</button></div></div>'
+    return '<div class="profile-menu"><button class="btn-ghost profile-trigger" style="font-size:var(--font-control);padding:8px 18px" onclick="toggleProfileMenu()">Profile</button><div class="profile-panel" id="profilePanel"><div class="profile-name">' + name + '</div><button class="profile-item" onclick="closeProfileMenu();openHelp()">Help</button><button class="profile-item" onclick="closeProfileMenu();clearData()">Reset</button><button class="profile-item" onclick="closeProfileMenu();openAccountPage(\'users\')">Users</button><button class="profile-item" onclick="closeProfileMenu();openAccountPage(\'billing\')">Billing</button><button class="profile-item" onclick="closeProfileMenu();signOut()">Sign Out</button></div></div>'
+}
+
+function openAccountPage(page) {
+    var target = page === 'billing' ? 'billing' : 'users';
+    flushSaveData().then(function() {
+        window.location.href = 'pipeline#' + target
+    })
 }
 
 function toggleModuleMenu(ev) {
@@ -651,6 +658,10 @@ var MILESTONES = {
 
 function go(page, step) {
     moduleMenuOpen = false;
+    if (page === 'users' || page === 'billing') {
+        openAccountPage(page);
+        return;
+    }
     currentPage = page;
     if (step) currentStep = step;
     else currentStep = null;
