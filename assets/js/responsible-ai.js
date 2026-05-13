@@ -312,9 +312,16 @@ function toggleProfileMenu() {
     if (p) p.classList.toggle('open')
 }
 
+function profileInitials() {
+    var source = (currentUser && (currentUser.name || currentUser.email)) || 'Account';
+    var parts = String(source).trim().split(/\s+/).filter(Boolean);
+    if (parts.length > 1) return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+    return source.charAt(0).toUpperCase()
+}
+
 function renderProfileMenu() {
     var name = esc(currentUser ? (currentUser.name || currentUser.email || 'Account') : 'Account');
-    return '<div class="profile-menu"><button class="btn-ghost profile-trigger" style="font-size:var(--font-control);padding:8px 18px" onclick="toggleProfileMenu()">Profile</button><div class="profile-panel" id="profilePanel"><div class="profile-name">' + name + '</div><button class="profile-item" onclick="closeProfileMenu();openHelp()">Help</button><button class="profile-item" onclick="closeProfileMenu();clearData()">Reset</button><button class="profile-item" onclick="closeProfileMenu();openAccountPage(\'users\')">Users</button><button class="profile-item" onclick="closeProfileMenu();openAccountPage(\'billing\')">Billing</button><button class="profile-item" onclick="closeProfileMenu();signOut()">Sign Out</button></div></div>'
+    return '<div class="profile-menu"><button class="profile-trigger" type="button" aria-label="Account menu">' + esc(profileInitials()) + '</button><div class="profile-panel" id="profilePanel"><div class="profile-name">' + name + '</div><button class="profile-item" onclick="closeProfileMenu();openHelp()">Help</button><button class="profile-item" onclick="closeProfileMenu();clearData()">Reset</button><button class="profile-item" onclick="closeProfileMenu();openAccountPage(\'users\')">Users</button><button class="profile-item" onclick="closeProfileMenu();openAccountPage(\'billing\')">Billing</button><button class="profile-item" onclick="closeProfileMenu();signOut()">Sign Out</button></div></div>'
 }
 
 function openAccountPage(page) {
