@@ -1008,7 +1008,7 @@ function toggleProfileMenu() {
 
 function renderProfileMenu() {
     var name = esc(currentUser ? (currentUser.name || currentUser.email || 'Account') : 'Account');
-    return '<div class="profile-menu"><button class="btn-ghost profile-trigger" style="font-size:var(--font-control);padding:8px 18px" onclick="toggleProfileMenu()">Profile</button><div class="profile-panel" id="profilePanel"><div class="profile-name">' + name + '</div><button class="profile-item" onclick="closeProfileMenu();openHelp()">Help</button><button class="profile-item" onclick="closeProfileMenu();clearData()">Reset</button><button class="profile-item" onclick="closeProfileMenu();signOut()">Sign Out</button></div></div>'
+    return '<div class="profile-menu"><button class="btn-ghost profile-trigger" style="font-size:var(--font-control);padding:8px 18px" onclick="toggleProfileMenu()">Profile</button><div class="profile-panel" id="profilePanel"><div class="profile-name">' + name + '</div><button class="profile-item" onclick="closeProfileMenu();openHelp()">Help</button><button class="profile-item" onclick="closeProfileMenu();clearData()">Reset</button><button class="profile-item" onclick="closeProfileMenu();go(`users`)">Users</button><button class="profile-item" onclick="closeProfileMenu();go(`billing`)">Billing</button><button class="profile-item" onclick="closeProfileMenu();signOut()">Sign Out</button></div></div>'
 }
 
 function toggleModuleMenu(ev) {
@@ -5816,60 +5816,6 @@ function sendGChat() {
     });
 }
 
-// === NOTES ===
-function toggleNotes() {
-    notesOpen = !notesOpen;
-    $('notesFab').className = 'notes-fab' + (notesOpen ? ' open' : '');
-    $('notesPanel').className = 'notes-panel' + (notesOpen ? ' open' : '');
-    if (notesOpen) renderNotesPanel();
-}
-
-function updateNotesCount() {
-    var el = $('notesCount');
-    if (el) el.textContent = (data.notes || []).length;
-}
-
-function renderNotesPanel() {
-    var panel = $('notesPanel');
-    if (!panel) return;
-    var h = '<div class="notes-header"><div class="notes-header-title">&#9998; Notes</div><button class="notes-close" onclick="toggleNotes()">×</button></div>';
-    h += '<div class="notes-list">';
-    var notes = data.notes || [];
-    if (!notes.length) h += '<div class="notes-empty">Capture insights as you work through the pipeline.</div>';
-    else
-        for (var i = notes.length - 1; i >= 0; i--) {
-            var n = notes[i];
-            h += '<div class="note-card"><div class="note-text">' + esc(n.text) + '</div><div class="note-meta"><span class="note-date">' + (n.step ? 'Step ' + n.step + ' · ' : '') + fmt(n.createdAt) + '</span><button class="note-del" onclick="deleteNote(\'' + n.id + '\')">×</button></div></div>'
-        }
-    h += '</div>';
-    h += '<div class="notes-input-row"><textarea id="notesInput" placeholder="Write a note..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();addNote()}"></textarea><button class="notes-send" onclick="addNote()">&#9998;</button></div>';
-    panel.innerHTML = h;
-}
-
-function addNote() {
-    var inp = document.getElementById('notesInput');
-    if (!inp || !inp.value.trim()) return;
-    if (!data.notes) data.notes = [];
-    data.notes.push({
-        id: uid(),
-        text: inp.value.trim(),
-        step: currentStep,
-        createdAt: Date.now()
-    });
-    saveData();
-    renderNotesPanel();
-    updateNotesCount();
-}
-
-function deleteNote(id) {
-    data.notes = (data.notes || []).filter(function(n) {
-        return n.id !== id
-    });
-    saveData();
-    renderNotesPanel();
-    updateNotesCount();
-}
-
 // === HELP MODAL ===
 var currentModal = null;
 
@@ -6012,16 +5958,12 @@ function renderModal() {
             d: 'Gold button, bottom right. Context-aware for whichever step you are on. Grounded in the OPEN and CARE frameworks. Ask it anything about the current step, your data, or portfolio decisions.'
         },
         {
-            ic: '\u270e Notes',
-            d: 'Bottom right. Capture thoughts as you work through each step. Notes are tagged to the step you are on when you write them.'
-        },
-        {
             ic: '\u2261 Team Chat',
             d: 'Log decisions and messages with your team. Separate from the AI Coach conversation.'
         },
         {
             ic: '\u25c9 Voice',
-            d: 'Top-right nav button. Navigate hands-free. Say: \u201chome\u201d \xb7 \u201clearn\u201d \xb7 \u201cpipeline\u201d \xb7 \u201cnavigate\u201d \xb7 \u201copen coach\u201d \xb7 \u201copen notes\u201d \xb7 \u201cclose\u201d'
+            d: 'Top-right nav button. Navigate hands-free. Say: \u201chome\u201d \xb7 \u201clearn\u201d \xb7 \u201cpipeline\u201d \xb7 \u201cnavigate\u201d \xb7 \u201copen coach\u201d \xb7 \u201cclose\u201d'
         }
     ];
     for (var i = 0; i < tools.length; i++) {

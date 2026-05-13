@@ -314,7 +314,7 @@ function toggleProfileMenu() {
 
 function renderProfileMenu() {
     var name = esc(currentUser ? (currentUser.name || currentUser.email || 'Account') : 'Account');
-    return '<div class="profile-menu"><button class="btn-ghost profile-trigger" style="font-size:var(--font-control);padding:8px 18px" onclick="toggleProfileMenu()">Profile</button><div class="profile-panel" id="profilePanel"><div class="profile-name">' + name + '</div><button class="profile-item" onclick="closeProfileMenu();openHelp()">Help</button><button class="profile-item" onclick="closeProfileMenu();clearData()">Reset</button><button class="profile-item" onclick="closeProfileMenu();signOut()">Sign Out</button></div></div>'
+    return '<div class="profile-menu"><button class="btn-ghost profile-trigger" style="font-size:var(--font-control);padding:8px 18px" onclick="toggleProfileMenu()">Profile</button><div class="profile-panel" id="profilePanel"><div class="profile-name">' + name + '</div><button class="profile-item" onclick="closeProfileMenu();openHelp()">Help</button><button class="profile-item" onclick="closeProfileMenu();clearData()">Reset</button><button class="profile-item" onclick="closeProfileMenu();go(`users`)">Users</button><button class="profile-item" onclick="closeProfileMenu();go(`billing`)">Billing</button><button class="profile-item" onclick="closeProfileMenu();signOut()">Sign Out</button></div></div>'
 }
 
 function toggleModuleMenu(ev) {
@@ -5564,60 +5564,6 @@ function sendGChat() {
     });
 }
 
-// === NOTES ===
-function toggleNotes() {
-    notesOpen = !notesOpen;
-    $('notesFab').className = 'notes-fab' + (notesOpen ? ' open' : '');
-    $('notesPanel').className = 'notes-panel' + (notesOpen ? ' open' : '');
-    if (notesOpen) renderNotesPanel();
-}
-
-function updateNotesCount() {
-    var el = $('notesCount');
-    if (el) el.textContent = (data.notes || []).length;
-}
-
-function renderNotesPanel() {
-    var panel = $('notesPanel');
-    if (!panel) return;
-    var h = '<div class="notes-header"><div class="notes-header-title">&#9998; Notes</div><button class="notes-close" onclick="toggleNotes()">×</button></div>';
-    h += '<div class="notes-list">';
-    var notes = data.notes || [];
-    if (!notes.length) h += '<div class="notes-empty">Capture insights as you work through the pipeline.</div>';
-    else
-        for (var i = notes.length - 1; i >= 0; i--) {
-            var n = notes[i];
-            h += '<div class="note-card"><div class="note-text">' + esc(n.text) + '</div><div class="note-meta"><span class="note-date">' + (n.step ? 'Step ' + n.step + ' · ' : '') + fmt(n.createdAt) + '</span><button class="note-del" onclick="deleteNote(\'' + n.id + '\')">×</button></div></div>'
-        }
-    h += '</div>';
-    h += '<div class="notes-input-row"><textarea id="notesInput" placeholder="Write a note..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();addNote()}"></textarea><button class="notes-send" onclick="addNote()">&#9998;</button></div>';
-    panel.innerHTML = h;
-}
-
-function addNote() {
-    var inp = document.getElementById('notesInput');
-    if (!inp || !inp.value.trim()) return;
-    if (!data.notes) data.notes = [];
-    data.notes.push({
-        id: uid(),
-        text: inp.value.trim(),
-        step: currentStep,
-        createdAt: Date.now()
-    });
-    saveData();
-    renderNotesPanel();
-    updateNotesCount();
-}
-
-function deleteNote(id) {
-    data.notes = (data.notes || []).filter(function(n) {
-        return n.id !== id
-    });
-    saveData();
-    renderNotesPanel();
-    updateNotesCount();
-}
-
 // === HELP MODAL ===
 var currentModal = null;
 
@@ -5729,7 +5675,7 @@ function renderModal() {
     h += '<div style="margin-bottom:24px"><div class="section-label" style="margin-bottom:12px">Risk Dashboard</div>';
     h += '<p style="font-size:14px;color:var(--stone);line-height:1.75">Phase 5 is the live Risk Dashboard. It shows the risk pipeline (Identified \u2192 Assessed \u2192 Managed \u2192 Resolved) with clickable stage counts, four classification portfolio cards (Manage, Monitor Enhanced, Monitor, Ethical), active management priorities, a coverage heat map across POSTi categories and severity levels, a Data Bank linking to all ten output documents, and key governance rhythm metrics. Click any portfolio card to drill into its risks.</p></div>';
     h += '<div style="margin-bottom:24px"><div class="section-label" style="margin-bottom:12px">Floating Tools \u2014 bottom-right stack</div>';
-    h += '<div style="font-size:14px;color:var(--stone);line-height:2"><span style="color:var(--gold)">✦ AI Coach</span> \u2014 top. Context-aware for your current step. Ask about POSTi, LIT scoring, CARE framework, exit plans, or anything in the governance model.<br><span style="color:var(--paper)">\u25ce Voice</span> \u2014 middle. Hands-free navigation. Say: <span style="font-family:var(--mono);font-size:var(--font-readable-sm)">&ldquo;learn&rdquo; &middot; &ldquo;framework&rdquo; &middot; &ldquo;dashboard&rdquo; &middot; &ldquo;open coach&rdquo; &middot; &ldquo;open notes&rdquo; &middot; &ldquo;close&rdquo;</span><br><span style="color:var(--paper)">✎ Notes</span> \u2014 bottom. Capture insights tagged to your current step. Persists across sessions.</div></div>';
+    h += '<div style="font-size:14px;color:var(--stone);line-height:2"><span style="color:var(--gold)">✦ AI Coach</span> \u2014 top. Context-aware for your current step. Ask about POSTi, LIT scoring, CARE framework, exit plans, or anything in the governance model.<br><span style="color:var(--paper)">\u25ce Voice</span> \u2014 middle. Hands-free navigation. Say: <span style="font-family:var(--mono);font-size:var(--font-readable-sm)">&ldquo;learn&rdquo; &middot; &ldquo;framework&rdquo; &middot; &ldquo;dashboard&rdquo; &middot; &ldquo;open coach&rdquo; &middot; &ldquo;close&rdquo;</span></div></div>';
     h += '<div style="margin-bottom:24px"><div class="section-label" style="margin-bottom:12px">Data &amp; Privacy</div>';
     h += '<p style="font-size:14px;color:var(--stone);line-height:1.75">All data is saved to your browser\'s local storage. The AI Coach calls the Anthropic API with your question and current step context only. Use Reset in the nav to clear everything.</p></div>';
     h += '<div style="text-align:center;padding-top:8px"><button class="btn-gold" onclick="closeModal()">Got It</button></div>';
