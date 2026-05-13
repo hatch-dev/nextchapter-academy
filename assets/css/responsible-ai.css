@@ -259,11 +259,11 @@ nav>* {
 	justify-content: space-between;
 	gap: 12px;
 	font-family: var(--sans);
-	font-size: var(--font-label);
-	font-weight: var(--weight-readable);
+	font-size: 13px;
+	font-weight: normal;
 	letter-spacing: .1em;
-	text-transform: uppercase;
-	color: var(--stone)
+	text-transform: none;
+	color: var(--gold);
 }
 
 .nav-tab {
