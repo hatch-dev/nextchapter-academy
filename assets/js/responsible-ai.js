@@ -1,0 +1,5885 @@
+var API_BASE = '/nextchapter/api';
+var SK = 'gov-v3';
+var MODULE_KEY = 'responsible_ai_governance';
+
+function emptyData() {
+    return {
+        assessmentBattery: {},
+        systems: [],
+        risks: [],
+        triage: {},
+        decisionRights: {},
+        ethicalFramework: {},
+        ownership: {},
+        raciMatrix: [],
+        reviewCadence: {},
+        incentivesSkills: {},
+        incentives: {},
+        litScores: {},
+        riskClasses: {},
+        exitPlans: {},
+        govRhythm: {},
+        embedOps: {},
+        firstReview: {},
+        govReview: {},
+        govCulture: {},
+        completedSteps: {},
+        completed: {},
+        notes: [],
+        startDate: new Date().toISOString().split('T')[0]
+    }
+}
+var data = emptyData();
+var currentPage = 'home',
+    currentStep = null,
+    currentPhase = null;
+var sidebarOpen = true;
+var coachOpen = false,
+    notesOpen = false;
+var coachMsgs = [{
+    role: 'ai',
+    text: 'Welcome to the AI Innovation Pipeline. I\'m your strategic guide through the 90-day transformation journey. Ask me about any step, framework, or concept — or challenge me on where you\'re stuck.'
+}];
+var coachCtx = 'Overview';
+var currentUser = null,
+    currentAccount = null,
+    moduleMenuOpen = false,
+    saveTimer = null,
+    sharedData = {},
+    sharedSaveTimer = null;
+
+function $(id) {
+    return document.getElementById(id)
+}
+
+function uid() {
+    return 'r-' + Math.random().toString(36).substr(2, 9)
+}
+
+function fmt(d) {
+    return new Date(d).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+    })
+}
+
+function esc(s) {
+    if (!s) return '';
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML
+}
+
+function val(id) {
+    var e = $(id);
+    return e ? e.value : ''
+}
+
+function normalizeModuleData(value) {
+    var base = emptyData();
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return base;
+    var merged = Object.assign(base, value);
+    ['assessmentBattery', 'triage', 'decisionRights', 'ethicalFramework', 'ownership', 'reviewCadence', 'incentivesSkills', 'incentives', 'litScores', 'riskClasses', 'exitPlans', 'govRhythm', 'embedOps', 'firstReview', 'govReview', 'govCulture', 'completedSteps', 'completed'].forEach(function(k) {
+        if (!merged[k] || typeof merged[k] !== 'object' || Array.isArray(merged[k])) merged[k] = {}
+    });
+    ['systems', 'risks', 'raciMatrix', 'notes'].forEach(function(k) {
+        if (!Array.isArray(merged[k])) merged[k] = []
+    });
+    return merged
+}
+
+function localBackupKey() {
+    return currentUser ? 'responsible-ai-backup-' + currentUser.account_id : 'responsible-ai-backup'
+}
+
+function apiReq(method, path, body) {
+    var opts = {
+        method: method,
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    };
+    if (body !== undefined) opts.body = JSON.stringify(body);
+    return fetch(API_BASE + path, opts).then(function(r) {
+        return r.json().catch(function() {
+            return {
+                ok: false,
+                error: 'Invalid server response'
+            }
+        }).then(function(j) {
+            if (!r.ok || j.ok === false) throw new Error(j.error || 'Request failed');
+            return j.data !== undefined ? j.data : j
+        })
+    })
+}
+
+function apiGet(path) {
+    return apiReq('GET', path)
+}
+
+function apiPut(path, body) {
+    return apiReq('PUT', path, body)
+}
+
+function apiDel(path, body) {
+    return apiReq('DELETE', path, body)
+}
+
+function hasActiveSubscription() {
+    return ((currentAccount && currentAccount.subscription_status) || '').toLowerCase() === 'active'
+}
+
+function hasModuleEnabled() {
+    return ((currentAccount && currentAccount.modules) || []).some(function(m) {
+        return m.module_key === MODULE_KEY && m.enabled && m.status === 'active'
+    })
+}
+
+function getPath(obj, path) {
+    return path.split('.').reduce(function(o, k) {
+        return o && o[k]
+    }, obj)
+}
+
+function setPath(obj, path, val) {
+    var parts = path.split('.'),
+        cur = obj;
+    for (var i = 0; i < parts.length - 1; i++) {
+        if (!cur[parts[i]]) cur[parts[i]] = {};
+        cur = cur[parts[i]]
+    }
+    cur[parts[parts.length - 1]] = val
+}
+
+function hasValue(v) {
+    return v !== undefined && v !== null && String(v).trim() !== ''
+}
+var SHARED_FIELDS = [{
+    key: 'ai.currentSystems',
+    path: 'assessmentBattery.currentSystems'
+}, {
+    key: 'governance.approver',
+    path: 'decisionRights.approveDeployment'
+}, {
+    key: 'governance.stopAuthority',
+    path: 'decisionRights.haltDeployment'
+}, {
+    key: 'governance.owner',
+    path: 'ownership.governanceOwner'
+}, {
+    key: 'governance.ownerAuthority',
+    path: 'ownership.ownerAuthority'
+}, {
+    key: 'governance.escalation',
+    path: 'ownership.escalation'
+}, {
+    key: 'governance.pulseFrequency',
+    path: 'reviewCadence.pulseFrequency'
+}, {
+    key: 'governance.pulseAttendees',
+    path: 'reviewCadence.pulseAttendees'
+}];
+
+function applySharedAnswers() {
+    sharedData = sharedData || {};
+    SHARED_FIELDS.forEach(function(f) {
+        var cur = getPath(data, f.path),
+            shared = getPath(sharedData, f.key);
+        if (!hasValue(cur) && hasValue(shared)) setPath(data, f.path, shared)
+    })
+}
+
+function exportSharedAnswers() {
+    sharedData = sharedData || {};
+    SHARED_FIELDS.forEach(function(f) {
+        var val = getPath(data, f.path);
+        if (hasValue(val)) setPath(sharedData, f.key, val)
+    })
+}
+
+function saveSharedData() {
+    if (!currentUser || !hasActiveSubscription()) return;
+    exportSharedAnswers();
+    clearTimeout(sharedSaveTimer);
+    var payload = JSON.parse(JSON.stringify(sharedData || {}));
+    sharedSaveTimer = setTimeout(function() {
+        apiPut('/shared-data', payload).catch(function(e) {
+            console.warn('Shared save failed', e.message)
+        })
+    }, 600)
+}
+
+function loadSharedData() {
+    return apiGet('/shared-data').then(function(d) {
+        sharedData = (d && typeof d === 'object' && !Array.isArray(d)) ? d : {}
+    }).catch(function() {
+        sharedData = {}
+    })
+}
+
+function isEmptyModuleData(value) {
+    return JSON.stringify(normalizeModuleData(value)) === JSON.stringify(emptyData())
+}
+
+function persistModuleDataNow() {
+    data = normalizeModuleData(data);
+    try {
+        localStorage.setItem(localBackupKey(), JSON.stringify(data))
+    } catch (e) {}
+    exportSharedAnswers();
+    return Promise.all([apiPut('/module-data', {
+        module_key: MODULE_KEY,
+        data: JSON.parse(JSON.stringify(data))
+    }), apiPut('/shared-data', JSON.parse(JSON.stringify(sharedData || {}))).catch(function(e) {
+        console.warn('Shared save failed', e.message)
+    })])
+}
+
+function loadData() {
+    return apiGet('/module-data?module_key=' + encodeURIComponent(MODULE_KEY)).then(function(d) {
+        data = normalizeModuleData(d);
+        try {
+            var backup = localStorage.getItem(localBackupKey());
+            if (backup && isEmptyModuleData(data)) {
+                data = normalizeModuleData(JSON.parse(backup));
+                if (!isEmptyModuleData(data)) return persistModuleDataNow()
+            }
+        } catch (e) {}
+        applySharedAnswers()
+    }).catch(function() {
+        try {
+            data = normalizeModuleData(JSON.parse(localStorage.getItem(localBackupKey()) || '{}'))
+        } catch (e) {
+            data = emptyData()
+        }
+        applySharedAnswers()
+    })
+}
+
+function saveData() {
+    if (!currentUser || !hasActiveSubscription() || !hasModuleEnabled()) return;
+    clearTimeout(saveTimer);
+    data = normalizeModuleData(data);
+    try {
+        localStorage.setItem(localBackupKey(), JSON.stringify(data))
+    } catch (e) {}
+    var payload = {
+        module_key: MODULE_KEY,
+        data: JSON.parse(JSON.stringify(data))
+    };
+    saveSharedData();
+    saveTimer = setTimeout(function() {
+        apiPut('/module-data', payload).catch(function(e) {
+            console.warn('Save failed', e.message)
+        })
+    }, 500)
+}
+
+function flushSaveData() {
+    if (!currentUser || !hasActiveSubscription() || !hasModuleEnabled()) return Promise.resolve();
+    clearTimeout(saveTimer);
+    return persistModuleDataNow().catch(function(e) {
+        console.warn('Save failed', e.message)
+    })
+}
+
+function backToModules() {
+    flushSaveData().then(function() {
+        window.location.href = 'pipeline#modules'
+    })
+}
+
+function signOut() {
+    flushSaveData().then(function() {
+        return apiDel('/session')
+    }).catch(function() {}).then(function() {
+        currentUser = null;
+        currentAccount = null;
+        data = emptyData();
+        window.location.href = 'pipeline'
+    })
+}
+
+function closeProfileMenu() {
+    var p = $('profilePanel');
+    if (p) p.classList.remove('open')
+}
+
+function toggleProfileMenu() {
+    var p = $('profilePanel');
+    if (p) p.classList.toggle('open')
+}
+
+function renderProfileMenu() {
+    var name = esc(currentUser ? (currentUser.name || currentUser.email || 'Account') : 'Account');
+    return '<div class="profile-menu"><button class="btn-ghost profile-trigger" style="font-size:var(--font-control);padding:8px 18px" onclick="toggleProfileMenu()">Profile</button><div class="profile-panel" id="profilePanel"><div class="profile-name">' + name + '</div><button class="profile-item" onclick="closeProfileMenu();openHelp()">Help</button><button class="profile-item" onclick="closeProfileMenu();clearData()">Reset</button><button class="profile-item" onclick="closeProfileMenu();signOut()">Sign Out</button></div></div>'
+}
+
+function toggleModuleMenu(ev) {
+    if (ev) ev.stopPropagation();
+    moduleMenuOpen = !moduleMenuOpen;
+    closeProfileMenu();
+    render()
+}
+
+function moduleOpenAction(key) {
+    if (key === 'ai_innovation_pipeline') return "openModuleItem('ai_innovation_pipeline')";
+    if (key === 'responsible_ai_governance') return "openModuleItem('responsible_ai_governance')";
+    return ''
+}
+
+function openModuleItem(key) {
+    moduleMenuOpen = false;
+    if (key === 'responsible_ai_governance') go('home');
+    else if (key === 'ai_innovation_pipeline') flushSaveData().then(function() {
+        window.location.href = 'pipeline'
+    })
+}
+
+function renderModuleDropdown(active) {
+    var items = (currentAccount && currentAccount.modules) || [];
+    var h = '<div class="nav-menu"><button class="nav-tab' + (active || moduleMenuOpen ? ' active' : '') + '" onclick="toggleModuleMenu(event)">Modules</button><div class="module-panel' + (moduleMenuOpen ? ' open' : '') + '" id="modulePanel">';
+    if (!items.length) h += '<button class="module-item" disabled><div class="module-item-name">No modules available</div><div class="module-item-meta"><span>Catalog</span><span>Empty</span></div></button>';
+    for (var i = 0; i < items.length; i++) {
+        var m = items[i],
+            action = moduleOpenAction(m.module_key),
+            open = !!(action && m.enabled && m.status === 'active');
+        var status = m.enabled ? (m.status === 'active' ? 'Open' : 'Coming Soon') : (m.status === 'active' ? 'Locked' : 'Coming Soon');
+        h += '<button class="module-item" ' + (open ? 'onclick="' + action + '"' : 'disabled') + '><div class="module-item-name">' + esc(m.name) + '</div><div class="module-item-meta"><span>' + esc(m.subtitle || 'Module') + '</span><span>' + status + '</span></div></button>'
+    }
+    return h + '</div></div>'
+}
+
+function renderGate(title, msg) {
+    var nt = $('navTabs'),
+        nr = $('navRight'),
+        app = $('app'),
+        sb = $('govSidebar'),
+        mc = $('mainContent'),
+        st = $('sidebarToggle');
+    if (sb) sb.style.display = 'none';
+    if (st) st.style.display = 'none';
+    if (mc) mc.style.marginLeft = '0';
+    if (nt) nt.innerHTML = '';
+    if (nr) nr.innerHTML = '<button class="btn-ghost" style="font-size:var(--font-control);padding:8px 18px" onclick="window.location.href=\'pipeline\'">Back to Modules</button>';
+    if (app) app.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:120px 24px"><div class="card" style="max-width:620px;padding:34px;text-align:center"><div class="section-label">Account Access</div><h1 style="font-family:var(--serif);font-size:42px;font-weight:300;margin:0 0 16px">' + esc(title) + '</h1><p style="color:var(--stone);line-height:1.8;margin-bottom:24px">' + esc(msg) + '</p><button class="btn-gold" onclick="window.location.href=\'pipeline\'">Open Dashboard</button></div></div>'
+}
+
+function initApp() {
+    apiGet('/session').then(function(user) {
+        currentUser = user;
+        currentAccount = user && user.account;
+        if (!currentUser) {
+            renderGate('Login required', 'Please login from the main dashboard before opening this module.');
+            return
+        }
+        if (!hasActiveSubscription()) {
+            renderGate('Subscription required', 'Purchase or activate a subscription to use the Responsible AI Governance module.');
+            return
+        }
+        if (!hasModuleEnabled()) {
+            renderGate('Module locked', '90-Day Responsible AI Governance is not enabled for this account.');
+            return
+        }
+        loadSharedData().then(loadData).then(function() {
+            saveData();
+            render()
+        })
+    }).catch(function() {
+        renderGate('Login required', 'Please login from the main dashboard before opening this module.')
+    })
+}
+
+var PH = [{
+        id: 1,
+        name: 'Map',
+        days: 'Days 1-30',
+        color: '#1E6E6E',
+        steps: [{
+            id: '1.1',
+            name: 'Assessment Battery',
+            icon: '▣'
+        }, {
+            id: '1.2',
+            name: 'AI Landscape Inventory',
+            icon: '◇'
+        }, {
+            id: '1.3',
+            name: 'Catastrophize',
+            icon: '◎'
+        }, {
+            id: '1.4',
+            name: 'Triage',
+            icon: '□'
+        }, {
+            id: '1.5',
+            name: 'Culture & Decision Rights',
+            icon: '▤'
+        }],
+        outcomes: [{
+            id: 'out-riskreg',
+            name: 'Initial Risk Register'
+        }, {
+            id: 'out-riskassess',
+            name: 'Risk Assessment'
+        }]
+    },
+    {
+        id: 2,
+        name: 'Build',
+        days: 'Days 31-50',
+        color: '#8B4513',
+        steps: [{
+            id: '2.1',
+            name: 'Ethical Framework',
+            icon: '⊞'
+        }, {
+            id: '2.2',
+            name: 'Ownership & Structure',
+            icon: '⊜'
+        }, {
+            id: '2.3',
+            name: 'Risk Review Cadence',
+            icon: '↻'
+        }, {
+            id: '2.4',
+            name: 'Incentives & Skills',
+            icon: '⊙'
+        }],
+        outcomes: [{
+            id: 'out-ethicsdoc',
+            name: 'Ethical Framework Doc'
+        }, {
+            id: 'out-raci2',
+            name: 'RACI Matrix'
+        }, {
+            id: 'out-govready',
+            name: 'Governance Readiness'
+        }]
+    },
+    {
+        id: 3,
+        name: 'Assess',
+        days: 'Days 51-70',
+        color: '#C8860A',
+        steps: [{
+            id: '3.1',
+            name: 'Apply Ethical Lens',
+            icon: '⊕'
+        }, {
+            id: '3.2',
+            name: 'LIT Assessment',
+            icon: '⊡'
+        }, {
+            id: '3.3',
+            name: 'Classify & Prioritize',
+            icon: '▤'
+        }],
+        outcomes: [{
+            id: 'out-assessedreg',
+            name: 'Assessed Risk Register'
+        }, {
+            id: 'out-riskclass',
+            name: 'Risk Classification'
+        }]
+    },
+    {
+        id: 4,
+        name: 'Embed',
+        days: 'Days 71-90',
+        color: '#3D4F5C',
+        steps: [{
+            id: '4.1',
+            name: 'Build Exit Plans',
+            icon: '◻'
+        }, {
+            id: '4.2',
+            name: 'Governance Rhythm',
+            icon: '△'
+        }, {
+            id: '4.3',
+            name: 'Embed into Operations',
+            icon: '↗'
+        }, {
+            id: '4.4',
+            name: 'First Governance Review',
+            icon: '⊟'
+        }],
+        outcomes: [{
+            id: 'out-exitplans',
+            name: 'Exit Plan Portfolio'
+        }, {
+            id: 'out-govfw',
+            name: 'Governance Framework'
+        }]
+    },
+    {
+        id: 5,
+        name: 'Govern',
+        days: 'Ongoing',
+        color: '#2A5A5A',
+        steps: [{
+            id: '5.0',
+            name: 'Risk Dashboard',
+            icon: '⬡'
+        }],
+        outcomes: []
+    }
+];
+
+var CTX = {
+    '1.1': {
+        insight: 'Every AI system deployed without an adequate governance framework creates reputational, legal, and operational risk right now. Those risks only compound over time.',
+        stat: 'A recent survey of 750 CFOs projects roughly 500,000 AI-related job losses in 2026 alone — with little governance in place.',
+        article: '90 Days to Responsible AI Governance',
+        source: 'Fast Company'
+    },
+    '1.2': {
+        insight: 'When AI systems become joined up across organizations, they create the biggest risks. Networks of AI agents and automated ordering systems deliver transformative value — but also create conditions for cascade failure.',
+        stat: "MIT's AI Incident Tracker reports a 47% increase in reported AI incidents between 2023 and 2024.",
+        article: 'AI Cascade Failures: How to Protect Your Organization',
+        source: 'Fast Company'
+    },
+    '1.3': {
+        insight: 'The gap between technological advancement and governance widens every day. With risks that include anything up to the extinction of humanity, we cannot afford inertia and confusion.',
+        stat: "Stanford's AI Index puts the increase in serious AI harm incidents at 74% year-on-year.",
+        article: "When It Comes to AI, Innovation Isn't Enough",
+        source: 'Fast Company'
+    },
+    '1.4': {
+        insight: 'Organizations face a dual imperative that traditional risk frameworks were never designed to address: harness AI potential while simultaneously defending against AI-driven disruption.',
+        stat: 'Defensive restructuring is already underway at many Fortune 500 companies, often framed as efficiency initiatives.',
+        article: 'The Dual Challenge of AI',
+        source: 'I by IMD'
+    },
+    '1.5': {
+        insight: 'A use policy sits downstream from the values it formalizes. The mature approach moves past disclosure theater toward genuine accountability — where reviewed and approved AI work becomes your human output.',
+        stat: 'A major consulting firm recently submitted an error-ridden AI-generated report to the Australian government.',
+        article: 'Your AI Use Policy Is Solving the Wrong Problem',
+        source: 'Fast Company'
+    },
+    '2.1': {
+        insight: 'Few businesses have the internal resources to navigate the complex philosophical territory of responsible AI. Yet the potential benefits are considerable — a Stanford-Accenture survey found businesses expect responsible AI to increase revenues by 18%.',
+        stat: 'One doctor denied over 60,000 insurance claims in a single month — spending an average of 1.2 seconds per case.',
+        article: 'Four Questions to Guide the Implementation of Responsible AI',
+        source: 'I by IMD'
+    },
+    '2.2': {
+        insight: "If responsible AI is a side responsibility bolted onto someone's existing role, it will always lose out to the part of their job that determines their success. Someone needs to own this — with explicit authority.",
+        stat: "Cigna's system denied certain insurance claims without any human review of the patient files.",
+        article: 'The Looming AI Risk: Automating Middle Management',
+        source: 'I by IMD'
+    },
+    '2.3': {
+        insight: 'Governance that has no rhythm has no teeth. A recurring Risk Pulse creates a structured moment to ask what is new, what has changed, and what needs attention now — before risks compound.',
+        stat: "Leaders who prepare by tackling governance priorities won't just survive the AI revolution — they'll shape it.",
+        article: '7 Things Every Leader Must Do to Prepare for 2026',
+        source: 'Fast Company'
+    },
+    '2.4': {
+        insight: "Culture transformation is harder than technology implementation. You get what you incentivize. If the organization rewards delivery KPIs and punishes transparency about AI failures, governance will always lose.",
+        stat: "Companies spend millions teaching employees to use AI tools, then wonder why transformation never happens.",
+        article: 'Three Myths That Undermine AI Success',
+        source: 'Fast Company'
+    },
+    '3.1': {
+        insight: 'Many recent studies have found high levels of bias when AI models make decisions about hiring, salary, loans, and sentencing. The ethical lens does not replace technical assessment — it runs alongside it.',
+        stat: '91% of AI models tested showed performance degradation over time once exposed to real-world data.',
+        article: 'The Right (and Wrong) Way for Leaders to Think About AI',
+        source: 'Fast Company'
+    },
+    '3.2': {
+        insight: 'Corrupted data at a single collection point can poison the outputs of every analytical tool downstream. As systems become more interconnected, the risk of cascade failures grows substantially.',
+        stat: 'A single AI system failure at one organization cascaded to affect supply chains across three continents.',
+        article: 'AI Cascade Failures: How to Protect Your Organization',
+        source: 'Fast Company'
+    },
+    '3.3': {
+        insight: "Once released, an AI model's weights can be copied and shared across borders more quickly than any physical weapon. Its marginal cost of replication is effectively zero. You cannot recall software the way you recall a defective drug.",
+        stat: 'Pharma-style regulation has been one of the most successful governance frameworks — but the model is insufficient for AI.',
+        article: "3 Reasons Why AI Regulations Shouldn't Follow the Pharma Model",
+        source: 'Fast Company'
+    },
+    '4.1': {
+        insight: 'AI promises to lift the burden of difficult work. But some decisions are important enough that we ought to feel their weight. It ought to take time to decide to deny a healthcare claim or halt a production line.',
+        stat: '20 seconds to approve a military strike. 1.2 seconds to deny a health insurance claim.',
+        article: 'Why Humanity Must Be in the AI Loop',
+        source: 'Fast Company'
+    },
+    '4.2': {
+        insight: 'Governance that lives only in a document is not governance. Embedding it into actual workflows — deployment gates, escalation protocols, reporting structures — is what makes it real.',
+        stat: "Taking ownership isn't just about accepting responsibility for errors — it's about recognizing and standing behind what you endorse.",
+        article: 'Your AI Use Policy Is Solving the Wrong Problem',
+        source: 'Fast Company'
+    },
+    '4.3': {
+        insight: 'Enterprise leaders who think about AI partnerships typically start and stop with technology vendors. This narrow view blinds them to the full spectrum of relationships that determine governance success or failure.',
+        stat: 'Ethics and oversight partners are becoming competitive differentiators when customers demand proof of responsible AI.',
+        article: 'If You Want to Get AI Right, Look Past the Technology',
+        source: 'Fast Company'
+    },
+    '4.4': {
+        insight: 'Reverse Improvement occurs when technological progress unintentionally diminishes core human skills and values. By embedding periodic reviews, leaders can balance progress with sustainable, human-centered growth.',
+        stat: "By embedding periodic reviews of AI's effectiveness, leaders can balance progress with sustainable growth.",
+        article: 'What Is Reverse Improvement?',
+        source: 'Fast Company'
+    }
+};
+
+
+var MILESTONES = {
+    '1.1': 'Baseline established — you now have a quantified picture of your AI exposure, risk tolerance, and existing controls.',
+    '1.2': 'AI landscape mapped — every system touching your organization is documented with ownership and governance status.',
+    '1.3': 'Risks surfaced — you have forced the hard conversations about what could go wrong, internally and externally.',
+    '1.4': 'Immediate actions identified — high-severity risks that cannot wait have been flagged with owners and deadlines.',
+    '1.5': 'Authority mapped — decision rights and governance culture are now visible, including the gaps.',
+    '2.1': 'Values defined — your ethical framework provides the foundation that all policies and decisions will build on.',
+    '2.2': 'Ownership assigned — responsible AI has a name, a mandate, and a RACI matrix to make it operational.',
+    '2.3': 'Rhythm set — the Risk Pulse and assessment thresholds ensure risks will not be left unattended between reviews.',
+    '2.4': 'Incentives aligned — governance metrics are tied to performance, and skills gaps have development plans.',
+    '3.1': 'Ethical lens applied — every risk has been examined through your ethical framework principles.',
+    '3.2': 'Risks scored — the LIT assessment gives you a rigorous, comparable measure of each risk\'s priority.',
+    '3.3': 'Risks classified — every scored risk now has a response classification: Manage, Monitor Enhanced, or Monitor.',
+    '4.1': 'Exit plans built — high-risk systems have documented shutdown procedures, owned and ready before they are needed.',
+    '4.2': 'Governance rhythm established — standing meetings, escalation protocols, and reporting are calendared.',
+    '4.3': 'Governance embedded — deployment gates, reassessment schedules, and integration points are operational.',
+    '4.4': 'First review complete — you\'ve assessed what\'s working, what needs improvement, and planned the next iteration.'
+};
+
+
+function go(page, step) {
+    moduleMenuOpen = false;
+    currentPage = page;
+    if (step) currentStep = step;
+    else currentStep = null;
+    currentPhase = null;
+    // Handle phase and outcome pages first (step is a phase ID or outcome ID, not a step ID)
+    if (page === 'phase') {
+        for (var i = 0; i < PH.length; i++) {
+            if (String(PH[i].id) === String(step)) {
+                currentPhase = PH[i];
+                currentStep = String(step);
+                break
+            }
+        }
+    } else if (page === 'outcome') {
+        currentStep = step;
+        for (var i = 0; i < PH.length; i++) {
+            if (PH[i].outcomes) {
+                for (var k = 0; k < PH[i].outcomes.length; k++) {
+                    if (PH[i].outcomes[k].id === step) {
+                        currentPhase = PH[i];
+                        break
+                    }
+                }
+            }
+            if (currentPhase) break;
+        }
+    } else if (currentStep) {
+        for (var i = 0; i < PH.length; i++) {
+            for (var j = 0; j < PH[i].steps.length; j++) {
+                if (PH[i].steps[j].id === currentStep) {
+                    currentPhase = PH[i];
+                    break
+                }
+            }
+            if (currentPhase) break;
+            if (PH[i].outcomes) {
+                for (var k = 0; k < PH[i].outcomes.length; k++) {
+                    if (PH[i].outcomes[k].id === currentStep) {
+                        currentPhase = PH[i];
+                        break
+                    }
+                }
+            }
+            if (currentPhase) break;
+        }
+    }
+    render();
+    var mc = document.getElementById('mainContent');
+    if (mc) mc.scrollTop = 0;
+    else window.scrollTo(0, 0);
+}
+
+function getRiskStages() {
+    var risks = data.risks || [];
+    var rc = data.riskClasses || {};
+    return {
+        identified: risks.filter(function(r) {
+            return !rc[r.id] && r.status !== 'resolved'
+        }).length,
+        assessed: risks.filter(function(r) {
+            return rc[r.id] && r.status !== 'resolved'
+        }).length,
+        managed: risks.filter(function(r) {
+            return rc[r.id] === 'manage' && r.status !== 'resolved'
+        }).length,
+        resolved: risks.filter(function(r) {
+            return r.status === 'resolved'
+        }).length
+    };
+}
+
+
+function getLitScore(riskId) {
+    var ls = (data.litScores || {})[riskId] || {};
+    return (ls.likelihood || 0) * (ls.importance || 0);
+}
+
+
+/* isStepDone replaced by module version below */
+
+function render() {
+    try {
+        if (!currentUser || !hasActiveSubscription() || !hasModuleEnabled()) return;
+        // Preserve unsaved form values before re-render
+        var _fc = {};
+        var _fields = document.querySelectorAll('input[id],textarea[id],select[id]');
+        for (var fi = 0; fi < _fields.length; fi++) {
+            var f = _fields[fi];
+            if (f.id) _fc[f.id] = f.value
+        }
+
+        var app = $('app'),
+            nt = $('navTabs'),
+            nr = $('navRight');
+        var pages = [{
+            id: 'modules',
+            l: 'Modules'
+        }, {
+            id: 'home',
+            l: 'Home'
+        }, {
+            id: 'learn',
+            l: 'Learn'
+        }, {
+            id: 'pipeline',
+            l: 'Framework'
+        }, {
+            id: 'phase5',
+            l: 'Risk Dashboard'
+        }, {
+            id: 'insights',
+            l: 'Insights'
+        }];
+        var th = '';
+        for (var i = 0; i < pages.length; i++) {
+            var p = pages[i];
+            var act = currentPage === p.id || (currentPage === 'step' && p.id === 'pipeline') || (currentPage === 'outcome' && p.id === 'pipeline') || (currentPage === 'phase' && p.id === 'pipeline') || (currentPage === 'overview' && p.id === 'pipeline');
+            th += p.id === 'modules' ? renderModuleDropdown(act) : '<button class="nav-tab' + (act ? ' active' : '') + '" onclick="go(\'' + p.id + '\')">' + p.l + '</button>'
+        }
+        nt.innerHTML = th;
+        nr.innerHTML = renderProfileMenu();
+        renderSidebar();
+        var h = '';
+        if (currentPage === 'home') h = renderHome();
+        else if (currentPage === 'learn') h = renderLearn();
+        else if (currentPage === 'pipeline') h = renderPipeline();
+        else if (currentPage === 'step') h = renderStep();
+        else if (currentPage === 'phase5') h = renderPhase5();
+        else if (currentPage === 'insights') h = renderInsights();
+        else if (currentPage === 'outcome') h = renderOutcomePage();
+        else if (currentPage === 'phase') h = renderPhaseLandingPage();
+        else if (currentPage === 'overview') h = renderModuleOverview();
+        app.innerHTML = h;
+
+        // Restore form values after re-render
+        for (var fk in _fc) {
+            var fe = document.getElementById(fk);
+            if (fe && !fe.value) fe.value = _fc[fk]
+        }
+
+        setTimeout(function() {
+            var els = document.querySelectorAll('.reveal');
+            for (var i = 0; i < els.length; i++) {
+                (function(el, d) {
+                    setTimeout(function() {
+                        el.classList.add('visible')
+                    }, d)
+                })(els[i], i * 60)
+            }
+        }, 50);
+        if (coachOpen) renderCoachPanel();
+        if (notesOpen) renderNotesPanel();
+        updateNotesCount();
+        updateVoiceUI();
+    } catch (e) {
+        $('app').innerHTML = '<div style="padding:120px 40px;color:#F87171;font-family:monospace"><h2>Error</h2><pre>' + e.message + '</pre></div>';
+        console.error(e)
+    }
+}
+
+function clearData() {
+    if (confirm('Reset all progress?')) {
+        localStorage.removeItem(localBackupKey());
+        data = emptyData();
+        if (typeof UI !== 'undefined') UI.activeView = null;
+        saveData();
+        render()
+    }
+}
+
+// === HOME ===
+function renderHome() {
+    var h = '<div class="hero"><div class="hero-bg"></div>';
+    h += '<div class="hero-left">';
+    h += '<div class="hero-eyebrow reveal">Next Chapter Academy &nbsp;·&nbsp; Faisal Hoque</div>';
+    h += '<h1 class="hero-headline reveal">90 Days to <em>Responsible AI Governance</em></h1>';
+    h += '<p class="hero-sub reveal">The gap between AI deployment and AI governance is where organizations get hurt. This framework transforms the aspiration into a defensible operating discipline — from honest exposure mapping through embedded oversight. <strong>The 90 days are the foundation. The discipline runs forever.</strong></p>';
+    h += '<div class="hero-btns reveal"><button class="btn-gold" onclick="go(\'pipeline\')">Start the Framework</button><button class="btn-ghost" onclick="go(\'learn\')">Read the Research</button></div>';
+    h += '</div>';
+    h += '<div class="hero-right"><div style="width:100%">';
+    var stats = [{
+            n: '01',
+            t: 'Map',
+            d: 'Assess AI exposure, map the landscape, catastrophize risks, triage, and map decision rights.'
+        },
+        {
+            n: '02',
+            t: 'Build',
+            d: 'Define ethical framework, assign ownership, set review cadence, align incentives and skills.'
+        },
+        {
+            n: '03',
+            t: 'Assess',
+            d: 'Apply ethical lens, score risks with LIT, classify and prioritize every identified risk.'
+        },
+        {
+            n: '04',
+            t: 'Embed',
+            d: 'Build exit plans, establish governance rhythm, embed into operations, run first review.'
+        },
+        {
+            n: '05',
+            t: 'Govern',
+            d: 'Ongoing: manage the live risk register with discipline that sustains.'
+        }
+    ];
+    for (var i = 0; i < stats.length; i++) {
+        var s = stats[i];
+        h += '<div class="reveal" style="display:flex;gap:24px;padding:20px 0;border-bottom:1px solid var(--rule)">' + '<div style="font-family:var(--serif);font-size:32px;font-weight:300;color:var(--gold);min-width:48px;line-height:1">' + s.n + '</div>' + '<div><div style="font-family:var(--serif);font-size:18px;font-weight:300;margin-bottom:4px;color:var(--paper)">' + s.t + '</div><div style="font-size:13px;color:var(--stone);line-height:1.6">' + s.d + '</div></div></div>'
+    }
+    h += '</div></div>';
+    h += '</div>';
+
+    h += '<div class="marquee-wrap"><div class="marquee-track">';
+    var mq = ['Map', 'Build', 'Assess', 'Embed', 'Govern', 'POSTi Framework', 'LIT Scoring', 'CARE Discipline', '90-Day Governance', 'Human Oversight', 'Risk Register', 'Exit Plans'];
+    for (var r = 0; r < 2; r++)
+        for (var i = 0; i < mq.length; i++) h += '<span class="marquee-item"><span class="marquee-dot"></span>' + mq[i] + '</span>';
+    h += '</div></div>';
+
+    h += '<div style="padding:100px 0;border-top:1px solid var(--rule)"><div class="wrap">';
+    h += '<div class="grid-2" style="gap:64px;align-items:center">';
+    h += '<div><div class="section-label reveal">Why This Matters</div><div class="pullquote reveal">Organizations don\'t fail at AI governance because of bad intentions. They fail because they treat governance as a compliance exercise rather than a structural discipline that sustains trust.<cite>— Faisal Hoque, Fast Company</cite></div></div>';
+    h += '<div class="grid-2" style="gap:16px">';
+    var cards = [{
+            t: 'Learn',
+            d: 'Research and articles behind every framework step.',
+            btn: 'Explore Library',
+            pg: 'learn'
+        },
+        {
+            t: 'Framework',
+            d: 'The full 90-day governance journey — step by step.',
+            btn: 'Begin Now',
+            pg: 'pipeline'
+        },
+        {
+            t: 'Risk Dashboard',
+            d: 'Your live risk register once governance is operational.',
+            btn: 'Open Dashboard',
+            pg: 'phase5'
+        },
+        {
+            t: 'From the Author',
+            d: 'faisalhoque.com — writing, speaking, and advisory work.',
+            btn: 'Visit Site',
+            url: 'https://faisalhoque.com'
+        }
+    ];
+    for (var i = 0; i < cards.length; i++) {
+        var c = cards[i];
+        var click = c.url ? 'window.open(\'' + c.url + '\')' : 'go(\'' + c.pg + '\')';
+        h += '<div class="card card-link reveal" style="padding:24px;display:flex;flex-direction:column;gap:12px;min-height:160px" onclick="' + click + '"><div style="font-family:var(--mono);font-size:var(--font-control);font-weight:var(--weight-readable);letter-spacing:.12em;text-transform:uppercase;color:var(--gold)">' + c.t + '</div><div style="font-family:var(--serif);font-size:18px;font-weight:300;line-height:1.3;flex:1">' + c.d + '</div><div class="card-arrow">' + c.btn + '</div></div>'
+    }
+    h += '</div></div></div></div>';
+    return h;
+}
+
+
+// === LEARN ===
+function renderLearn() {
+    var ARTICLES = [{
+            title: 'Here\'s How to Jump-Start Your Responsible AI Governance in 90 Days',
+            desc: 'The complete framework — mapping exposure, building ethical foundations, assessing risks, and embedding governance that lasts.',
+            url: 'https://www.fastcompany.com',
+            tag: 'Foundation · Fast Company'
+        },
+        {
+            title: 'Your AI Use Policy Is Solving the Wrong Problem',
+            desc: 'A use policy sits downstream from the values it formalizes. The mature approach moves past disclosure theater toward genuine accountability.',
+            url: 'https://www.fastcompany.com',
+            tag: 'Ethics · Fast Company'
+        },
+        {
+            title: 'The Looming AI Risk: Automating Middle Management',
+            desc: 'When AI makes decisions that humans should make, accountability disappears — and the consequences can be catastrophic.',
+            url: 'https://www.imd.org',
+            tag: 'Oversight · I by IMD'
+        },
+        {
+            title: 'AI Cascade Failures: How to Protect Your Organization',
+            desc: 'Why interconnected AI systems create compound risks that traditional frameworks never anticipated.',
+            url: 'https://www.fastcompany.com',
+            tag: 'Risk · Fast Company'
+        },
+        {
+            title: 'Why Humanity Must Be in the AI Loop',
+            desc: 'The human case for mandatory review of consequential AI decisions — from military strikes to healthcare claims.',
+            url: 'https://www.fastcompany.com',
+            tag: 'Governance · Fast Company'
+        },
+        {
+            title: 'Four Questions to Guide the Implementation of Responsible AI',
+            desc: 'The philosophical and practical foundations of an ethical AI framework for business.',
+            url: 'https://www.imd.org',
+            tag: 'Strategy · I by IMD'
+        },
+    ];
+    var BOOKS = [{
+            t: 'TRANSCEND',
+            a: 'Faisal Hoque',
+            d: 'USA Today & LA Times bestseller. Human potential in the age of machines.'
+        },
+        {
+            t: 'Reimagining Government (2026)',
+            a: 'Faisal Hoque et al.',
+            d: 'AI transformation in government contexts. Post Hill Press / Simon & Schuster.'
+        },
+        {
+            t: 'The Alignment Problem',
+            a: 'Brian Christian',
+            d: 'Why it is so hard to make AI systems do what we actually want.'
+        },
+        {
+            t: 'Atlas of AI',
+            a: 'Kate Crawford',
+            d: 'The real-world harms of AI systems and the power structures that enable them.'
+        },
+        {
+            t: 'Weapons of Math Destruction',
+            a: 'Cathy O\'Neil',
+            d: 'How big data increases inequality and threatens democracy through unaccountable algorithms.'
+        },
+        {
+            t: 'The Age of Surveillance Capitalism',
+            a: 'Shoshana Zuboff',
+            d: 'The commodification of human experience and the governance challenges it creates.'
+        },
+    ];
+    var h = '<div style="padding-top:100px"><div class="wrap" style="padding-top:48px;padding-bottom:100px">';
+    h += '<div class="section-label reveal">Research & Reading</div>';
+    h += '<div class="section-title reveal">Foundation <em>Reading</em></div>';
+    h += '<p class="section-body reveal" style="margin-bottom:48px">Every step in the 90-day governance framework is grounded in published research. Start with the anchor article — the others deepen each phase.</p>';
+    h += '<div class="grid-2" style="gap:16px;margin-bottom:80px">';
+    for (var i = 0; i < ARTICLES.length; i++) {
+        var a = ARTICLES[i];
+        h += '<a href="' + a.url + '" target="_blank" rel="noopener" class="card card-link reveal" style="padding:28px;display:flex;flex-direction:column;gap:12px;min-height:180px;text-decoration:none;color:inherit">';
+        h += '<div style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);letter-spacing:.15em;text-transform:uppercase;color:var(--gold)">' + a.tag + '</div>';
+        h += '<div style="font-family:var(--serif);font-size:20px;font-weight:300;line-height:1.3;flex:1">' + a.title + '</div>';
+        h += '<div style="font-size:13px;color:rgba(245,240,236,.72);line-height:1.6">' + a.desc + '</div>';
+        h += '<div class="card-arrow" style="margin-top:auto">Read Article</div>';
+        h += '</a>'
+    }
+    h += '</div>';
+    h += '<div class="section-label reveal">Books</div><div class="section-title reveal" style="margin-bottom:40px">Essential <em>Reading</em></div>';
+    h += '<div class="grid-2" style="gap:12px">';
+    for (var i = 0; i < BOOKS.length; i++) {
+        var b = BOOKS[i];
+        h += '<div class="card reveal" style="padding:24px;display:flex;gap:16px"><div style="font-family:var(--serif);font-size:32px;color:var(--gold);line-height:1">◈</div><div><div style="font-family:var(--serif);font-size:18px;font-weight:300">' + b.t + '</div><div style="font-family:var(--mono);font-size:var(--font-control);font-weight:var(--weight-readable);letter-spacing:.1em;color:var(--gold);margin:4px 0">' + b.a + '</div><div style="font-size:12px;color:var(--stone);line-height:1.6">' + b.d + '</div></div></div>'
+    }
+    h += '</div>';
+    var VIDEOS = [{
+            t: 'Why AI Governance Cannot Be Treated as a Compliance Exercise',
+            a: 'Faisal Hoque · IMD Business School',
+            d: 'How to build governance that sustains trust, not just satisfies auditors.',
+            url: 'https://www.imd.org',
+            dur: '18 min'
+        },
+        {
+            t: 'The Human Case for AI Oversight',
+            a: 'MIT Sloan Management Review',
+            d: 'Why decisions that matter need human weight behind them.',
+            url: 'https://sloanreview.mit.edu',
+            dur: '14 min'
+        },
+        {
+            t: 'Building an Ethical AI Framework',
+            a: 'Harvard Business Review',
+            d: 'From values to policies to enforcement — the practical path for business leaders.',
+            url: 'https://hbr.org',
+            dur: '16 min'
+        },
+        {
+            t: 'AI Risk Management for Business Leaders',
+            a: 'McKinsey Global Institute',
+            d: 'How leading organizations are mapping and managing AI risk portfolios.',
+            url: 'https://www.mckinsey.com',
+            dur: '20 min'
+        },
+        {
+            t: 'Responsible AI in Practice',
+            a: 'World Economic Forum',
+            d: 'Case studies from organizations that have embedded governance into operations.',
+            url: 'https://www.weforum.org',
+            dur: '15 min'
+        },
+        {
+            t: 'CONVERGENCE: The Governance Gap — Who Decides What AI Should Do?',
+            a: 'Faisal Hoque & Lauren Hawker Zafer',
+            d: 'The regulatory, organizational, and ethical dimensions of AI governance.',
+            url: '#',
+            dur: '22 min'
+        },
+    ];
+    h += '<div style="margin-top:80px"><div class="section-label reveal">Videos</div><div class="section-title reveal" style="margin-bottom:40px">Watch & <em>Apply</em></div>';
+    h += '<div class="grid-2" style="gap:12px">';
+    for (var i = 0; i < VIDEOS.length; i++) {
+        var v = VIDEOS[i];
+        h += '<a href="' + v.url + '" target="_blank" rel="noopener" class="card card-link reveal" style="padding:24px;display:flex;gap:16px;text-decoration:none;color:inherit">';
+        h += '<div style="width:40px;height:40px;border-radius:20px;background:rgba(30,110,110,.12);border:1px solid var(--rule);display:flex;align-items:center;justify-content:center;flex-shrink:0"><span style="font-size:12px;color:var(--ph1);margin-left:2px">▶</span></div>';
+        h += '<div style="flex:1"><div style="font-family:var(--serif);font-size:17px;font-weight:300;line-height:1.3;margin-bottom:4px">' + v.t + '</div>';
+        h += '<div style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);letter-spacing:.1em;color:var(--gold);margin-bottom:6px">' + v.a + ' · ' + v.dur + '</div>';
+        h += '<div style="font-size:12px;color:var(--stone);line-height:1.6">' + v.d + '</div></div>';
+        h += '</a>'
+    }
+    h += '</div></div>';
+    var PODCASTS = [{
+            t: 'CONVERGENCE: 90 Days to Responsible AI Governance',
+            a: 'Faisal Hoque & Lauren Hawker Zafer',
+            d: 'How organizations move from AI exposure to an operational governance discipline.',
+            url: '#',
+            tag: 'CONVERGENCE'
+        },
+        {
+            t: "CONVERGENCE: The Kidnapper's Ransom Paradox",
+            a: 'Faisal Hoque & Lauren Hawker Zafer',
+            d: 'When AI dependency creates organizational ransom situations — and how governance protects against it.',
+            url: '#',
+            tag: 'CONVERGENCE'
+        },
+        {
+            t: 'CONVERGENCE: Agentic Enterprise — Who Is Accountable?',
+            a: 'Faisal Hoque & Lauren Hawker Zafer',
+            d: "When AI agents act on your behalf, governance questions multiply. Who's responsible?",
+            url: '#',
+            tag: 'CONVERGENCE'
+        },
+        {
+            t: 'CONVERGENCE: The Governance Gap',
+            a: 'Faisal Hoque & Lauren Hawker Zafer',
+            d: "Who decides what AI should do? The rules haven't caught up. The market won't wait.",
+            url: '#',
+            tag: 'CONVERGENCE'
+        },
+        {
+            t: 'Hard Fork: AI Accountability',
+            a: 'New York Times',
+            d: 'How organizations, regulators, and individuals navigate AI accountability in practice.',
+            url: 'https://www.nytimes.com',
+            tag: 'External'
+        },
+        {
+            t: 'Lex Fridman: AI Safety and Alignment',
+            a: 'Lex Fridman Podcast',
+            d: 'Technical and philosophical perspectives on ensuring AI systems behave as intended.',
+            url: 'https://lexfridman.com',
+            tag: 'External'
+        },
+    ];
+    h += '<div style="margin-top:80px"><div class="section-label reveal">Podcasts</div><div class="section-title reveal" style="margin-bottom:40px">Listen & <em>Challenge</em></div>';
+    h += '<div class="grid-2" style="gap:12px">';
+    for (var i = 0; i < PODCASTS.length; i++) {
+        var p = PODCASTS[i];
+        var isConv = p.tag === 'CONVERGENCE';
+        h += '<a href="' + p.url + '" target="_blank" rel="noopener" class="card card-link reveal" style="padding:24px;display:flex;gap:16px;text-decoration:none;color:inherit' + (isConv ? ';border-color:rgba(30,110,110,.2);background:rgba(30,110,110,.03)' : '') + '">';
+        h += '<div style="width:40px;height:40px;border-radius:20px;background:rgba(184,137,42,.12);border:1px solid var(--rule);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🎙</div>';
+        h += '<div style="flex:1"><div style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);letter-spacing:.15em;color:' + (isConv ? 'var(--gold)' : 'var(--stone)') + ';text-transform:uppercase;margin-bottom:6px">' + p.tag + '</div>';
+        h += '<div style="font-family:var(--serif);font-size:17px;font-weight:300;line-height:1.3;margin-bottom:4px">' + p.t + '</div>';
+        h += '<div style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);letter-spacing:.08em;color:var(--stone);margin-bottom:6px">' + p.a + '</div>';
+        h += '<div style="font-size:12px;color:var(--stone);line-height:1.6">' + p.d + '</div></div>';
+        h += '</a>'
+    }
+    h += '</div></div>';
+    h += '</div></div>';
+    return h;
+}
+
+
+// === FRAMEWORK / PIPELINE ===
+function renderPipeline() {
+    var rs = getRiskStages();
+    var h = '<div style="padding-top:100px"><div class="wrap" style="padding-top:48px;padding-bottom:32px">';
+    h += '<div class="section-label reveal">The 90-Day Journey</div>';
+    h += '<div class="section-title reveal">Your <em>Governance Framework</em></div>';
+    h += '<p class="section-body reveal" style="margin-bottom:48px">Four phases of structured work, then ongoing governance. Each phase builds the infrastructure for the next. Work through every step in order — the sequence matters.</p>';
+    h += '<div class="pipe-viz reveal">';
+    var rStages = [{
+        n: 'Identified',
+        c: '#1E6E6E',
+        v: rs.identified
+    }, {
+        n: 'Assessed',
+        c: '#C8860A',
+        v: rs.assessed
+    }, {
+        n: 'Managed',
+        c: '#3D4F5C',
+        v: rs.managed
+    }, {
+        n: 'Resolved',
+        c: '#2A5A5A',
+        v: rs.resolved
+    }];
+    for (var i = 0; i < rStages.length; i++) {
+        var rs2 = rStages[i];
+        h += '<div class="pipe-stage" onclick="go(\'phase5\')">';
+        h += '<div class="pipe-stage-name" style="color:' + rs2.c + '">' + rs2.n + '</div>';
+        h += '<div class="pipe-stage-count" style="color:' + rs2.c + '">' + rs2.v + '</div>';
+        h += '<div style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--stone);margin-top:4px;letter-spacing:.08em">RISKS</div>';
+        h += '</div>'
+    }
+    h += '</div>';
+    h += '</div>';
+    h += '<div class="timeline-wrap reveal"><div class="wrap"><div class="timeline-phases">';
+    for (var i = 0; i < PH.length; i++) {
+        var ph = PH[i];
+        var stepsTotal = ph.steps.length;
+        var stepsDone = ph.steps.filter(function(s) {
+            return isStepDone(s.id)
+        }).length;
+        h += '<div class="timeline-phase" onclick="go(\'step\',\'' + ph.steps[0].id + '\')" style="border-top:3px solid ' + ph.color + '">';
+        h += '<div class="phase-num" style="color:' + ph.color + '">Phase ' + ph.id + ' · ' + ph.days + '</div>';
+        h += '<div class="phase-name" style="color:var(--paper)">' + ph.name + '</div>';
+        h += '<div class="phase-days">' + stepsDone + '/' + stepsTotal + ' complete</div>';
+        h += '<div class="phase-steps">';
+        for (var j = 0; j < ph.steps.length; j++) {
+            var s = ph.steps[j];
+            h += '<div style="color:' + (isStepDone(s.id) ? ph.color : 'var(--stone)') + '">' + s.icon + ' ' + s.name + '</div>'
+        }
+        h += '</div>';
+        h += '<div style="margin-top:16px"><button class="btn-ghost" style="font-size:var(--font-label);padding:6px 14px;border-color:' + ph.color + ';color:' + ph.color + '">Enter Phase →</button></div>';
+        h += '</div>'
+    }
+    h += '</div></div></div>';
+    h += '</div>';
+    return h;
+}
+
+
+// === STEP ===
+function renderStep() {
+    if (!currentStep) return renderPipeline();
+    var ph = currentPhase;
+    if (!ph) return renderPipeline();
+    var stepObj = null;
+    for (var j = 0; j < ph.steps.length; j++) {
+        if (ph.steps[j].id === currentStep) {
+            stepObj = ph.steps[j];
+            break
+        }
+    }
+    if (!stepObj) return renderPipeline();
+
+    var h = '<div class="content-area"><div class="content-inner">';
+    // Breadcrumb
+    h += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:32px">';
+    h += '<button class="btn-ghost" style="font-size:var(--font-label);padding:6px 14px" onclick="go(\'pipeline\')">← Pipeline</button>';
+    h += '<div style="font-family:var(--mono);font-size:var(--font-control);font-weight:var(--weight-readable);color:var(--stone);letter-spacing:.08em">Phase ' + ph.id + ' · ' + ph.name + ' <span style="color:var(--gold)">/ ' + stepObj.name + '</span></div>';
+    h += '</div>';
+
+    // Step nav
+    h += '<div class="step-nav">';
+    for (var j = 0; j < ph.steps.length; j++) {
+        var s = ph.steps[j];
+        var done = isStepDone(s.id);
+        h += '<button class="step-nav-btn' + (currentStep === s.id ? ' active' : '') + (done ? ' done' : '') + '" onclick="go(\'step\',\'' + s.id + '\')">' + s.name + '</button>'
+    }
+    h += '</div>';
+
+    // Step content (module renderer handles headers, context, milestones)
+    h += renderStepContent(currentStep);
+
+    // Milestone reward card
+    h += milestone(currentStep);
+
+    // Navigation
+    var allSteps = [];
+    for (var i = 0; i < PH.length; i++)
+        for (var j = 0; j < PH[i].steps.length; j++) allSteps.push(PH[i].steps[j]);
+    var curIdx = allSteps.findIndex(function(s) {
+        return s.id === currentStep
+    });
+    h += '<div style="display:flex;justify-content:space-between;margin-top:40px;padding-top:24px;border-top:1px solid var(--rule)">';
+    if (curIdx > 0) {
+        var prev = allSteps[curIdx - 1];
+        h += '<button class="btn-ghost" onclick="go(\'step\',\'' + prev.id + '\')">← ' + prev.name + '</button>'
+    } else {
+        h += '<div></div>'
+    }
+    if (curIdx < allSteps.length - 1) {
+        var next = allSteps[curIdx + 1];
+        h += '<button class="btn-gold" onclick="go(\'step\',\'' + next.id + '\')">' + next.name + ' →</button>'
+    }
+    h += '</div>';
+
+    h += '</div></div>';
+    return h;
+}
+
+// === STEP CONTENT ROUTER ===
+function renderStepContent(id) {
+    if (id === '1.1') return render11();
+    if (id === '1.2') return render12();
+    if (id === '1.3') return render13();
+    if (id === '1.4') return render14();
+    if (id === '1.5') return render15();
+    if (id === '2.1') return render21();
+    if (id === '2.2') return render22();
+    if (id === '2.3') return render23();
+    if (id === '2.4') return render24();
+    if (id === '3.1') return render31();
+    if (id === '3.2') return render32();
+    if (id === '3.3') return render33();
+    if (id === '4.1') return render41();
+    if (id === '4.2') return render42();
+    if (id === '4.3') return render43();
+    if (id === '4.4') return render44();
+    if (id === '5.0') return renderDashboardContent();
+    return '<p style="color:var(--stone)">Coming soon.</p>';
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   MODULE INTEGRATION — Re-skinned governance module functions
+   ═══════════════════════════════════════════════════════════════ */
+
+// UI state for module (sidebar, expand toggles, etc.)
+var UI = {
+    v: 'home',
+    prev: null,
+    sb: true,
+    ctxOpen: {},
+    showEx: {},
+    expanded: {},
+    editSys: null,
+    editRisk: null,
+    showSysForm: false,
+    showRiskForm: false,
+    activeRisk: null,
+    activeView: null,
+    triageActive: null,
+    abSec: '1.1a'
+};
+
+// === STATE MANAGEMENT (bridged to master) ===
+
+function goModule(v) {
+    if (v === 'home') go('overview');
+    else if (v.match(/^\d+\.\d/)) go('step', v);
+    else if (v.indexOf('out-') === 0) go('outcome', v);
+    else if (v.indexOf('phase-') === 0) {
+        var pid = v.split('-')[1];
+        go('phase', pid)
+    } else if (v === '5.0') go('phase5');
+    else go('pipeline');
+}
+
+function isRiskComplete(r) {
+    return r.name && r.description && r.category && r.severity
+}
+
+// === CONSTANTS ===
+var PC = {
+    map: '#1E6E6E',
+    build: '#8B4513',
+    assess: '#C8860A',
+    embed: '#3D4F5C',
+    govern: '#2A5A5A'
+};
+var TC = {
+    internal: '#2A7B6F',
+    external: '#A0522D'
+};
+var PHASES = [{
+        id: 1,
+        key: 'map',
+        name: 'Map',
+        color: '#1E6E6E',
+        days: 'Days 1\u201330',
+        steps: [{
+            id: '1.1',
+            name: 'Assessment Battery'
+        }, {
+            id: '1.2',
+            name: 'AI Landscape Inventory'
+        }, {
+            id: '1.3',
+            name: 'Catastrophize'
+        }, {
+            id: '1.4',
+            name: 'Triage'
+        }, {
+            id: '1.5',
+            name: 'Culture & Decision Rights'
+        }],
+        outcomes: [{
+            id: 'out-riskassess',
+            name: 'Risk Assessment Report'
+        }, {
+            id: 'out-riskreg',
+            name: 'Initial Risk Register'
+        }]
+    },
+    {
+        id: 2,
+        key: 'build',
+        name: 'Build',
+        color: '#8B4513',
+        days: 'Days 31\u201350',
+        steps: [{
+            id: '2.1',
+            name: 'Ethical Framework'
+        }, {
+            id: '2.2',
+            name: 'Ownership & Structure'
+        }, {
+            id: '2.3',
+            name: 'Risk Review Cadence'
+        }, {
+            id: '2.4',
+            name: 'Incentives & Skills'
+        }],
+        outcomes: [{
+            id: 'out-govready',
+            name: 'Governance Readiness'
+        }, {
+            id: 'out-raci2',
+            name: 'RACI Matrix'
+        }, {
+            id: 'out-ethicsdoc',
+            name: 'Ethical Framework Doc'
+        }]
+    },
+    {
+        id: 3,
+        key: 'assess',
+        name: 'Assess',
+        color: '#C8860A',
+        days: 'Days 51\u201370',
+        steps: [{
+            id: '3.1',
+            name: 'Apply Ethical Lens'
+        }, {
+            id: '3.2',
+            name: 'LIT Assessment'
+        }, {
+            id: '3.3',
+            name: 'Classify & Prioritize'
+        }],
+        outcomes: [{
+            id: 'out-assessedreg',
+            name: 'Assessed Risk Register'
+        }, {
+            id: 'out-riskclass',
+            name: 'Risk Classification'
+        }]
+    },
+    {
+        id: 4,
+        key: 'embed',
+        name: 'Embed',
+        color: '#3D4F5C',
+        days: 'Days 71\u201390',
+        steps: [{
+            id: '4.1',
+            name: 'Build Exit Plans'
+        }, {
+            id: '4.2',
+            name: 'Governance Rhythm'
+        }, {
+            id: '4.3',
+            name: 'Embed into Operations'
+        }, {
+            id: '4.4',
+            name: 'First Governance Review'
+        }],
+        outcomes: [{
+            id: 'out-govfw',
+            name: 'Governance Framework'
+        }, {
+            id: 'out-exitplans',
+            name: 'Exit Plan Portfolio'
+        }, {
+            id: 'out-updatedreg',
+            name: 'Updated Risk Register'
+        }]
+    },
+    {
+        id: 5,
+        key: 'govern',
+        name: 'Govern',
+        color: '#2A5A5A',
+        days: 'Ongoing',
+        steps: [{
+            id: '5.0',
+            name: 'Risk Dashboard'
+        }],
+        outcomes: []
+    }
+];
+
+var POSTI = [{
+        key: 'P',
+        name: 'Product',
+        color: '#C4553A',
+        desc: 'Risks to what you make and sell'
+    },
+    {
+        key: 'O',
+        name: 'Operational',
+        color: '#3A8B8B',
+        desc: 'Risks to how you run the business'
+    },
+    {
+        key: 'S',
+        name: 'Strategic',
+        color: '#8B6BAE',
+        desc: 'Risks to your competitive position and market'
+    },
+    {
+        key: 'T',
+        name: 'Technological',
+        color: '#D4963A',
+        desc: 'Risks from the technology itself'
+    },
+    {
+        key: 'i',
+        name: 'Intersectional',
+        color: '#6B7F8D',
+        desc: 'Compound risks spanning multiple categories'
+    }
+];
+
+var EXAMPLE_SYSTEMS = [{
+        id: 'sys-1',
+        name: 'AI-Powered Quoting Engine',
+        fn: 'Generates custom glass fabrication quotes using ML pricing model',
+        dataUsed: 'Historical quote data, material costs, labor rates, customer history',
+        peopleAffected: 'Sales team (5), customers (~200/month)',
+        owner: 'Sarah Kim',
+        govStatus: 'none',
+        isExternal: false
+    },
+    {
+        id: 'sys-2',
+        name: 'Computer Vision QC System',
+        fn: 'Inspects glass panels for defects using camera-based image recognition',
+        dataUsed: 'Production line images, defect classification training data',
+        peopleAffected: 'QC team (3), production workers (12)',
+        owner: 'James Okafor',
+        govStatus: 'none',
+        isExternal: false
+    },
+    {
+        id: 'sys-3',
+        name: 'Staff ChatGPT Usage',
+        fn: 'Multiple employees using ChatGPT for email drafting, research, and document summarization',
+        dataUsed: 'Unknown \u2014 employees may be sharing proprietary information',
+        peopleAffected: 'All staff (~35)',
+        owner: 'Unassigned',
+        govStatus: 'none',
+        isExternal: false
+    },
+    {
+        id: 'sys-4',
+        name: 'Supplier Demand Forecasting',
+        fn: 'Key glass supplier uses AI forecasting that determines delivery schedules and pricing',
+        dataUsed: 'Aurora\'s order history, market demand signals',
+        peopleAffected: 'Procurement (2), production planning',
+        owner: 'David Torres',
+        govStatus: 'none',
+        isExternal: true
+    }
+];
+
+var EXAMPLE_RISKS = [{
+        id: 'r-ex1',
+        systemId: 'sys-1',
+        name: 'Discriminatory Pricing',
+        description: 'The quoting engine may produce systematically different prices based on location or company size in ways that correlate with protected characteristics.',
+        category: 'P',
+        severity: 'high',
+        source: 'internal',
+        ethicalFlag: true,
+        ethicalDesc: 'Potential unfair treatment of customer segments',
+        status: 'identified'
+    },
+    {
+        id: 'r-ex2',
+        systemId: 'sys-3',
+        name: 'Confidential Data Leakage',
+        description: 'Employees pasting proprietary glass formulations, customer data, or financial information into ChatGPT without understanding data retention policies.',
+        category: 'T',
+        severity: 'high',
+        source: 'internal',
+        ethicalFlag: false,
+        ethicalDesc: '',
+        status: 'identified'
+    },
+    {
+        id: 'r-ex3',
+        systemId: null,
+        name: 'Competitor AI Disruption',
+        description: 'A major competitor deploys AI-driven custom glass design tools that allow customers to self-serve, eliminating the need for Aurora\'s consultative sales process.',
+        category: 'S',
+        severity: 'medium',
+        source: 'external',
+        ethicalFlag: false,
+        ethicalDesc: '',
+        status: 'identified'
+    },
+    {
+        id: 'r-ex4',
+        systemId: 'sys-2',
+        name: 'QC System Bias',
+        description: 'The vision system was trained primarily on clear glass samples and may miss defects in tinted or specialty glass.',
+        category: 'P',
+        severity: 'high',
+        source: 'internal',
+        ethicalFlag: true,
+        ethicalDesc: 'Product safety and customer trust implications',
+        status: 'identified'
+    },
+    {
+        id: 'r-ex5',
+        systemId: 'sys-4',
+        name: 'Supply Chain AI Dependency',
+        description: 'If the supplier\'s forecasting AI fails or is manipulated, Aurora could face sudden material shortages.',
+        category: 'O',
+        severity: 'medium',
+        source: 'external',
+        ethicalFlag: false,
+        ethicalDesc: '',
+        status: 'identified'
+    }
+];
+
+var STEP_CTX = {
+    '1.1': {
+        i: 'Every AI system deployed without an adequate governance framework creates reputational, legal, and operational risk right now.',
+        s: 'A recent survey of 750 CFOs projects roughly 500,000 AI-related job losses in 2026 alone.',
+        a: '90 Days to Responsible AI Governance',
+        src: 'Fast Company'
+    },
+    '1.2': {
+        i: 'When AI systems become joined up across organizations, they create the biggest risks. Networks of AI agents create the conditions for cascade failure.',
+        s: 'MIT\'s AI Incident Tracker reports a 47% increase in reported incidents between 2023 and 2024.',
+        a: 'AI Cascade Failures',
+        src: 'Fast Company'
+    },
+    '1.3': {
+        i: 'The gap between technological advancement and governance widens every day. With risks that take in anything up to and including the extinction of humanity, we cannot afford inertia.',
+        s: 'Stanford\'s AI Index puts the increase in serious AI harm incidents at 74% year-on-year.',
+        a: 'When It Comes to AI, Innovation Isn\'t Enough',
+        src: 'Fast Company'
+    },
+    '1.4': {
+        i: 'Organizations face a dual imperative that traditional risk frameworks were never designed to address: harness AI\'s potential while defending against AI-driven disruption.',
+        s: 'Defensive restructuring is already underway at many Fortune 500 companies.',
+        a: 'The Dual Challenge of AI',
+        src: 'I by IMD'
+    },
+    '1.5': {
+        i: 'A use policy sits downstream from the values it formalizes. The mature approach moves past disclosure theater toward genuine accountability.',
+        s: 'A major consulting firm submitted an error-ridden AI-generated report to the Australian government.',
+        a: 'Your AI Use Policy Is Solving the Wrong Problem',
+        src: 'Fast Company'
+    },
+    '2.1': {
+        i: 'Few businesses have the internal resources to navigate the complex philosophical territory involved in ensuring AI is used responsibly.',
+        s: 'A Stanford-Accenture survey found businesses expect responsible AI adoption to increase revenues by an average of 18%.',
+        a: 'Four Questions to Guide Responsible AI',
+        src: 'I by IMD'
+    },
+    '2.2': {
+        i: 'One doctor denied over 60,000 insurance claims in a single month. On average, physicians spent just 1.2 seconds on each case.',
+        s: 'Cigna\'s system denied certain insurance claims without any human review of the patient files.',
+        a: 'The Looming AI Risk: Automating Middle Management',
+        src: 'I by IMD'
+    },
+    '2.3': {
+        i: 'Successful AI transformation requires a well-balanced innovation portfolio \u2014 a deliberately diversified mix spanning different risk levels and time horizons.',
+        s: 'Leaders who prepare by tackling governance priorities won\'t just survive the AI revolution \u2014 they\'ll shape it.',
+        a: '7 Things Every Leader Must Do to Prepare for 2026',
+        src: 'Fast Company'
+    },
+    '2.4': {
+        i: 'Companies spend millions teaching employees to use AI tools, then wonder why transformation never happens. The underlying problem isn\'t just about skills.',
+        s: 'Culture transformation is harder than technology implementation.',
+        a: 'Three Myths That Undermine AI Success',
+        src: 'Fast Company'
+    },
+    '3.1': {
+        i: 'Many recent studies have found high levels of bias toward specific demographic groups when AI models make decisions about hiring, salary, loans, and sentencing.',
+        s: '91% of AI models tested showed performance degradation over time once exposed to real-world data.',
+        a: 'The Right (and Wrong) Way for Leaders to Think About AI',
+        src: 'Fast Company'
+    },
+    '3.2': {
+        i: 'Corrupted data at a single collection point can poison the outputs of every analytical tool downstream.',
+        s: 'A single AI system failure cascaded to affect supply chains across three continents.',
+        a: 'AI Cascade Failures',
+        src: 'Fast Company'
+    },
+    '3.3': {
+        i: 'Once released, an AI model\'s weights can be copied and shared across borders far more quickly than any physical weapon.',
+        s: 'Pharma-style regulation has been one of the most successful frameworks, but the model is insufficient for AI.',
+        a: '3 Reasons Why AI Regulations Shouldn\'t Follow the Pharma Model',
+        src: 'Fast Company'
+    },
+    '4.1': {
+        i: 'AI promises to lift the burden of difficult work. But some decisions are important enough that we ought to feel their weight.',
+        s: '20 seconds to approve a military strike. 1.2 seconds to deny a health insurance claim.',
+        a: 'Why Humanity Must Be in the AI Loop',
+        src: 'Fast Company'
+    },
+    '4.2': {
+        i: 'Once you have reviewed, edited, and approved AI-assisted work, it ceases to be AI output and becomes your human output.',
+        s: 'Taking ownership isn\'t just about accepting responsibility for errors.',
+        a: 'Your AI Use Policy Is Solving the Wrong Problem',
+        src: 'Fast Company'
+    },
+    '4.3': {
+        i: 'Enterprise leaders who think about AI partnerships typically start and stop with technology vendors. This narrow view blinds them.',
+        s: 'Ethics and oversight partners are becoming competitive differentiators.',
+        a: 'If You Want to Get AI Right, Look Past the Technology',
+        src: 'Fast Company'
+    },
+    '4.4': {
+        i: 'Reverse Improvement occurs when technological progress unintentionally diminishes core human skills and values.',
+        s: 'By embedding periodic reviews, leaders can balance progress with sustainable, human-centered growth.',
+        a: 'What Is Reverse Improvement?',
+        src: 'Fast Company'
+    }
+};
+
+var STEP_MILES = {
+    '1.1': 'Baseline established \u2014 you now have a quantified picture of your AI exposure, risk tolerance, and existing controls.',
+    '1.2': 'AI landscape mapped \u2014 every system touching your organization is documented with ownership and governance status.',
+    '1.3': 'Risks surfaced \u2014 you\'ve forced the hard conversations about what could go wrong.',
+    '1.4': 'Immediate actions identified \u2014 high-severity risks that can\'t wait have been flagged with owners and deadlines.',
+    '1.5': 'Authority mapped \u2014 decision rights and governance culture are now visible, including the gaps.',
+    '2.1': 'Values defined \u2014 your ethical framework provides the foundation that all policies and decisions will build on.',
+    '2.2': 'Ownership assigned \u2014 responsible AI has a name, a mandate, and a RACI matrix to make it operational.',
+    '2.3': 'Rhythm set \u2014 the Risk Pulse and assessment thresholds ensure risks won\'t be left unattended between reviews.',
+    '2.4': 'Incentives aligned \u2014 governance metrics are tied to performance, and skills gaps have development plans.',
+    '3.1': 'Ethical lens applied \u2014 every risk has been examined through your ethical framework principles.',
+    '3.2': 'Risks scored \u2014 the LIT assessment gives you a rigorous, comparable measure of each risk\'s priority.',
+    '3.3': 'Risks classified \u2014 every scored risk now has a response classification: Manage, Monitor Enhanced, or Monitor.',
+    '4.1': 'Exit plans built \u2014 high-risk systems have documented shutdown procedures, owned and ready before they\'re needed.',
+    '4.2': 'Governance rhythm established \u2014 standing meetings, escalation protocols, and reporting are calendared.',
+    '4.3': 'Governance embedded \u2014 deployment gates, reassessment schedules, and integration points are operational.',
+    '4.4': 'First review complete \u2014 you\'ve assessed what\'s working, what needs improvement, and planned the next iteration.'
+};
+
+var PHASE_DESCS = {
+    1: {
+        n: 'The first phase maps your AI exposure, surfaces risks through structured catastrophizing, and establishes governance baselines.',
+        arts: [{
+            t: '90 Days to Responsible AI Governance',
+            s: 'Fast Company'
+        }, {
+            t: 'AI Cascade Failures',
+            s: 'Fast Company'
+        }, {
+            t: 'The Dual Challenge of AI',
+            s: 'I by IMD'
+        }]
+    },
+    2: {
+        n: 'Build the governance infrastructure: ethical framework, ownership structure, review cadence, and the incentives and skills to sustain it.',
+        arts: [{
+            t: 'Four Questions to Guide Responsible AI',
+            s: 'I by IMD'
+        }, {
+            t: 'Three Myths That Undermine AI Success',
+            s: 'Fast Company'
+        }]
+    },
+    3: {
+        n: 'Apply your ethical framework to every risk, score them with the LIT assessment, and classify the response: Manage, Monitor Enhanced, or Monitor.',
+        arts: [{
+            t: 'The Right (and Wrong) Way for Leaders to Think About AI',
+            s: 'Fast Company'
+        }, {
+            t: '3 Reasons Why AI Regulations Shouldn\'t Follow the Pharma Model',
+            s: 'Fast Company'
+        }]
+    },
+    4: {
+        n: 'Embed governance into operations: exit plans, standing meetings, deployment gates, and the first review cycle.',
+        arts: [{
+            t: 'Why Humanity Must Be in the AI Loop',
+            s: 'Fast Company'
+        }, {
+            t: 'If You Want to Get AI Right, Look Past the Technology',
+            s: 'Fast Company'
+        }]
+    }
+};
+
+var STEP_FLOW = {
+    1: [{
+        id: '1.1',
+        icon: '\u25a3',
+        sh: 'Assess'
+    }, {
+        id: '1.2',
+        icon: '\u25c7',
+        sh: 'Map'
+    }, {
+        id: '1.3',
+        icon: '\u25ce',
+        sh: 'Catastrophize'
+    }, {
+        id: '1.4',
+        icon: '\u25a1',
+        sh: 'Triage'
+    }, {
+        id: '1.5',
+        icon: '\u25a4',
+        sh: 'Rights'
+    }],
+    2: [{
+        id: '2.1',
+        icon: '\u229e',
+        sh: 'Ethics'
+    }, {
+        id: '2.2',
+        icon: '\u29dc',
+        sh: 'Ownership'
+    }, {
+        id: '2.3',
+        icon: '\u21bb',
+        sh: 'Cadence'
+    }, {
+        id: '2.4',
+        icon: '\u2299',
+        sh: 'Skills'
+    }],
+    3: [{
+        id: '3.1',
+        icon: '\u2295',
+        sh: 'Ethical Lens'
+    }, {
+        id: '3.2',
+        icon: '\u22a1',
+        sh: 'LIT Score'
+    }, {
+        id: '3.3',
+        icon: '\u25a4',
+        sh: 'Classify'
+    }],
+    4: [{
+        id: '4.1',
+        icon: '\u25fb',
+        sh: 'Exit Plans'
+    }, {
+        id: '4.2',
+        icon: '\u25b3',
+        sh: 'Rhythm'
+    }, {
+        id: '4.3',
+        icon: '\u2197',
+        sh: 'Embed'
+    }, {
+        id: '4.4',
+        icon: '\u229f',
+        sh: 'Review'
+    }]
+};
+
+// === CLASSIFICATION HELPERS ===
+function getSignificance(l, i) {
+    if (!l || !i || l === 1 || i === 1) return 'low';
+    if (l >= 4 && i >= 4) return 'critical';
+    if ((l >= 4 && i >= 2) || (l >= 2 && i >= 4)) return 'high';
+    if (l >= 2 && i >= 2) return 'medium';
+    return 'low'
+}
+
+function sigLabel(s) {
+    return {
+        critical: 'Critical',
+        high: 'High',
+        medium: 'Medium',
+        low: 'Low'
+    } [s] || '\u2014'
+}
+
+function sigColor(s) {
+    return {
+        critical: '#9B2D3F',
+        high: '#D4A017',
+        medium: '#3A8B8B',
+        low: '#6B7F8D'
+    } [s] || '#999'
+}
+
+function getResponse(sig, cap) {
+    if (!sig || !cap) return '';
+    if (sig === 'critical') return 'manage';
+    if (sig === 'high') return cap <= 2 ? 'manage' : 'monitor-enhanced';
+    if (sig === 'medium') return cap <= 2 ? 'manage' : 'monitor';
+    return 'monitor'
+}
+
+function respLabel(r) {
+    return {
+        manage: 'Manage',
+        'monitor-enhanced': 'Monitor Enhanced',
+        monitor: 'Monitor'
+    } [r] || '\u2014'
+}
+
+function respColor(r) {
+    return {
+        manage: '#9B2D3F',
+        'monitor-enhanced': '#B5547A',
+        monitor: '#3A8B8B'
+    } [r] || '#999'
+}
+
+function explainClassification(sig, cap) {
+    if (sig === 'critical') return 'Critical significance (L\u22654 \xd7 I\u22654) \u2192 always requires active management.';
+    if (sig === 'high' && cap <= 2) return 'High significance + low response capacity (' + cap + '/5) \u2192 active management needed.';
+    if (sig === 'high') return 'High significance + adequate capacity (' + cap + '/5) \u2192 monitor with enhanced vigilance.';
+    if (sig === 'medium' && cap <= 2) return 'Medium significance + low capacity (' + cap + '/5) \u2192 active management needed.';
+    if (sig === 'medium') return 'Medium significance + adequate capacity (' + cap + '/5) \u2192 routine monitoring.';
+    return 'Low significance \u2192 routine monitoring.'
+}
+
+// Step completion
+function isStepDone(sid) {
+    var co = data.completedSteps || {};
+    var comp = data.completed || {};
+    if (sid === '1.1') return !!(comp['1.1a'] && comp['1.1b'] && comp['1.1c']);
+    if (sid === '1.2') return (data.systems || []).length > 0;
+    if (sid === '1.3') return (data.risks || []).length > 0;
+    if (sid === '1.4') return !!(co['1.4']);
+    if (sid === '1.5') return !!(co['1.5']);
+    if (sid === '5.0') return false;
+    return !!(co[sid] || comp[sid])
+}
+// === SHARED UI BUILDERS ===
+function badge(text, color) {
+    return '<span class="bg" style="background:' + color + '18;color:' + color + '">' + esc(text) + '</span>'
+}
+
+function card(inner, style) {
+    return '<div class="cd"' + (style ? ' style="' + style + '"' : '') + '>' + inner + '</div>'
+}
+
+function btn(label, onclick, color, style, disabled) {
+    return '<button onclick="' + esc(onclick || '') + '" style="padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:' + (disabled ? 'not-allowed' : 'pointer') + ';font-family:inherit;opacity:' + (disabled ? .5 : 1) + ';background:' + (color || '#1E6E6E') + ';color:#fff;border:none;' + (style || '') + '"' + (disabled ? ' disabled' : '') + '>' + label + '</button>'
+}
+
+function btnS(label, onclick, color, style) {
+    return '<button onclick="' + esc(onclick || '') + '" style="padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;background:transparent;color:' + (color || '#1E6E6E') + ';border:1px solid ' + (color || '#1E6E6E') + ';' + (style || '') + '">' + label + '</button>'
+}
+
+function btnG(label, onclick, style) {
+    return '<button onclick="' + esc(onclick || '') + '" style="padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;background:transparent;color:#8A8278;border:1px solid rgba(245,242,236,.12);' + (style || '') + '">' + label + '</button>'
+}
+
+function ta(label, id, val, ph, rows) {
+    return '<div style="margin-bottom:16px"><label style="font-size:13px;font-weight:600;color:#B09080;display:block;margin-bottom:6px">' + esc(label) + '</label><textarea id="' + id + '" rows="' + (rows || 3) + '" placeholder="' + esc(ph || '') + '" style="width:100%;padding:12px;border:1px solid rgba(245,242,236,.12);border-radius:8px;font-size:14px;font-family:inherit;line-height:1.6;resize:vertical;box-sizing:border-box">' + esc(val || '') + '</textarea></div>'
+}
+
+function inp(label, id, val, ph, type) {
+    return '<div style="margin-bottom:16px"><label style="font-size:13px;font-weight:600;color:#B09080;display:block;margin-bottom:6px">' + esc(label) + '</label><input type="' + (type || 'text') + '" id="' + id + '" value="' + esc(val || '') + '" placeholder="' + esc(ph || '') + '" style="width:100%;padding:10px 12px;border:1px solid rgba(245,242,236,.12);border-radius:8px;font-size:14px;font-family:inherit;box-sizing:border-box"/></div>'
+}
+
+function sel(label, id, val, opts) {
+    var h = '<div style="margin-bottom:16px"><label style="font-size:13px;font-weight:600;color:#B09080;display:block;margin-bottom:6px">' + esc(label) + '</label><select id="' + id + '" style="width:100%;padding:10px 12px;border:1px solid rgba(245,242,236,.12);border-radius:8px;font-size:14px;font-family:inherit;background:rgba(245,242,236,.03);box-sizing:border-box">';
+    opts.forEach(function(o) {
+        h += '<option value="' + esc(o.v) + '"' + (val === o.v ? ' selected' : '') + '>' + esc(o.l) + '</option>'
+    });
+    return h + '</select></div>'
+}
+
+function likert(label, id, val, lo, hi) {
+    var h = '<div style="margin-bottom:20px"><div style="font-size:14px;font-weight:var(--weight-readable);margin-bottom:8px">' + esc(label) + '</div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7);width:80px;text-align:right">' + esc(lo || 'Strongly Disagree') + '</span>';
+    for (var n = 1; n <= 5; n++) {
+        var s = val === n;
+        h += '<div onclick="likSet(\'' + id + '\',' + n + ')" style="width:32px;height:32px;border-radius:16px;border:2px solid ' + (s ? '#1E6E6E' : '#ddd') + ';background:' + (s ? '#1E6E6E' : '#fff') + ';color:' + (s ? '#fff' : '#999') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;font-weight:600;transition:all .15s">' + n + '</div>'
+    }
+    return h + '<span style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7);width:80px">' + esc(hi || 'Strongly Agree') + '</span></div></div>'
+}
+
+function likSet(path, n) {
+    var parts = path.split('.');
+    if (parts.length === 2) {
+        if (!data[parts[0]]) data[parts[0]] = {};
+        data[parts[0]][parts[1]] = n
+    } else if (parts.length === 1) data[parts[0]] = n;
+    saveData();
+    render()
+}
+
+function vp(code, title, dur) {
+    return '<div style="background:rgba(30,110,110,.06);border-radius:10px;padding:20px;margin-bottom:24px"><div style="display:flex;align-items:center;gap:12px"><div style="width:40px;height:40px;border-radius:20px;background:' + '#1E6E6E' + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px">\u25b6</div><div><div style="font-size:14px;font-weight:600">' + esc(title) + '</div>' + badge(code + ' \xb7 ' + dur, '#1E6E6E') + '</div></div></div>'
+}
+
+function exToggle(key, title, content) {
+    var open = UI.showEx[key];
+    return '<div style="margin-bottom:12px"><div onclick="UI.showEx[\'' + key + '\']=!UI.showEx[\'' + key + '\'];render()" style="display:flex;align-items:center;gap:8px;padding:12px 16px;background:rgba(245,242,236,.03);border-radius:8px;cursor:pointer;font-size:14px;font-weight:600"><span>' + (open ? '\u25be' : '\u25b8') + '</span>' + esc(title) + '</div>' + (open ? '<div style="padding-top:12px;padding-left:16px;padding-right:16px">' + content + '</div>' : '') + '</div>'
+}
+
+function ctxPanel(sid) {
+    var c = STEP_CTX[sid];
+    if (!c) return '';
+    var open = UI.ctxOpen[sid];
+    return '<div style="margin-bottom:20px"><div onclick="UI.ctxOpen[\'' + sid + '\']=!UI.ctxOpen[\'' + sid + '\'];render()" style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(245,242,236,.03);border-radius:' + (open ? '10px 10px 0 0' : '10px') + ';cursor:pointer;border:1px solid rgba(200,104,56,.15)"><span style="font-family:var(--mono);font-size:15px;color:var(--stone)">\u25c8</span><span style="font-size:13px;font-weight:600;color:#B09080;flex:1">Why This Matters</span><span style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.5)">' + (open ? '\u25be' : '\u25b8') + '</span></div>' + (open ? '<div style="padding:16px 20px;background:rgba(245,242,236,.03);border:1px solid rgba(200,104,56,.15);border-top:none;border-radius:0 0 10px 10px"><p style="font-size:13px;color:#c8bfb4;line-height:1.7;font-style:italic;margin-bottom:12px">\u201c' + esc(c.i) + '\u201d</p>' + (c.s ? '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(245,242,236,.04);border-radius:6px;margin-bottom:12px"><span style="font-family:var(--mono);font-size:13px;color:var(--stone)">\u25ce</span><span style="font-size:12px;color:#B09080">' + esc(c.s) + '</span></div>' : '') + '<div style="display:flex;align-items:center;gap:6px;font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)"><span style=\"font-family:var(--mono);font-size:var(--font-readable-sm);font-weight:var(--weight-readable);color:var(--stone)\">\u25b8</span><span style="font-weight:600">' + esc(c.a) + '</span><span>\xb7 ' + esc(c.src) + '</span></div></div>' : '') + '</div>'
+}
+
+function milestone(sid) {
+    var m = STEP_MILES[sid];
+    if (!m || !isStepDone(sid)) return '';
+    return '<div style="margin-top:16px;padding:14px 18px;background:rgba(27,107,90,.06);border:1px solid rgba(27,107,90,.2);border-radius:10px;display:flex;align-items:center;gap:12px"><div style="width:32px;height:32px;border-radius:16px;background:#1B6B5A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">\u2713</div><div><div style="font-size:12px;font-weight:700;color:#1B6B5A;text-transform:uppercase;letter-spacing:.5px">Milestone Reached</div><div style="font-size:13px;color:#B09080;line-height:1.5">' + esc(m) + '</div></div></div>'
+}
+
+function doneBtn(onclick, disabled, label, color) {
+    return '<div style="margin-top:20px">' + btn(label || 'Mark Complete', onclick, color || '#1E6E6E', 'width:100%;padding:14px;font-size:15px', disabled) + '</div>'
+}
+
+function postiTag(cat) {
+    var p = POSTI.find(function(x) {
+        return x.key === cat
+    });
+    return p ? badge(p.key + ' ' + p.name, p.color) : badge(cat || '\u2014', '#999')
+}
+
+function sevTag(sev) {
+    var c = sev === 'high' ? '#9B2D3F' : sev === 'medium' ? '#D4A017' : '#6B7F8D';
+    return badge(sev || '\u2014', c)
+}
+
+function trackTag(src) {
+    return badge(src === 'external' ? 'External' : 'Internal', src === 'external' ? TC.external : TC.internal)
+}
+// === RISK PIPELINE VISUALIZATION ===
+function riskViz(activeStage, navMap, customCounts) {
+    var risks = data.risks || [];
+    var counts = customCounts || {
+        identified: risks.filter(function(r) {
+            return !r.classification && (r.status === 'identified' || !r.status)
+        }).length,
+        assessed: risks.filter(function(r) {
+            return !r.classification && r.status === 'assessed'
+        }).length,
+        managed: risks.filter(function(r) {
+            return r.classification
+        }).length,
+        resolved: risks.filter(function(r) {
+            return r.status === 'resolved'
+        }).length
+    };
+    var stages = [{
+        key: 'identified',
+        label: 'Identified',
+        color: '#1E6E6E'
+    }, {
+        key: 'assessed',
+        label: 'Assessed',
+        color: '#C8860A'
+    }, {
+        key: 'managed',
+        label: 'Managed',
+        color: '#3D4F5C'
+    }, {
+        key: 'resolved',
+        label: 'Resolved',
+        color: '#2A5A5A'
+    }];
+    var W = 700,
+        H = 80,
+        sw = 160,
+        gap = 8,
+        startX = (W - stages.length * sw - (stages.length - 1) * gap) / 2;
+    var h = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;max-width:700px;display:block;margin:0 auto 20px">';
+    stages.forEach(function(s, i) {
+        var x = startX + i * (sw + gap);
+        var active = activeStage === s.key;
+        var count = counts[s.key] || 0;
+        var empty = count === 0;
+        var nav = navMap && navMap[s.key];
+        h += '<g' + (nav ? ' onclick="goModule(\'' + nav + '\')" style="cursor:pointer"' : '') + '>' +
+            '<polygon points="' + x + ',10 ' + (x + sw - 15) + ',10 ' + (x + sw) + ',40 ' + (x + sw - 15) + ',70 ' + x + ',70 ' + (x + 15) + ',40" fill="' + s.color + '" opacity="' + (active ? 1 : empty ? .4 : .6) + '"' + (active ? ' stroke="#000" stroke-width="1.5"' : '') + '/>' +
+            '<text x="' + (x + sw / 2) + '" y="35" text-anchor="middle" fill="#fff" font-size="12" font-weight="700" font-family="DM Sans">' + s.label + '</text>' +
+            '<text x="' + (x + sw / 2) + '" y="52" text-anchor="middle" fill="#fff" font-size="12" font-family="DM Sans" opacity="0.9">' + count + ' item' + (count !== 1 ? 's' : '') + '</text></g>'
+    });
+    return h + '</svg>'
+}
+
+// === VISUALIZATIONS (Pass B) ===
+function vizRadar() {
+    var ab = data.assessmentBattery || {};
+    var exp = ab.aiExposure || {};
+    var tol = ab.riskTolerance || {};
+    var ctrl = ab.existingControls || {};
+    var eSpec = [exp.directCriticality, exp.thirdPartyDependency, exp.adoptionPace].filter(function(v) {
+        return v
+    });
+    var tSpec = [tol.innovVsSecurity, tol.decisionAccuracy, tol.downtimeTolerance, tol.biasTolerance, tol.jobImpact, tol.customerAutonomy].filter(function(v) {
+        return v
+    });
+    var cSpec = [ctrl.policyAdherence, ctrl.oversightEffectiveness, ctrl.reviewFrequency].filter(function(v) {
+        return v
+    });
+    var axes = [{
+        label: 'AI Exposure',
+        value: eSpec.length ? (eSpec.reduce(function(a, b) {
+            return a + b
+        }, 0) / eSpec.length) : 0
+    }, {
+        label: 'Risk Tolerance',
+        value: tSpec.length ? (tSpec.reduce(function(a, b) {
+            return a + b
+        }, 0) / tSpec.length) : 0
+    }, {
+        label: 'Existing Controls',
+        value: cSpec.length ? (cSpec.reduce(function(a, b) {
+            return a + b
+        }, 0) / cSpec.length) : 0
+    }];
+    if (axes.every(function(a) {
+            return a.value === 0
+        })) return '';
+    var cx = 150,
+        cy = 130,
+        R = 90,
+        n = 3,
+        PI = Math.PI;
+    var pts = axes.map(function(a, i) {
+        var angle = (PI * 2 * i / n) - PI / 2;
+        var r = R * (a.value / 5);
+        return {
+            x: cx + r * Math.cos(angle),
+            y: cy + r * Math.sin(angle),
+            lx: cx + (R + 20) * Math.cos(angle),
+            ly: cy + (R + 20) * Math.sin(angle),
+            l: a.label,
+            v: a.value
+        }
+    });
+    var svg = '<svg viewBox="0 0 300 260" style="width:100%;max-width:360px;display:block;margin:0 auto">';
+    [1, 2, 3, 4, 5].forEach(function(lv) {
+        var gp = axes.map(function(_, i) {
+            var angle = (PI * 2 * i / n) - PI / 2;
+            var r = R * (lv / 5);
+            return (cx + r * Math.cos(angle)) + ',' + (cy + r * Math.sin(angle))
+        }).join(' ');
+        svg += '<polygon points="' + gp + '" fill="none" stroke="#e8e8e8" stroke-width="1"/>'
+    });
+    axes.forEach(function(_, i) {
+        var angle = (PI * 2 * i / n) - PI / 2;
+        svg += '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + R * Math.cos(angle)) + '" y2="' + (cy + R * Math.sin(angle)) + '" stroke="#e8e8e8" stroke-width="1"/>'
+    });
+    svg += '<polygon points="' + pts.map(function(p) {
+        return p.x + ',' + p.y
+    }).join(' ') + '" fill="' + '#1E6E6E' + '30" stroke="' + '#1E6E6E' + '" stroke-width="2"/>';
+    pts.forEach(function(p) {
+        svg += '<circle cx="' + p.x + '" cy="' + p.y + '" r="4" fill="' + '#1E6E6E' + '"/>'
+    });
+    pts.forEach(function(p) {
+        svg += '<text x="' + p.lx + '" y="' + p.ly + '" text-anchor="middle" font-size="12" font-weight="600" fill="#B09080" font-family="DM Sans">' + p.l + '</text><text x="' + p.lx + '" y="' + (p.ly + 12) + '" text-anchor="middle" font-size="12" font-weight="700" fill="' + '#1E6E6E' + '" font-family="DM Sans">' + p.v.toFixed(1) + '/5</text>'
+    });
+    svg += '</svg>';
+    return card('<h3 style="font-size:16px;font-weight:700;margin:0 0 4px">Assessment Profile</h3>' + svg, 'margin-top:20px;padding:20px')
+}
+
+function vizSystems() {
+    var systems = data.systems || [];
+    if (!systems.length) return '';
+    var int = systems.filter(function(s) {
+        return !s.isExternal
+    });
+    var ext = systems.filter(function(s) {
+        return s.isExternal
+    });
+    var govStatus = {
+        none: 0,
+        partial: 0,
+        governed: 0
+    };
+    systems.forEach(function(s) {
+        govStatus[s.govStatus || 'none']++
+    });
+    var h = '<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">AI Systems Overview</h3>';
+    h += '<div style="display:flex;gap:12px;margin-bottom:16px"><div style="flex:1;text-align:center;padding:12px;background:rgba(27,107,90,.08);border-radius:8px;border:1px solid rgba(27,107,90,.2)"><div style="font-size:24px;font-weight:800;color:' + TC.internal + '">' + int.length + '</div><div style="font-size:var(--font-readable-sm);color:' + TC.internal + ';font-weight:600">Internal</div></div><div style="flex:1;text-align:center;padding:12px;background:rgba(160,82,45,.08);border-radius:8px;border:1px solid rgba(160,82,45,.2)"><div style="font-size:24px;font-weight:800;color:' + TC.external + '">' + ext.length + '</div><div style="font-size:var(--font-readable-sm);color:' + TC.external + ';font-weight:600">External</div></div></div>';
+    h += '<div style="display:flex;gap:8px;margin-bottom:8px">';
+    [{
+        k: 'none',
+        l: 'No Governance',
+        c: '#9B2D3F'
+    }, {
+        k: 'partial',
+        l: 'Partial',
+        c: '#D4A017'
+    }, {
+        k: 'governed',
+        l: 'Governed',
+        c: '#1B6B5A'
+    }].forEach(function(g) {
+        h += '<div style="flex:1;text-align:center;padding:8px;border-radius:6px;background:' + g.c + '10;border:1px solid ' + g.c + '30"><div style="font-size:16px;font-weight:700;color:' + g.c + '">' + govStatus[g.k] + '</div><div style="font-size:var(--font-control);color:' + g.c + '">' + g.l + '</div></div>'
+    });
+    h += '</div>';
+    systems.forEach(function(s) {
+        h += '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(245,242,236,.06);font-size:13px">' + trackTag(s.isExternal ? 'external' : 'internal') + ' <span style="font-weight:600;flex:1">' + esc(s.name) + '</span><span style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">' + esc(s.owner) + '</span></div>'
+    });
+    return card(h, 'margin-top:20px')
+}
+
+function vizHeatMap() {
+    var risks = data.risks || [];
+    if (!risks.length) return '';
+    var cats = {};
+    POSTI.forEach(function(p) {
+        cats[p.key] = {
+            high: 0,
+            medium: 0,
+            low: 0
+        }
+    });
+    risks.forEach(function(r) {
+        if (r.category && r.severity && cats[r.category]) cats[r.category][r.severity]++
+    });
+    var h = '<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">Risk Heat Map</h3>';
+    h += '<div style="display:grid;grid-template-columns:80px repeat(' + POSTI.length + ',1fr);gap:2px">';
+    h += '<div></div>';
+    POSTI.forEach(function(p) {
+        h += '<div style="text-align:center;font-size:var(--font-control);font-weight:700;color:' + p.color + ';padding:6px">' + p.key + '</div>'
+    });
+    ['high', 'medium', 'low'].forEach(function(sev) {
+        var sevC = sev === 'high' ? '#9B2D3F' : sev === 'medium' ? '#D4A017' : '#6B7F8D';
+        h += '<div style="font-size:var(--font-readable-sm);font-weight:600;color:' + sevC + ';padding:6px;display:flex;align-items:center">' + sev.charAt(0).toUpperCase() + sev.slice(1) + '</div>';
+        POSTI.forEach(function(p) {
+            var c = cats[p.key][sev];
+            var intensity = c === 0 ? 'rgba(245,242,236,.03)' : c === 1 ? (sevC + '20') : c >= 2 ? (sevC + '40') : (sevC + '60');
+            h += '<div style="text-align:center;padding:10px;background:' + intensity + ';border-radius:4px;font-size:14px;font-weight:700;color:' + (c > 0 ? sevC : 'rgba(138,130,120,.25)') + '">' + c + '</div>'
+        })
+    });
+    h += '</div>';
+    return card(h, 'margin-top:20px')
+}
+
+function vizTriageSummary() {
+    var risks = data.risks || [],
+        triage = data.triage || {};
+    var immediate = risks.filter(function(r) {
+        return (triage[r.id] || {}).action === 'immediate'
+    });
+    var monitor = risks.filter(function(r) {
+        return (triage[r.id] || {}).action === 'monitor'
+    });
+    var accept = risks.filter(function(r) {
+        return (triage[r.id] || {}).action === 'accept'
+    });
+    var unTriaged = risks.filter(function(r) {
+        return !(triage[r.id] || {}).action
+    });
+    if (!risks.length) return '';
+    var h = '<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">Triage Summary</h3>';
+    h += '<div style="display:flex;gap:12px;margin-bottom:12px">';
+    [{
+        l: 'Immediate',
+        c: immediate.length,
+        cl: '#9B2D3F'
+    }, {
+        l: 'Monitor',
+        c: monitor.length,
+        cl: '#D4A017'
+    }, {
+        l: 'Accept',
+        c: accept.length,
+        cl: '#3A8B8B'
+    }, {
+        l: 'Untriaged',
+        c: unTriaged.length,
+        cl: '#999'
+    }].forEach(function(g) {
+        h += '<div style="flex:1;text-align:center;padding:12px;background:' + g.cl + '10;border-radius:8px;border:1px solid ' + g.cl + '30"><div style="font-size:20px;font-weight:800;color:' + g.cl + '">' + g.c + '</div><div style="font-size:var(--font-control);color:' + g.cl + ';font-weight:600">' + g.l + '</div></div>'
+    });
+    h += '</div>';
+    return card(h, 'margin-top:20px')
+}
+
+function vizEthicsWheel() {
+    var ef = data.ethicalFramework || {};
+    var sections = [{
+        k: 'fairness',
+        l: 'Fairness',
+        c: '#C4553A'
+    }, {
+        k: 'humanOversight',
+        l: 'Human Oversight',
+        c: '#3A8B8B'
+    }, {
+        k: 'workforceImpact',
+        l: 'Workforce Impact',
+        c: '#8B6BAE'
+    }, {
+        k: 'societalEffects',
+        l: 'Societal Effects',
+        c: '#D4963A'
+    }, {
+        k: 'transparency',
+        l: 'Transparency',
+        c: '#6B7F8D'
+    }];
+    var done = sections.filter(function(s) {
+        return ef[s.k]
+    }).length;
+    if (done === 0) return '';
+    var cx = 120,
+        cy = 120,
+        R = 80,
+        n = 5,
+        PI = Math.PI;
+    var svg = '<svg viewBox="0 0 240 240" style="width:100%;max-width:260px;display:block;margin:0 auto">';
+    sections.forEach(function(s, i) {
+        var a1 = (PI * 2 * i / n) - PI / 2;
+        var a2 = (PI * 2 * (i + 1) / n) - PI / 2;
+        var filled = !!ef[s.k];
+        svg += '<path d="M ' + cx + ' ' + cy + ' L ' + (cx + R * Math.cos(a1)) + ' ' + (cy + R * Math.sin(a1)) + ' A ' + R + ' ' + R + ' 0 0 1 ' + (cx + R * Math.cos(a2)) + ' ' + (cy + R * Math.sin(a2)) + ' Z" fill="' + (filled ? s.c + '40' : s.c + '10') + '" stroke="' + s.c + '" stroke-width="' + (filled ? 2 : 1) + '"/>';
+        var mid = (a1 + a2) / 2;
+        svg += '<text x="' + (cx + (R * 0.6) * Math.cos(mid)) + '" y="' + (cy + (R * 0.6) * Math.sin(mid)) + '" text-anchor="middle" font-size="12" font-weight="600" fill="' + s.c + '" font-family="DM Sans">' + (filled ? '\u2713' : '\u25cb') + '</text>'
+    });
+    svg += '<text x="' + cx + '" y="' + (cy - 4) + '" text-anchor="middle" font-size="18" font-weight="800" fill="#F5F2EC" font-family="DM Sans">' + done + '</text><text x="' + cx + '" y="' + (cy + 12) + '" text-anchor="middle" font-size="12" fill="rgba(138,130,120,.7)" font-family="DM Sans">of ' + n + '</text></svg>';
+    var legend = sections.map(function(s) {
+        return '<span style="font-size:var(--font-readable-sm);color:' + s.c + '"><strong>' + (ef[s.k] ? '\u2713' : '\u25cb') + '</strong> ' + s.l + '</span>'
+    }).join(' \xb7 ');
+    return card('<h3 style="font-size:16px;font-weight:700;margin:0 0 8px">Ethical Framework</h3>' + svg + '<div style="text-align:center;margin-top:8px">' + legend + '</div>', 'margin-top:20px')
+}
+
+function vizLITScatter() {
+    var risks = data.risks || [];
+    var scored = risks.filter(function(r) {
+        return r.litL && r.litI
+    });
+    if (!scored.length) return '';
+    var W = 400,
+        H = 300,
+        pad = 40;
+    var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;max-width:420px;display:block;margin:0 auto">';
+    svg += '<rect x="' + pad + '" y="10" width="' + (W - pad - 10) + '" height="' + (H - pad - 10) + '" fill="rgba(245,242,236,.04)" stroke="rgba(245,242,236,.06)" rx="4"/>';
+    for (var g = 1; g <= 5; g++) {
+        var x = pad + (g - 1) * ((W - pad - 10) / 4);
+        var y = 10 + (5 - g) * ((H - pad - 10) / 4);
+        svg += '<line x1="' + pad + '" y1="' + y + '" x2="' + (W - 10) + '" y2="' + y + '" stroke="rgba(245,242,236,.06)" stroke-width="1"/><text x="' + (pad - 8) + '" y="' + (y + 4) + '" text-anchor="end" font-size="12" fill="rgba(138,130,120,.5)" font-family="DM Sans">' + g + '</text>';
+        svg += '<line x1="' + x + '" y1="10" x2="' + x + '" y2="' + (H - pad) + '" stroke="rgba(245,242,236,.06)" stroke-width="1"/><text x="' + x + '" y="' + (H - pad + 16) + '" text-anchor="middle" font-size="12" fill="rgba(138,130,120,.5)" font-family="DM Sans">' + g + '</text>'
+    }
+    svg += '<text x="' + (W / 2) + '" y="' + (H - 5) + '" text-anchor="middle" font-size="12" fill="#8A8278" font-family="DM Sans">Likelihood</text>';
+    svg += '<text x="12" y="' + (H / 2 - 10) + '" text-anchor="middle" font-size="12" fill="#8A8278" font-family="DM Sans" transform="rotate(-90,12,' + (H / 2 - 10) + ')">Importance</text>';
+    scored.forEach(function(r) {
+        var px = pad + (r.litL - 1) * ((W - pad - 10) / 4);
+        var py = 10 + (5 - r.litI) * ((H - pad - 10) / 4);
+        var cat = POSTI.find(function(p) {
+            return p.key === r.category
+        });
+        var c = cat ? cat.color : '#888';
+        svg += '<circle cx="' + px + '" cy="' + py + '" r="8" fill="' + c + '" opacity="0.8" stroke="#fff" stroke-width="1.5" style="cursor:pointer" onclick="goModule(\'3.3\')"/><title>' + esc(r.name) + ' (L:' + r.litL + ' I:' + r.litI + ')</title>'
+    });
+    svg += '</svg>';
+    return card('<h3 style="font-size:16px;font-weight:700;margin:0 0 8px">LIT Scatter Plot</h3><p style="font-size:12px;color:rgba(138,130,120,.7);margin-bottom:8px">Each dot represents a risk, positioned by Likelihood (x) and Importance (y).</p>' + svg, 'margin-top:20px')
+}
+
+function vizSigMatrix() {
+    var risks = data.risks || [];
+    var classified = risks.filter(function(r) {
+        return r.classification
+    });
+    if (!classified.length) return '';
+    var manage = classified.filter(function(r) {
+        return r.classification === 'manage'
+    });
+    var monEnh = classified.filter(function(r) {
+        return r.classification === 'monitor-enhanced'
+    });
+    var monitor = classified.filter(function(r) {
+        return r.classification === 'monitor'
+    });
+    var h = '<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">Classification Summary</h3>';
+    h += '<div style="display:flex;gap:12px;margin-bottom:16px">';
+    [{
+        l: 'Manage',
+        c: manage.length,
+        cl: '#9B2D3F'
+    }, {
+        l: 'Monitor Enhanced',
+        c: monEnh.length,
+        cl: '#B5547A'
+    }, {
+        l: 'Monitor',
+        c: monitor.length,
+        cl: '#3A8B8B'
+    }].forEach(function(g) {
+        h += '<div style="flex:1;text-align:center;padding:14px;background:' + g.cl + '10;border-radius:8px;border:2px solid ' + g.cl + '30"><div style="font-size:28px;font-weight:800;color:' + g.cl + '">' + g.c + '</div><div style="font-size:var(--font-readable-sm);color:' + g.cl + ';font-weight:600">' + g.l + '</div></div>'
+    });
+    h += '</div>';
+    classified.forEach(function(r) {
+        h += '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(245,242,236,.06);font-size:13px">' + badge(respLabel(r.classification), respColor(r.classification)) + ' <span style="font-weight:600;flex:1">' + esc(r.name) + '</span>' + (r.litComposite ? '<span style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">LIT: ' + r.litComposite + '/15</span>' : '') + '</div>'
+    });
+    return card(h, 'margin-top:20px')
+}
+
+function vizExitHealth() {
+    var systems = data.systems || [],
+        risks = data.risks || [],
+        exitPlans = data.exitPlans || {};
+    if (!systems.length) return '';
+    var h = '<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">Exit Readiness</h3>';
+    systems.forEach(function(s) {
+        var plan = exitPlans[s.id] || {};
+        var sysRisks = risks.filter(function(r) {
+            return r.systemId === s.id
+        });
+        var highRisks = sysRisks.filter(function(r) {
+            return r.severity === 'high' || r.classification === 'manage'
+        });
+        var hasPlan = plan.exitTriggers && plan.shutdownSequence;
+        var hasDirector = !!plan.exitDirector;
+        var status = hasPlan && hasDirector ? 'ready' : hasPlan || hasDirector ? 'partial' : 'none';
+        var statusC = status === 'ready' ? '#1B6B5A' : status === 'partial' ? '#D4A017' : '#9B2D3F';
+        h += '<div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid rgba(245,242,236,.06);border-radius:8px;margin-bottom:8px;border-left:4px solid ' + statusC + '">' +
+            '<div style="width:36px;height:36px;border-radius:18px;background:' + statusC + '18;color:' + statusC + ';display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">' + (status === 'ready' ? '\u2713' : status === 'partial' ? '\u25cb' : '\u2717') + '</div>' +
+            '<div style="flex:1"><div style="font-size:14px;font-weight:600">' + esc(s.name) + '</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">' + sysRisks.length + ' risks' + (highRisks.length ? ' (' + highRisks.length + ' high)' : '') + '</div></div>' +
+            badge(status === 'ready' ? 'Exit Ready' : status === 'partial' ? 'Partial' : 'No Plan', statusC) + '</div>'
+    });
+    return card(h, 'margin-top:20px')
+}
+
+function vizTimeline(currentPhase) {
+    var phaseRanges = [{
+        id: 1,
+        start: 0,
+        end: 30,
+        name: 'Map',
+        color: '#1E6E6E'
+    }, {
+        id: 2,
+        start: 31,
+        end: 50,
+        name: 'Build',
+        color: '#8B4513'
+    }, {
+        id: 3,
+        start: 51,
+        end: 65,
+        name: 'Assess',
+        color: '#C8860A'
+    }, {
+        id: 4,
+        start: 66,
+        end: 90,
+        name: 'Embed',
+        color: '#3D4F5C'
+    }];
+    var sd = new Date(data.startDate || new Date().toISOString().split('T')[0]);
+    var today = new Date();
+    var daysSince = Math.max(0, Math.floor((today - sd) / (1000 * 60 * 60 * 24)));
+    var progress = Math.min(100, Math.max(0, (daysSince / 90) * 100));
+    var phProg = function(pid) {
+        var p = PHASES.find(function(x) {
+            return x.id === pid
+        });
+        if (!p) return 0;
+        var d = p.steps.filter(function(s) {
+            return isStepDone(s.id)
+        }).length;
+        return p.steps.length ? Math.round(d / p.steps.length * 100) : 0
+    };
+    var h = '<div style="margin-bottom:24px"><div style="background:rgba(245,242,236,.03);border:1px solid rgba(245,242,236,.08);border-radius:10px;padding:16px 20px">';
+    h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><div style="font-size:12px;font-weight:700;color:rgba(138,130,120,.7);text-transform:uppercase;letter-spacing:1px">90-Day Timeline</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">Day ' + Math.min(90, daysSince) + ' of 90</div></div>';
+    h += '<div style="display:flex;margin-bottom:6px">';
+    phaseRanges.forEach(function(p) {
+        var w = ((p.end - p.start) / 90) * 100;
+        h += '<div onclick="goModule(\'phase-' + p.id + '\')" style="width:' + w + '%;text-align:center;cursor:pointer;padding:2px 0"><div style="font-size:var(--font-readable-sm);font-weight:700;color:' + (currentPhase === p.id ? p.color : '#666') + '">' + p.name + '</div><div style="font-size:var(--font-label);color:rgba(138,130,120,.6)">Days ' + (p.start === 0 ? 1 : p.start) + '\u2013' + p.end + '</div></div>'
+    });
+    h += '</div><div style="position:relative;height:10px;margin-bottom:6px;background:rgba(245,242,236,.06);border-radius:5px">';
+    phaseRanges.forEach(function(p) {
+        var left = (p.start / 90) * 100;
+        var w = ((p.end - p.start) / 90) * 100;
+        var pp = phProg(p.id);
+        h += '<div style="position:absolute;top:0;left:' + left + '%;width:' + w + '%;height:10px;border-radius:' + (p.id === 1 ? '5px 0 0 5px' : p.id === 4 ? '0 5px 5px 0' : '0') + '"><div style="height:100%;width:' + pp + '%;background:' + p.color + ';border-radius:' + (p.id === 1 ? '5px 0 0 5px' : p.id === 4 && pp === 100 ? '0 5px 5px 0' : '0') + ';transition:width .3s"></div></div>'
+    });
+    h += '<div style="position:absolute;top:-3px;left:' + progress + '%;width:3px;height:16px;background:#333;border-radius:2px;z-index:3;transition:left .3s"></div></div>';
+    h += '<div style="display:flex">';
+    phaseRanges.forEach(function(p) {
+        var w = ((p.end - p.start) / 90) * 100;
+        var pp = phProg(p.id);
+        h += '<div onclick="goModule(\'phase-' + p.id + '\')" style="width:' + w + '%;text-align:center;cursor:pointer;padding:2px 0"><div style="font-size:var(--font-control);color:' + (pp === 100 ? '#1B6B5A' : '#888') + ';font-weight:' + (pp === 100 ? 700 : 400) + '">' + pp + '%</div></div>'
+    });
+    h += '</div></div></div>';
+    return h
+}
+// === SIDEBAR + TOPBAR + HOME + PHASE LANDING ===
+
+function renderPhaseLanding(phaseId) {
+    var p = PHASES.find(function(x) {
+        return x.id === phaseId
+    });
+    if (!p) return '';
+    var desc = PHASE_DESCS[phaseId] || {};
+    var flow = STEP_FLOW[phaseId] || [];
+    var done = p.steps.filter(function(s) {
+        return isStepDone(s.id)
+    }).length;
+    var total = p.steps.length;
+    var pct = total ? Math.round(done / total * 100) : 0;
+
+    var h = vizTimeline(phaseId);
+    h += '<div style="display:flex;align-items:center;gap:16px;margin-bottom:24px"><div style="width:64px;height:64px;border-radius:32px;background:' + p.color + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;flex-shrink:0">' + phaseId + '</div><div><div style="display:flex;align-items:center;gap:8px"><h1 style="font-size:24px;font-weight:800;margin:0">' + p.name + '</h1>' + badge(p.days, p.color) + '</div><p style="color:#8A8278;font-size:14px;line-height:1.5;margin:6px 0 0">' + esc(desc.n || '') + '</p></div></div>';
+
+    // Progress bar + step flow
+    h += card('<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="font-size:17px;font-weight:700;margin:0">Progress</h3>' + badge(done + '/' + total + ' steps \xb7 ' + pct + '%', pct === 100 ? '#1B6B5A' : p.color) + '</div><div style="height:8px;background:rgba(245,242,236,.06);border-radius:4px;overflow:hidden;margin-bottom:16px"><div style="height:100%;width:' + pct + '%;background:' + (pct === 100 ? '#1B6B5A' : p.color) + ';border-radius:4px;transition:width .3s"></div></div><div style="display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap">' + flow.map(function(s, i) {
+        var d = isStepDone(s.id);
+        var r = '<div onclick="goModule(\'' + s.id + '\')" style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:8px 12px;border-radius:8px;background:' + (d ? '#f0f8f0' : 'transparent') + ';min-width:70px"><div style="width:36px;height:36px;border-radius:18px;background:' + (d ? '#1B6B5A' : p.color + '20') + ';color:' + (d ? '#fff' : p.color) + ';display:flex;align-items:center;justify-content:center;font-size:16px;border:2px solid ' + (d ? '#1B6B5A' : p.color) + '">' + (d ? '\u2713' : s.icon) + '</div><div style="font-size:var(--font-control);font-weight:600;color:' + (d ? '#1B6B5A' : '#666') + ';text-align:center">' + s.sh + '</div></div>';
+        if (i < flow.length - 1) r += '<div style="width:24px;height:2px;background:' + (d && isStepDone(flow[i + 1].id) ? '#1B6B5A' : '#ddd') + ';margin-top:-12px;flex-shrink:0"></div>';
+        return r
+    }).join('') + '</div>', 'margin-bottom:24px');
+
+    // Steps + Outcomes grid
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px"><div><div style="font-size:12px;font-weight:700;color:rgba(138,130,120,.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Steps</div>';
+    p.steps.forEach(function(s) {
+        var d = isStepDone(s.id);
+        h += '<div onclick="goModule(\'' + s.id + '\')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(245,242,236,.03);border:1px solid rgba(245,242,236,.08);border-radius:8px;margin-bottom:6px;cursor:pointer;border-left:3px solid ' + (d ? '#1B6B5A' : p.color) + '"><div style="width:20px;height:20px;border-radius:10px;background:' + (d ? '#1B6B5A' : p.color + '20') + ';color:' + (d ? '#fff' : p.color) + ';display:flex;align-items:center;justify-content:center;font-size:var(--font-control);font-weight:700;flex-shrink:0">' + (d ? '\u2713' : s.id.split('.')[1]) + '</div><span style="font-size:13px;font-weight:600;color:' + (d ? '#1B6B5A' : '#333') + ';flex:1">' + s.name + '</span></div>'
+    });
+    h += '</div><div><div style="font-size:12px;font-weight:700;color:rgba(138,130,120,.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Outcomes</div>';
+    (p.outcomes || []).forEach(function(o) {
+        h += '<div onclick="goModule(\'' + o.id + '\')" style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(245,242,236,.03);border:1px solid rgba(245,242,236,.08);border-radius:8px;margin-bottom:6px;cursor:pointer;border-left:3px solid ' + p.color + '"><span style="font-size:13px;font-weight:600;flex:1">' + o.name + '</span><span style="color:rgba(138,130,120,.7);font-size:12px">\u2192</span></div>'
+    });
+    h += '</div></div>';
+
+    // Articles
+    if (desc.arts) {
+        h += card('<div style="font-size:12px;font-weight:700;color:rgba(138,130,120,.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Recommended Reading</div>' + desc.arts.map(function(a) {
+            return '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(245,242,236,.03);border-radius:6px;margin-bottom:4px"><span style="font-family:var(--mono);font-size:13px;color:var(--stone)">\u25b8</span><span style="font-size:12px;font-weight:600">' + esc(a.t) + '</span><span style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">\xb7 ' + esc(a.s) + '</span></div>'
+        }).join(''), 'margin-bottom:24px')
+    }
+
+    // Completion
+    if (pct === 100) {
+        var msg = phaseId === 1 ? 'You\'ve mapped your AI landscape, surfaced risks, and established governance baselines.' : phaseId === 2 ? 'Your governance infrastructure is in place.' : phaseId === 3 ? 'Risks assessed, scored, and classified.' : 'Governance embedded into operations.';
+        var next = phaseId < 4 ? 'phase-' + (phaseId + 1) : '5.0';
+        h += card('<div style="text-align:center"><div style="font-family:var(--mono);font-size:22px;margin-bottom:8px;color:var(--stone)">\u25c8</div><h3 style="font-size:17px;font-weight:700;margin:0 0 4px">Phase ' + phaseId + ' Complete</h3><p style="font-size:13px;color:#B09080">' + esc(msg) + '</p>' + btn(phaseId < 4 ? 'Continue to Phase ' + (phaseId + 1) + ' \u2192' : 'Go to Risk Dashboard \u2192', 'goModule(\'' + next + '\')', p.color, 'margin-top:12px') + '</div>', 'background:rgba(27,107,90,.06);border:2px solid #1B6B5A')
+    }
+    return h
+}
+// === PHASE 1 STEPS ===
+
+// 1.1 Assessment Battery (3 sub-sections: a=Exposure, b=Tolerance, c=Controls)
+function render11() {
+    var ab = data.assessmentBattery || {};
+    var exp = ab.aiExposure || {};
+    var tol = ab.riskTolerance || {};
+    var ctrl = ab.existingControls || {};
+    var sec = UI.abSec || '1.1a';
+    var co = data.completed || {};
+    var secs = [{
+        id: '1.1a',
+        l: 'AI Exposure',
+        c: !!co['1.1a']
+    }, {
+        id: '1.1b',
+        l: 'Risk Tolerance',
+        c: !!co['1.1b']
+    }, {
+        id: '1.1c',
+        l: 'Existing Controls',
+        c: !!co['1.1c']
+    }];
+    var h = vp('V-1.1', 'Assessment Battery', '3\u20135 min') + ctxPanel('1.1');
+    h += '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Step 1.1: Assessment Battery</h2><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:0 0 20px">Complete all three sections to establish your governance baseline.</p>';
+    h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px">';
+    secs.forEach(function(s) {
+        h += '<button onclick="UI.abSec=\'' + s.id + '\';render()" style="padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:' + (sec === s.id ? '2px solid ' + '#1E6E6E' : '1px solid #ddd') + ';background:' + (s.c ? '#e8f5f0' : '#fff') + ';color:' + (sec === s.id || s.c ? '#1E6E6E' : '#666') + '">' + (s.c ? '\u2713' : '\u25cb') + ' ' + s.l + '</button>'
+    });
+    h += '</div>';
+
+    if (sec === '1.1a') {
+        h += '<h3 style="font-size:17px;font-weight:700;margin:0 0 4px">1.1a AI Exposure Assessment</h3><p style="color:rgba(138,130,120,.7);font-size:13px;margin:0 0 20px;line-height:1.5">Map how AI currently touches your organization. Score each area 1\u20135.</p>';
+        h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 8px">Direct AI Usage</h3>' + ta('What AI systems or tools does your organization currently use?', 'exp_currentSystems', exp.currentSystems, 'List all AI systems, including shadow usage...') + likert('How critical are AI systems to core operations?', 'assessmentBattery.aiExposure.directCriticality', exp.directCriticality, 'Not critical', 'Mission-critical') + ta('Which departments or functions use AI?', 'exp_departments', exp.departments, 'e.g., Sales, Production, IT...') + ta('What customer-facing services involve AI?', 'exp_customerFacing', exp.customerFacing, 'e.g., Automated quoting, chatbots...'));
+        h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 8px">Indirect AI Exposure</h3>' + ta('Which suppliers or partners use AI that affects your operations?', 'exp_supplierAI', exp.supplierAI, 'e.g., Demand forecasting by key suppliers...') + likert('How dependent are you on third-party AI systems?', 'assessmentBattery.aiExposure.thirdPartyDependency', exp.thirdPartyDependency, 'No dependency', 'Highly dependent') + ta('What data do you share with external AI systems?', 'exp_dataShared', exp.dataShared, 'e.g., Order history, customer details...'));
+        h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 8px">Future AI Exposure</h3>' + ta('What AI implementations are planned for the next 12\u201324 months?', 'exp_planned', exp.planned, 'e.g., Predictive maintenance, automated scheduling...') + likert('How aggressively is your organization pursuing AI adoption?', 'assessmentBattery.aiExposure.adoptionPace', exp.adoptionPace, 'Very cautious', 'Very aggressive') + ta('What regulatory changes affecting AI are on your horizon?', 'exp_regulatory', exp.regulatory, 'e.g., EU AI Act, industry-specific regulations...'));
+        h += exToggle('aurora_exp', 'Aurora Windows \u2014 AI Exposure Example', card('<p style="font-size:13px;line-height:1.7;color:#B09080"><strong>Direct:</strong> AI-Powered Quoting Engine (Sales), Computer Vision QC (Production), staff using ChatGPT informally. Criticality: 3/5.</p><p style="font-size:13px;line-height:1.7;color:#B09080;margin-top:8px"><strong>Indirect:</strong> Primary glass supplier uses AI demand forecasting. Dependency: 4/5.</p><p style="font-size:13px;line-height:1.7;color:#B09080;margin-top:8px"><strong>Future:</strong> Exploring predictive maintenance, AI-assisted custom glass design. Adoption pace: 3/5.</p>', 'background:rgba(245,242,236,.03);border:1px solid #e8e8e4'));
+        h += co['1.1a'] ? '<div style="text-align:center;padding:16px;color:#1B6B5A;font-weight:600">\u2713 Section Complete</div>' : doneBtn('saveAB11a()', false, 'Mark Complete', '#1E6E6E')
+    }
+
+    if (sec === '1.1b') {
+        h += '<h3 style="font-size:17px;font-weight:700;margin:0 0 4px">1.1b Risk Tolerance Assessment</h3><p style="color:rgba(138,130,120,.7);font-size:13px;margin:0 0 20px;line-height:1.5">Understand your organization\'s appetite for AI-related risk.</p>';
+        h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 8px">Strategic Risk Posture</h3>' + likert('Where does your organization sit on the innovation vs. security spectrum?', 'assessmentBattery.riskTolerance.innovVsSecurity', tol.innovVsSecurity, 'Security-first', 'Innovation-first') + sel('Which best describes your AI implementation approach?', 'tol_implApproach', tol.implApproach, [{
+            v: '',
+            l: 'Select...'
+        }, {
+            v: 'early',
+            l: 'Early adopter'
+        }, {
+            v: 'fast',
+            l: 'Fast follower'
+        }, {
+            v: 'late',
+            l: 'Late adopter'
+        }, {
+            v: 'mixed',
+            l: 'Mixed \u2014 depends on use case'
+        }]));
+        h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 8px">Operational Risk Thresholds</h3>' + likert('What accuracy level is acceptable for AI-driven decisions?', 'assessmentBattery.riskTolerance.decisionAccuracy', tol.decisionAccuracy, 'Must be near-perfect', 'Comfortable with error') + likert('How much system downtime is acceptable?', 'assessmentBattery.riskTolerance.downtimeTolerance', tol.downtimeTolerance, 'Zero tolerance', 'Hours acceptable') + likert('What is your tolerance for algorithmic bias?', 'assessmentBattery.riskTolerance.biasTolerance', tol.biasTolerance, 'Zero tolerance', 'Some bias acceptable'));
+        h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 8px">Human Impact Tolerance</h3>' + likert('How willing to accept AI-driven changes to jobs and roles?', 'assessmentBattery.riskTolerance.jobImpact', tol.jobImpact, 'Very resistant', 'Fully willing') + likert('Comfort with AI making customer decisions without human review?', 'assessmentBattery.riskTolerance.customerAutonomy', tol.customerAutonomy, 'Always human review', 'Full AI autonomy'));
+        h += exToggle('aurora_tol', 'Aurora Windows \u2014 Risk Tolerance Example', card('<p style="font-size:13px;line-height:1.7;color:#B09080"><strong>Strategic:</strong> Fast follower (3/5). Margaret wants to be competitive but not reckless.</p><p style="font-size:13px;line-height:1.7;color:#B09080;margin-top:8px"><strong>Operational:</strong> Low tolerance for quoting errors (2/5). Zero downtime during production.</p><p style="font-size:13px;line-height:1.7;color:#B09080;margin-top:8px"><strong>Human Impact:</strong> Will not replace roles without retraining (2/5). Moderate comfort with AI customer decisions if human escalation exists (3/5).</p>', 'background:rgba(245,242,236,.03);border:1px solid #e8e8e4'));
+        h += co['1.1b'] ? '<div style="text-align:center;padding:16px;color:#1B6B5A;font-weight:600">\u2713 Section Complete</div>' : doneBtn('saveAB11b()', false, 'Mark Complete', '#1E6E6E')
+    }
+
+    if (sec === '1.1c') {
+        h += '<h3 style="font-size:17px;font-weight:700;margin:0 0 4px">1.1c Existing Controls Assessment</h3><p style="color:rgba(138,130,120,.7);font-size:13px;margin:0 0 20px;line-height:1.5">Audit the governance and control structures already in place.</p>';
+        h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 8px">Policies & Frameworks</h3>' + ta('Does your organization have an AI use policy?', 'ctrl_aiPolicy', ctrl.aiPolicy, 'e.g., No formal policy / Basic guidelines / Comprehensive...') + ta('What data governance or privacy policies are in place?', 'ctrl_dataPolicy', ctrl.dataPolicy, 'e.g., GDPR compliance, data classification...') + likert('How well are existing policies understood and followed?', 'assessmentBattery.existingControls.policyAdherence', ctrl.policyAdherence, 'Poorly understood', 'Well embedded'));
+        h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 8px">Oversight Mechanisms</h3>' + ta('Who currently has oversight responsibility for AI systems?', 'ctrl_oversightRoles', ctrl.oversightRoles, 'e.g., IT Manager by default, no formal assignment...') + likert('How effective is current AI oversight?', 'assessmentBattery.existingControls.oversightEffectiveness', ctrl.oversightEffectiveness, 'No oversight', 'Robust oversight') + ta('What incident response procedures exist for AI failures?', 'ctrl_incidentResponse', ctrl.incidentResponse, 'e.g., None specific to AI / General IT incident process...'));
+        h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 8px">Review & Audit</h3>' + likert('How regularly are AI systems reviewed?', 'assessmentBattery.existingControls.reviewFrequency', ctrl.reviewFrequency, 'Never', 'Regularly') + ta('Has your organization ever conducted an AI audit?', 'ctrl_auditHistory', ctrl.auditHistory, 'e.g., Never / Once informally / Regularly...'));
+        h += exToggle('aurora_ctrl', 'Aurora Windows \u2014 Existing Controls Example', card('<p style="font-size:13px;line-height:1.7;color:#B09080"><strong>Policies:</strong> No AI-specific policy. General IT acceptable use policy doesn\'t mention AI. Adherence: 2/5.</p><p style="font-size:13px;line-height:1.7;color:#B09080;margin-top:8px"><strong>Oversight:</strong> Sarah Kim oversees AI by default but no formal mandate. Effectiveness: 2/5.</p><p style="font-size:13px;line-height:1.7;color:#B09080;margin-top:8px"><strong>Review:</strong> No formal AI audit ever conducted. Frequency: 1/5.</p>', 'background:rgba(245,242,236,.03);border:1px solid #e8e8e4'));
+        h += co['1.1c'] ? '<div style="text-align:center;padding:16px;color:#1B6B5A;font-weight:600">\u2713 Section Complete</div>' : doneBtn('saveAB11c()', false, 'Mark Complete \u2014 proceed to Step 1.2', '#1E6E6E')
+    }
+
+    if (secs.every(function(s) {
+            return s.c
+        })) h += vizRadar();
+    return h
+}
+
+function saveABFields(prefix, base, fields) {
+    fields.forEach(function(f) {
+        var v = val(prefix + '_' + f);
+        if (v) {
+            if (!data.assessmentBattery) data.assessmentBattery = {};
+            if (!data.assessmentBattery[base]) data.assessmentBattery[base] = {};
+            data.assessmentBattery[base][f] = v
+        }
+    })
+}
+
+function saveAB11a() {
+    saveABFields('exp', 'aiExposure', ['currentSystems', 'departments', 'customerFacing', 'supplierAI', 'dataShared', 'planned', 'regulatory']);
+    if (!data.completed) data.completed = {};
+    data.completed['1.1a'] = true;
+    UI.abSec = '1.1b';
+    saveData();
+    render()
+}
+
+function saveAB11b() {
+    if (!data.assessmentBattery) data.assessmentBattery = {};
+    if (!data.assessmentBattery.riskTolerance) data.assessmentBattery.riskTolerance = {};
+    data.assessmentBattery.riskTolerance.implApproach = val('tol_implApproach');
+    if (!data.completed) data.completed = {};
+    data.completed['1.1b'] = true;
+    UI.abSec = '1.1c';
+    saveData();
+    render()
+}
+
+function saveAB11c() {
+    saveABFields('ctrl', 'existingControls', ['aiPolicy', 'dataPolicy', 'oversightRoles', 'incidentResponse', 'auditHistory']);
+    if (!data.completed) data.completed = {};
+    data.completed['1.1c'] = true;
+    saveData();
+    render()
+}
+
+// 1.2 AI Landscape Inventory
+function render12() {
+    var systems = data.systems || [];
+    var h = vp('V-1.2', 'AI Landscape Inventory', '3\u20135 min') + ctxPanel('1.2');
+    h += '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Step 1.2: AI Landscape Inventory</h2><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:0 0 20px">Document every AI system that touches your organization \u2014 internal, external, formal, and shadow.</p>';
+    // Load examples button
+    if (!systems.length) h += '<div style="margin-bottom:20px">' + btn('Load Aurora Example Systems', 'loadExampleSystems()', '#1E6E6E', 'font-size:13px') + ' ' + btnS('+ Add System', 'UI.showSysForm=true;UI.editSys=null;render()', '#1E6E6E', 'font-size:13px') + '</div>';
+    else h += '<div style="margin-bottom:20px">' + btnS('+ Add System', 'UI.showSysForm=true;UI.editSys=null;render()', '#1E6E6E', 'font-size:13px') + '</div>';
+    if (UI.showSysForm) h += renderSystemForm();
+    // System list
+    var intSys = systems.filter(function(s) {
+        return !s.isExternal
+    });
+    var extSys = systems.filter(function(s) {
+        return s.isExternal
+    });
+    if (intSys.length) {
+        h += '<h3 style="font-size:15px;font-weight:700;color:' + TC.internal + ';margin:0 0 12px">Internal Systems (' + intSys.length + ')</h3>';
+        intSys.forEach(function(s, i) {
+            h += renderSystemCard(s)
+        })
+    }
+    if (extSys.length) {
+        h += '<h3 style="font-size:15px;font-weight:700;color:' + TC.external + ';margin:16px 0 12px">External Systems (' + extSys.length + ')</h3>';
+        extSys.forEach(function(s) {
+            h += renderSystemCard(s)
+        })
+    }
+    h += vizSystems();
+    return h
+}
+
+function renderSystemCard(s) {
+    return card('<div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><h4 style="font-size:14px;font-weight:700;margin:0">' + esc(s.name) + '</h4>' + trackTag(s.isExternal ? 'external' : 'internal') + badge(s.govStatus === 'governed' ? 'Governed' : s.govStatus === 'partial' ? 'Partial' : 'No Gov', s.govStatus === 'governed' ? '#1B6B5A' : s.govStatus === 'partial' ? '#D4A017' : '#9B2D3F') + '</div><p style="font-size:12px;color:#8A8278;margin:4px 0">' + esc(s.fn) + '</p><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7);margin-top:4px"><strong>Data:</strong> ' + esc(s.dataUsed) + ' \xb7 <strong>Affected:</strong> ' + esc(s.peopleAffected) + ' \xb7 <strong>Owner:</strong> ' + esc(s.owner) + '</div></div><div style="display:flex;gap:4px">' + btnG('Edit', 'editSystem(\'' + s.id + '\')', 'font-size:var(--font-readable-sm);padding:4px 10px') + btnG('\u00d7', 'removeSystem(\'' + s.id + '\')', 'font-size:var(--font-readable-sm);padding:4px 8px;color:#9B2D3F') + '</div></div>', 'margin-bottom:10px')
+}
+
+function renderSystemForm() {
+    var s = UI.editSys ? ((data.systems || []).find(function(x) {
+        return x.id === UI.editSys
+    }) || {}) : {
+        name: '',
+        fn: '',
+        dataUsed: '',
+        peopleAffected: '',
+        owner: '',
+        govStatus: 'none',
+        isExternal: false
+    };
+    return card('<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">' + (UI.editSys ? 'Edit System' : 'Add New System') + '</h3>' +
+        inp('System Name', 'sf_name', s.name, 'e.g., Predictive Maintenance Model') +
+        ta('What does this system do?', 'sf_fn', s.fn, 'Describe its function and purpose...') +
+        ta('What data does it use?', 'sf_dataUsed', s.dataUsed, 'e.g., Sensor data, customer records...') +
+        inp('Who is affected?', 'sf_peopleAffected', s.peopleAffected, 'e.g., Sales team, customers...') +
+        inp('Current Owner', 'sf_owner', s.owner, 'Who is responsible?') +
+        sel('Governance Status', 'sf_govStatus', s.govStatus, [{
+            v: 'none',
+            l: 'No governance in place'
+        }, {
+            v: 'partial',
+            l: 'Some governance (informal)'
+        }, {
+            v: 'governed',
+            l: 'Formally governed'
+        }]) +
+        sel('System Type', 'sf_isExternal', s.isExternal ? 'external' : 'internal', [{
+            v: 'internal',
+            l: 'Internal \u2014 we built or deployed it'
+        }, {
+            v: 'external',
+            l: 'External \u2014 third party\'s AI that affects us'
+        }]) +
+        '<div style="display:flex;gap:8px;margin-top:12px">' + btn('Save', 'saveSystem()', '#1E6E6E') + ' ' + btnG('Cancel', 'UI.showSysForm=false;UI.editSys=null;render()') + '</div>', 'border:2px solid ' + '#1E6E6E')
+}
+
+function loadExampleSystems() {
+    data.systems = EXAMPLE_SYSTEMS.map(function(s) {
+        return JSON.parse(JSON.stringify(s))
+    });
+    saveData();
+    render()
+}
+
+function saveSystem() {
+    var s = {
+        id: UI.editSys || uid(),
+        name: val('sf_name'),
+        fn: val('sf_fn'),
+        dataUsed: val('sf_dataUsed'),
+        peopleAffected: val('sf_peopleAffected'),
+        owner: val('sf_owner'),
+        govStatus: val('sf_govStatus'),
+        isExternal: val('sf_isExternal') === 'external'
+    };
+    if (!s.name) return;
+    if (!data.systems) data.systems = [];
+    if (UI.editSys) {
+        data.systems = data.systems.map(function(x) {
+            return x.id === UI.editSys ? s : x
+        })
+    } else {
+        data.systems.push(s)
+    }
+    UI.showSysForm = false;
+    UI.editSys = null;
+    saveData();
+    render()
+}
+
+function editSystem(id) {
+    UI.editSys = id;
+    UI.showSysForm = true;
+    render()
+}
+
+function removeSystem(id) {
+    data.systems = (data.systems || []).filter(function(s) {
+        return s.id !== id
+    });
+    saveData();
+    render()
+}
+
+// 1.3 Catastrophize
+function render13() {
+    var risks = data.risks || [];
+    var systems = data.systems || [];
+    var intRisks = risks.filter(function(r) {
+        return r.source !== 'external'
+    });
+    var extRisks = risks.filter(function(r) {
+        return r.source === 'external'
+    });
+    var h = vp('V-1.3', 'Catastrophize: Surfacing AI Risks', '3\u20135 min') + ctxPanel('1.3');
+    h += '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Step 1.3: Catastrophize</h2><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:0 0 20px">Force the hard conversations: what could go wrong with AI in your organization? Think worst-case, be vivid, be specific.</p>';
+
+    // Dual track
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">';
+    h += card('<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><div style="width:12px;height:12px;border-radius:6px;background:' + TC.internal + '"></div><h3 style="font-size:15px;font-weight:700;color:' + TC.internal + ';margin:0">Internal Track</h3></div><p style="font-size:12px;color:#8A8278;line-height:1.5;margin-bottom:12px">Risks from AI systems your organization deploys or uses.</p><div style="font-size:24px;font-weight:800;color:' + TC.internal + '">' + intRisks.length + '</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">risks identified</div><div style="margin-top:12px">' + btnS('+ Add Internal Risk', 'showRiskForm(\'internal\')', TC.internal, 'font-size:12px;padding:6px 14px') + '</div>', 'border-top:4px solid ' + TC.internal);
+    h += card('<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><div style="width:12px;height:12px;border-radius:6px;background:' + TC.external + '"></div><h3 style="font-size:15px;font-weight:700;color:' + TC.external + ';margin:0">External Track</h3></div><p style="font-size:12px;color:#8A8278;line-height:1.5;margin-bottom:12px">Risks from AI used by competitors, regulators, or market forces.</p><div style="font-size:24px;font-weight:800;color:' + TC.external + '">' + extRisks.length + '</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">risks identified</div><div style="margin-top:12px">' + btnS('+ Add External Risk', 'showRiskForm(\'external\')', TC.external, 'font-size:12px;padding:6px 14px') + '</div>', 'border-top:4px solid ' + TC.external);
+    h += '</div>';
+
+    if (!risks.length) h += '<div style="margin-bottom:20px">' + btn('Load Aurora Example Risks', 'loadExampleRisks()', '#1E6E6E', 'font-size:13px') + '</div>';
+    if (UI.showRiskForm) h += renderRiskForm();
+
+    // Risk list
+    risks.forEach(function(r) {
+        var sys = systems.find(function(s) {
+            return s.id === r.systemId
+        });
+        h += card('<div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="flex:1"><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px"><h4 style="font-size:14px;font-weight:700;margin:0">' + esc(r.name) + '</h4>' + postiTag(r.category) + sevTag(r.severity) + trackTag(r.source) + (r.ethicalFlag ? badge('Ethical', '#7B4F8A') : '') + '</div><p style="font-size:12px;color:#8A8278;margin:4px 0">' + esc(r.description) + '</p>' + (sys ? '<div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7);margin-top:4px">System: ' + esc(sys.name) + '</div>' : '') + '</div><div style="display:flex;gap:4px">' + btnG('Edit', 'editRisk(\'' + r.id + '\')', 'font-size:var(--font-readable-sm);padding:4px 10px') + btnG('\u00d7', 'removeRisk(\'' + r.id + '\')', 'font-size:var(--font-readable-sm);padding:4px 8px;color:#9B2D3F') + '</div></div>', 'margin-bottom:10px;border-left:4px solid ' + (r.source === 'external' ? TC.external : TC.internal))
+    });
+
+    h += vizHeatMap();
+    return h
+}
+
+function renderRiskForm() {
+    var r = UI.editRisk ? ((data.risks || []).find(function(x) {
+        return x.id === UI.editRisk
+    }) || {}) : {
+        name: '',
+        description: '',
+        category: '',
+        severity: '',
+        source: UI.riskTrack || 'internal',
+        systemId: null,
+        ethicalFlag: null,
+        ethicalDesc: '',
+        status: 'identified'
+    };
+    var systems = data.systems || [];
+    return card('<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">' + (UI.editRisk ? 'Edit Risk' : 'Add New Risk') + '</h3>' +
+        ((r.source !== 'external') ? sel('Associated System', 'rf_systemId', r.systemId || '', [{
+            v: '',
+            l: 'Select system (optional)...'
+        }].concat(systems.map(function(s) {
+            return {
+                v: s.id,
+                l: s.name
+            }
+        }))) : '') +
+        inp('Risk Name', 'rf_name', r.name, 'Short, descriptive name') +
+        ta('What could happen? Describe the worst-case scenario.', 'rf_description', r.description, 'Be specific and vivid...', 4) +
+        sel('POSTi Category', 'rf_category', r.category, [{
+            v: '',
+            l: 'Select category...'
+        }].concat(POSTI.map(function(p) {
+            return {
+                v: p.key,
+                l: p.key + ' \u2014 ' + p.name + ': ' + p.desc
+            }
+        }))) +
+        sel('Initial Severity', 'rf_severity', r.severity, [{
+            v: '',
+            l: 'Select...'
+        }, {
+            v: 'high',
+            l: 'High \u2014 significant potential damage'
+        }, {
+            v: 'medium',
+            l: 'Medium \u2014 notable but manageable'
+        }, {
+            v: 'low',
+            l: 'Low \u2014 minor impact'
+        }]) +
+        '<div style="margin-bottom:16px"><label style="font-size:13px;font-weight:600;color:#B09080;display:block;margin-bottom:6px">Ethical implications?</label><div style="display:flex;gap:8px">' + [{
+            v: 'true',
+            l: 'Yes',
+            s: r.ethicalFlag === true
+        }, {
+            v: 'false',
+            l: 'No',
+            s: r.ethicalFlag === false
+        }, {
+            v: 'null',
+            l: 'Uncertain',
+            s: r.ethicalFlag === null
+        }].map(function(o) {
+            return '<button onclick="UI.riskEthFlag=' + o.v + ';render()" style="padding:6px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border:' + (o.s ? '2px solid #7B4F8A' : '1px solid #ddd') + ';background:' + (o.s ? '#7B4F8A' : '#fff') + ';color:' + (o.s ? '#fff' : '#666') + '">' + o.l + '</button>'
+        }).join('') + '</div></div>' +
+        (r.ethicalFlag === true || UI.riskEthFlag === 'true' ? ta('Describe the ethical dimension', 'rf_ethicalDesc', r.ethicalDesc, 'e.g., Could result in unfair treatment...') : '') +
+        '<div style="display:flex;gap:8px;margin-top:12px">' + btn('Save', 'saveRisk()', '#1E6E6E') + ' ' + btnG('Cancel', 'UI.showRiskForm=false;UI.editRisk=null;render()') + '</div>', 'border:2px solid ' + '#1E6E6E')
+}
+
+function showRiskForm(track) {
+    UI.riskTrack = track;
+    UI.showRiskForm = true;
+    UI.editRisk = null;
+    UI.riskEthFlag = null;
+    render()
+}
+
+function loadExampleRisks() {
+    data.risks = EXAMPLE_RISKS.map(function(r) {
+        return JSON.parse(JSON.stringify(r))
+    });
+    saveData();
+    render()
+}
+
+function saveRisk() {
+    var r = {
+        id: UI.editRisk || uid(),
+        name: val('rf_name'),
+        description: val('rf_description'),
+        category: val('rf_category'),
+        severity: val('rf_severity'),
+        source: UI.riskTrack || 'internal',
+        systemId: val('rf_systemId') || null,
+        ethicalFlag: UI.riskEthFlag === 'true' ? true : UI.riskEthFlag === 'false' ? false : null,
+        ethicalDesc: val('rf_ethicalDesc') || '',
+        status: 'identified'
+    };
+    if (!r.name) return;
+    if (!data.risks) data.risks = [];
+    if (UI.editRisk) {
+        data.risks = data.risks.map(function(x) {
+            return x.id === UI.editRisk ? Object.assign(x, r) : x
+        })
+    } else {
+        data.risks.push(r)
+    }
+    UI.showRiskForm = false;
+    UI.editRisk = null;
+    saveData();
+    render()
+}
+
+function editRisk(id) {
+    var r = (data.risks || []).find(function(x) {
+        return x.id === id
+    });
+    UI.editRisk = id;
+    UI.riskTrack = r ? r.source : 'internal';
+    UI.riskEthFlag = r ? String(r.ethicalFlag) : null;
+    UI.showRiskForm = true;
+    render()
+}
+
+function removeRisk(id) {
+    data.risks = (data.risks || []).filter(function(r) {
+        return r.id !== id
+    });
+    saveData();
+    render()
+}
+
+// 1.4 Triage
+function render14() {
+    var risks = data.risks || [];
+    var triage = data.triage || {};
+    var highRisks = risks.filter(function(r) {
+        return r.severity === 'high'
+    });
+    var medRisks = risks.filter(function(r) {
+        return r.severity === 'medium'
+    });
+    if (!risks.length) return vp('V-1.4', 'Triage', '3\u20135 min') + ctxPanel('1.4') + '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Step 1.4: Triage</h2>' + card('<div style="text-align:center;padding:48px"><p style="color:rgba(138,130,120,.5)">Complete Step 1.3 first to identify risks.</p></div>');
+
+    var h = vp('V-1.4', 'Triage', '3\u20135 min') + ctxPanel('1.4');
+    h += '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Step 1.4: Triage</h2><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:0 0 20px">High-severity risks get immediate attention. Assign owners, set deadlines, decide on action.</p>';
+
+    if (highRisks.length) {
+        h += '<h3 style="font-size:15px;font-weight:700;color:#9B2D3F;margin:0 0 12px">High-Severity Risks (' + highRisks.length + ') \u2014 Immediate Action Required</h3>';
+        highRisks.forEach(function(r) {
+            var t = triage[r.id] || {};
+            h += card('<div style="margin-bottom:8px"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><h4 style="font-size:14px;font-weight:700;margin:0">' + esc(r.name) + '</h4>' + postiTag(r.category) + sevTag(r.severity) + (r.ethicalFlag ? badge('Ethical', '#7B4F8A') : '') + '</div><p style="font-size:12px;color:#8A8278">' + esc(r.description) + '</p></div>' +
+                sel('Action', 'tri_' + r.id + '_action', t.action, [{
+                    v: '',
+                    l: 'Select action...'
+                }, {
+                    v: 'immediate',
+                    l: 'Immediate \u2014 address now'
+                }, {
+                    v: 'monitor',
+                    l: 'Monitor \u2014 watch closely'
+                }, {
+                    v: 'accept',
+                    l: 'Accept \u2014 acknowledged risk'
+                }]) +
+                inp('Owner', 'tri_' + r.id + '_owner', t.owner, 'Who is responsible?') +
+                inp('Deadline', 'tri_' + r.id + '_deadline', t.deadline, 'e.g., End of week 1', 'date') +
+                ta('Notes', 'tri_' + r.id + '_notes', t.notes, 'Action plan, mitigation steps...', 2), 'border-left:4px solid #9B2D3F;margin-bottom:12px')
+        })
+    }
+
+    if (medRisks.length) {
+        h += exToggle('med_risks', 'Review Medium-Severity Risks (' + medRisks.length + ')', medRisks.map(function(r) {
+            var t = triage[r.id] || {};
+            return card('<div style="margin-bottom:8px"><h4 style="font-size:14px;font-weight:700;margin:0">' + esc(r.name) + '</h4><p style="font-size:12px;color:#8A8278">' + esc(r.description) + '</p></div>' + sel('Action', 'tri_' + r.id + '_action', t.action, [{
+                v: '',
+                l: 'Select action...'
+            }, {
+                v: 'immediate',
+                l: 'Immediate'
+            }, {
+                v: 'monitor',
+                l: 'Monitor'
+            }, {
+                v: 'accept',
+                l: 'Accept'
+            }]) + inp('Owner', 'tri_' + r.id + '_owner', t.owner, 'Who is responsible?'), 'border-left:4px solid #D4A017;margin-bottom:8px')
+        }).join(''))
+    }
+
+    h += exToggle('aurora_triage', 'Aurora Windows \u2014 Triage Example', card('<p style="font-size:13px;line-height:1.7;color:#B09080"><strong>Discriminatory Pricing:</strong> Immediate \u2014 Sarah Kim, deadline: end of week 2. Action: audit pricing model for bias.</p><p style="font-size:13px;line-height:1.7;color:#B09080;margin-top:8px"><strong>Confidential Data Leakage:</strong> Immediate \u2014 David Torres. Action: implement acceptable use policy for ChatGPT within 5 days.</p>', 'background:rgba(245,242,236,.03);border:1px solid #e8e8e4'));
+
+    h += vizTriageSummary();
+    h += doneBtn('saveTriage()', false, 'Mark Complete', '#1E6E6E');
+    return h
+}
+
+function saveTriage() {
+    var risks = data.risks || [];
+    if (!data.triage) data.triage = {};
+    risks.forEach(function(r) {
+        data.triage[r.id] = {
+            action: val('tri_' + r.id + '_action'),
+            owner: val('tri_' + r.id + '_owner'),
+            deadline: val('tri_' + r.id + '_deadline'),
+            notes: val('tri_' + r.id + '_notes')
+        }
+    });
+    if (!data.completedSteps) data.completedSteps = {};
+    data.completedSteps['1.4'] = true;
+    saveData();
+    render()
+}
+
+// 1.5 Culture & Decision Rights
+function render15() {
+    var tri = data.triage || {};
+    var culture = tri.culture || {};
+    var dr = data.decisionRights || {};
+    var h = vp('V1.5', 'Culture and Authority: The Foundations of Governance', '8 min') + ctxPanel('1.5');
+    h += badge('Map \xb7 Days 1\u201330', '#1E6E6E') + '<h1 style="font-size:24px;font-weight:800;margin:8px 0 8px">Culture & Decision Rights</h1><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:8px 0 24px">Governance depends on two things: a culture that takes it seriously, and decision rights that give it teeth.</p>';
+
+    h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 8px">Governance Culture Diagnostic</h3><p style="font-size:13px;color:rgba(138,130,120,.7);margin-bottom:16px">Does your organization treat responsible AI as a business priority or a compliance box to be checked?</p>' +
+        likert('Leadership treats AI governance as a strategic business priority.', 'triage.culture.priority', culture.priority, 'Strongly disagree', 'Strongly agree') +
+        likert('When an AI issue arises, the instinct is to understand and fix it \u2014 not hide it.', 'triage.culture.transparency', culture.transparency, 'Strongly disagree', 'Strongly agree') +
+        likert('People at all levels feel empowered to raise concerns about AI systems.', 'triage.culture.empowerment', culture.empowerment, 'Strongly disagree', 'Strongly agree') +
+        likert('The organization has the skills needed to govern AI effectively.', 'triage.culture.skills', culture.skills, 'Strongly disagree', 'Strongly agree') +
+        likert('AI governance is seen as enabling innovation, not blocking it.', 'triage.culture.enabling', culture.enabling, 'Strongly disagree', 'Strongly agree') +
+        (function() {
+            var vals = [culture.priority, culture.transparency, culture.empowerment, culture.skills, culture.enabling].filter(function(v) {
+                return v
+            });
+            if (!vals.length) return '';
+            var avg = (vals.reduce(function(a, b) {
+                return a + b
+            }, 0) / vals.length).toFixed(1);
+            return '<div style="margin-top:12px;padding:12px;background:rgba(30,110,110,.06);border-radius:8px;font-size:13px"><strong>Culture Score:</strong> ' + avg + '/5 \u2014 ' + (avg >= 4 ? 'Strong foundation' : avg >= 3 ? 'Moderate \u2014 cultural work needed' : avg >= 2 ? 'Weak \u2014 significant cultural barriers' : 'Critical \u2014 governance will face strong resistance') + '</div>'
+        })());
+
+    h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 8px">Decision Rights</h3><p style="font-size:13px;color:rgba(138,130,120,.7);margin-bottom:16px">Clear decision rights are the structural precondition for effective governance.</p>' +
+        ta('Who can approve a new AI deployment?', 'dr_approveDeployment', dr.approveDeployment, 'Name and role \u2014 e.g., Margaret Chen, CEO, with recommendation from IT Manager', 2) +
+        ta('Who decides when a system requires governance review?', 'dr_requireReview', dr.requireReview, 'Name and role \u2014 who triggers the review process?', 2) +
+        ta('Who can halt an AI deployment?', 'dr_haltDeployment', dr.haltDeployment, 'Name and role \u2014 who has stop authority?', 2) +
+        ta('Who can reallocate resources to address a newly identified risk?', 'dr_reallocateResources', dr.reallocateResources, 'Name and role \u2014 who controls budget and people when a risk emerges?', 2) +
+        ta('Gaps or ambiguities in decision rights', 'dr_gaps', dr.gaps, 'What\'s unclear, missing, or contested?', 3));
+
+    h += exToggle('aurora_dr', 'Aurora Windows \u2014 Culture & Decision Rights Example', card('<p style="font-size:13px;line-height:1.7;color:#B09080"><strong>Culture score:</strong> 2.4/5. Margaret is supportive but hasn\'t communicated governance as a priority. No formal channels for raising AI concerns. Skills gap is the weakest area.</p><p style="font-size:13px;line-height:1.7;color:#B09080;margin-top:8px"><strong>Approve deployment:</strong> Currently ambiguous. Sarah Kim approves IT systems by default.</p><p style="font-size:13px;line-height:1.7;color:#B09080;margin-top:4px"><strong>Halt authority:</strong> Nobody has explicit halt authority.</p><p style="font-size:13px;line-height:1.7;color:#B09080;margin-top:4px"><strong>Gaps:</strong> No distinction between AI and general IT decisions. No escalation path.</p>', 'background:rgba(245,242,236,.03);border:1px solid #e8e8e4'));
+
+    var co = data.completedSteps || {};
+    h += co['1.5'] ? '<div style="text-align:center;padding:16px;color:#1B6B5A;font-weight:600">\u2713 Step Complete</div>' : doneBtn('saveDR()', false, 'Mark Complete', '#1E6E6E');
+    return h
+}
+
+function saveDR() {
+    if (!data.decisionRights) data.decisionRights = {};
+    ['approveDeployment', 'requireReview', 'haltDeployment', 'reallocateResources', 'gaps'].forEach(function(f) {
+        data.decisionRights[f] = val('dr_' + f)
+    });
+    if (!data.completedSteps) data.completedSteps = {};
+    data.completedSteps['1.5'] = true;
+    saveData();
+    render()
+}
+// === PHASE 2 STEPS ===
+function render21() {
+    var ef = data.ethicalFramework || {};
+    var co = data.completed || {};
+    var h = vp('V-2.1', 'Ethical Framework', '3\u20135 min') + ctxPanel('2.1');
+    h += '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Step 2.1: Ethical Framework</h2><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:0 0 20px">Define the ethical principles that will guide every AI decision your organization makes.</p>';
+    var sects = [{
+        k: 'fairness',
+        t: 'Fairness',
+        ph: 'Your organization\'s commitment to fairness in AI',
+        extra: ta('How will you test for and address bias?', 'ef_biasProcess', ef.biasProcess, 'e.g., Regular auditing of outputs, diverse test data...')
+    }, {
+        k: 'humanOversight',
+        t: 'Human Oversight',
+        ph: 'Your position on human oversight',
+        extra: sel('Default position on AI autonomy', 'ef_defaultAutonomy', ef.defaultAutonomy, [{
+            v: '',
+            l: 'Select...'
+        }, {
+            v: 'human-in-loop',
+            l: 'Human-in-the-loop \u2014 human approves every decision'
+        }, {
+            v: 'human-on-loop',
+            l: 'Human-on-the-loop \u2014 human monitors and can intervene'
+        }, {
+            v: 'human-over-loop',
+            l: 'Human-over-the-loop \u2014 human sets parameters, AI operates within them'
+        }, {
+            v: 'case-by-case',
+            l: 'Case-by-case \u2014 determined by risk level of each system'
+        }])
+    }, {
+        k: 'workforceImpact',
+        t: 'Workforce Impact',
+        ph: 'Your approach to workforce impact',
+        extra: ta('What commitments will you make to employees affected by AI?', 'ef_employeeCommitments', ef.employeeCommitments, 'e.g., Retraining, no involuntary redundancy...')
+    }, {
+        k: 'societalEffects',
+        t: 'Societal Effects',
+        ph: 'Your stance on broader societal effects'
+    }, {
+        k: 'transparency',
+        t: 'Transparency',
+        ph: 'Your transparency commitments'
+    }];
+    sects.forEach(function(s) {
+        h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 8px;color:' + '#8B4513' + '">' + s.t + '</h3>' + ta(s.ph, 'ef_' + s.k, ef[s.k], 'Define your position...', 3) + (s.extra || ''), 'border-left:4px solid ' + '#8B4513')
+    });
+    h += exToggle('aurora_eth', 'Aurora Windows \u2014 Ethical Framework Example', card('<p style="font-size:13px;line-height:1.7;color:#B09080"><strong>Fairness:</strong> We will not deploy AI that treats customer segments differently based on protected characteristics. Bias testing: quarterly audit of quoting engine outputs.</p><p style="font-size:13px;line-height:1.7;color:#B09080;margin-top:8px"><strong>Human Oversight:</strong> Human-in-the-loop for all customer-facing decisions. Human-on-the-loop for internal QC.</p>', 'background:rgba(245,242,236,.03);border:1px solid #e8e8e4'));
+    h += vizEthicsWheel();
+    h += co['2.1'] ? '<div style="text-align:center;padding:16px;color:#1B6B5A;font-weight:600">\u2713 Complete</div>' : doneBtn('saveEF()', false, 'Mark Complete', '#8B4513');
+    return h
+}
+
+function saveEF() {
+    if (!data.ethicalFramework) data.ethicalFramework = {};
+    ['fairness', 'humanOversight', 'workforceImpact', 'societalEffects', 'transparency', 'biasProcess', 'employeeCommitments'].forEach(function(f) {
+        var v = val('ef_' + f);
+        if (v) data.ethicalFramework[f] = v
+    });
+    data.ethicalFramework.defaultAutonomy = val('ef_defaultAutonomy');
+    if (!data.completed) data.completed = {};
+    data.completed['2.1'] = true;
+    if (!data.completedSteps) data.completedSteps = {};
+    data.completedSteps['2.1'] = true;
+    saveData();
+    render()
+}
+
+function render22() {
+    var os = data.ownership || {};
+    var raci = data.raciMatrix || [];
+    var h = vp('V-2.2', 'Ownership & Structure', '3\u20135 min') + ctxPanel('2.2');
+    h += '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Step 2.2: Ownership & Structure</h2><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:0 0 20px">Assign a governance owner, select a model, and build a RACI matrix.</p>';
+    h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">Governance Owner</h3>' + inp('Governance Owner *', 'os_governanceOwner', os.governanceOwner, 'e.g., Margaret Chen, CEO') + ta('What authority does this person have?', 'os_ownerAuthority', os.ownerAuthority, 'What decisions can the owner make independently?', 2) + ta('How much of their role is dedicated to AI governance?', 'os_ownerDedication', os.ownerDedication, 'e.g., 20% initially, moving to 50% as AI footprint grows / Full-time dedicated role...', 2));
+    h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">Governance Model</h3>' + sel('Governance model', 'os_govModel', os.govModel, [{
+        v: '',
+        l: 'Select...'
+    }, {
+        v: 'centralized',
+        l: 'Centralized \u2014 single team owns all governance'
+    }, {
+        v: 'decentralized',
+        l: 'Decentralized \u2014 each unit governs independently'
+    }, {
+        v: 'hybrid',
+        l: 'Hybrid \u2014 central standards + embedded leads (recommended)'
+    }, {
+        v: 'committee',
+        l: 'Committee \u2014 cross-functional governance committee'
+    }]) + ta('Business Unit Leads (if applicable)', 'os_buLeads', os.buLeads, 'e.g., Sarah Kim (IT), David Torres (Ops)...', 2) + ta('Escalation Path', 'os_escalation', os.escalation, 'e.g., System owner \u2192 Governance owner \u2192 CEO \u2192 Board', 2));
+    // RACI
+    h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">RACI Matrix</h3><p style="font-size:12px;color:rgba(138,130,120,.7);margin-bottom:12px">Add governance activities and assign R(esponsible), A(ccountable), C(onsulted), I(nformed).</p>' + (!raci.length ? '<div style="margin-bottom:12px">' + btn('Load Aurora Examples', 'loadRaciExamples()', '#8B4513', 'font-size:13px') + '</div>' : '') + raci.map(function(r, i) {
+        return '<div style="padding:12px;border:1px solid rgba(245,242,236,.06);border-radius:8px;margin-bottom:8px;background:rgba(245,242,236,.04)"><div style="display:flex;gap:8px;margin-bottom:8px"><input id="raci_' + i + '_activity" value="' + esc(r.activity) + '" placeholder="Activity" style="flex:2;padding:8px;border:1px solid rgba(245,242,236,.12);border-radius:6px;font-size:13px;font-family:inherit"/><button onclick="removeRaci(' + i + ')" style="background:none;border:none;cursor:pointer;color:rgba(138,130,120,.4)">\u00d7</button></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px"><input id="raci_' + i + '_responsible" value="' + esc(r.responsible) + '" placeholder="Responsible" style="padding:6px;border:1px solid rgba(245,242,236,.12);border-radius:4px;font-size:var(--font-readable-sm);font-family:inherit"/><input id="raci_' + i + '_accountable" value="' + esc(r.accountable) + '" placeholder="Accountable" style="padding:6px;border:1px solid rgba(245,242,236,.12);border-radius:4px;font-size:var(--font-readable-sm);font-family:inherit"/><input id="raci_' + i + '_consulted" value="' + esc(r.consulted) + '" placeholder="Consulted" style="padding:6px;border:1px solid rgba(245,242,236,.12);border-radius:4px;font-size:var(--font-readable-sm);font-family:inherit"/><input id="raci_' + i + '_informed" value="' + esc(r.informed) + '" placeholder="Informed" style="padding:6px;border:1px solid rgba(245,242,236,.12);border-radius:4px;font-size:var(--font-readable-sm);font-family:inherit"/></div></div>'
+    }).join('') + '<div style="margin-top:8px">' + btnS('+ Add Activity', 'addRaci()', '#8B4513', 'font-size:12px;padding:6px 14px') + '</div>');
+    h += exToggle('aurora_own', 'Aurora Windows \u2014 Ownership Example', card('<p style="font-size:13px;line-height:1.7;color:#B09080"><strong>Owner:</strong> Margaret Chen (CEO), hub-and-spoke model. Leads: Sarah Kim (IT/AI systems), David Torres (Operations).</p><p style="font-size:13px;line-height:1.7;color:#B09080;margin-top:8px"><strong>RACI:</strong> New deployment approval: Sarah (R), Margaret (A), James (C), Lisa (I).</p>', 'background:rgba(245,242,236,.03);border:1px solid #e8e8e4'));
+    h += doneBtn('saveOS()', false, 'Mark Complete', '#8B4513');
+    return h
+}
+
+function addRaci() {
+    if (!data.raciMatrix) data.raciMatrix = [];
+    data.raciMatrix.push({
+        activity: '',
+        responsible: '',
+        accountable: '',
+        consulted: '',
+        informed: ''
+    });
+    saveData();
+    render()
+}
+
+function loadRaciExamples() {
+    if (!data.raciMatrix) data.raciMatrix = [];
+    var examples = [{
+        activity: 'Initial Risk Assessment',
+        responsible: 'Sarah Kim',
+        accountable: 'Margaret Chen',
+        consulted: 'David Torres, James Okafor',
+        informed: 'Lisa Patel, All Staff'
+    }, {
+        activity: 'AI System Deployment Approval',
+        responsible: 'Sarah Kim',
+        accountable: 'Margaret Chen',
+        consulted: 'James Okafor, Lisa Patel',
+        informed: 'David Torres'
+    }, {
+        activity: 'Quarterly Governance Review',
+        responsible: 'David Torres',
+        accountable: 'Margaret Chen',
+        consulted: 'Sarah Kim, James Okafor',
+        informed: 'All Staff'
+    }, {
+        activity: 'Incident Response',
+        responsible: 'Sarah Kim',
+        accountable: 'Margaret Chen',
+        consulted: 'James Okafor',
+        informed: 'David Torres, Lisa Patel'
+    }, {
+        activity: 'Bias Audit \u2014 Quoting Engine',
+        responsible: 'Sarah Kim',
+        accountable: 'David Torres',
+        consulted: 'Margaret Chen',
+        informed: 'Sales Team'
+    }, {
+        activity: 'Employee AI Training',
+        responsible: 'David Torres',
+        accountable: 'Margaret Chen',
+        consulted: 'Sarah Kim',
+        informed: 'All Staff'
+    }, {
+        activity: 'Policy Updates',
+        responsible: 'Margaret Chen',
+        accountable: 'Margaret Chen',
+        consulted: 'Sarah Kim, David Torres, Lisa Patel',
+        informed: 'All Staff'
+    }];
+    data.raciMatrix = data.raciMatrix.concat(examples);
+    saveData();
+    render()
+}
+
+function removeRaci(i) {
+    data.raciMatrix = (data.raciMatrix || []).filter(function(_, j) {
+        return j !== i
+    });
+    saveData();
+    render()
+}
+
+function saveOS() {
+    if (!data.ownership) data.ownership = {};
+    ['governanceOwner', 'ownerAuthority', 'ownerDedication', 'govModel', 'buLeads', 'escalation'].forEach(function(f) {
+        data.ownership[f] = val('os_' + f)
+    });
+    var raci = data.raciMatrix || [];
+    for (var i = 0; i < raci.length; i++) {
+        raci[i].activity = val('raci_' + i + '_activity');
+        raci[i].responsible = val('raci_' + i + '_responsible');
+        raci[i].accountable = val('raci_' + i + '_accountable');
+        raci[i].consulted = val('raci_' + i + '_consulted');
+        raci[i].informed = val('raci_' + i + '_informed')
+    }
+    data.raciMatrix = raci;
+    if (!data.completedSteps) data.completedSteps = {};
+    data.completedSteps['2.2'] = true;
+    saveData();
+    render()
+}
+
+function render23() {
+    var rc = data.reviewCadence || {};
+    var h = vp('V-2.3', 'Risk Review Cadence', '3\u20135 min') + ctxPanel('2.3');
+    h += '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Step 2.3: Risk Review Cadence</h2><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:0 0 20px">Establish the Risk Pulse \u2014 a standing meeting that keeps risk visible.</p>';
+    h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">Risk Pulse Meeting</h3>' + sel('Risk Pulse cadence', 'rc_pulseFrequency', rc.pulseFrequency, [{
+        v: '',
+        l: 'Select...'
+    }, {
+        v: 'weekly',
+        l: 'Weekly \u2014 fast-moving AI environment'
+    }, {
+        v: 'biweekly',
+        l: 'Biweekly \u2014 moderate pace'
+    }, {
+        v: 'monthly',
+        l: 'Monthly \u2014 stable environment'
+    }, {
+        v: 'quarterly',
+        l: 'Quarterly \u2014 minimal AI activity (not recommended)'
+    }]) + inp('Attendees *', 'rc_pulseAttendees', rc.pulseAttendees, 'e.g., Governance owner, system owners, department heads') + inp('First meeting date', 'rc_firstPulse', rc.firstPulse, '', 'date') + ta('Additional agenda items', 'rc_additionalAgenda', rc.additionalAgenda, 'e.g., New risk intake, escalation review...', 2));
+    h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">Assessment Thresholds</h3><p style="font-size:12px;color:rgba(138,130,120,.7);margin-bottom:12px">Define what triggers a full risk assessment vs. a light review vs. no review required.</p>' + ta('Full assessment trigger *', 'rc_fullReviewTrigger', rc.fullReviewTrigger, 'e.g., Any new AI system, change to high-risk system, regulatory change...', 2) + ta('Light review trigger', 'rc_lightReviewTrigger', rc.lightReviewTrigger, 'e.g., Minor model update, new data source, vendor change...', 2) + ta('No review threshold', 'rc_noReviewThreshold', rc.noReviewThreshold, 'e.g., Bug fixes, UI changes, non-AI feature updates...', 2));
+    h += exToggle('aurora_rc', 'Aurora Windows \u2014 Risk Review Cadence Example', card('<p style="font-size:13px;line-height:1.7;color:#B09080"><strong>Pulse:</strong> Bi-weekly, 30 min. Margaret + Sarah + David + James. First meeting: next Monday.</p><p style="font-size:13px;line-height:1.7;color:#B09080;margin-top:8px"><strong>Thresholds:</strong> Full: any new AI system or model retrain. Light: data source changes. None: UI/UX changes.</p>', 'background:rgba(245,242,236,.03);border:1px solid #e8e8e4'));
+    h += doneBtn('saveRC()', false, 'Mark Complete', '#8B4513');
+    return h
+}
+
+function saveRC() {
+    if (!data.reviewCadence) data.reviewCadence = {};
+    ['pulseFrequency', 'pulseAttendees', 'firstPulse', 'additionalAgenda', 'fullReviewTrigger', 'lightReviewTrigger', 'noReviewThreshold'].forEach(function(f) {
+        data.reviewCadence[f] = val('rc_' + f)
+    });
+    if (!data.completedSteps) data.completedSteps = {};
+    data.completedSteps['2.3'] = true;
+    saveData();
+    render()
+}
+
+function render24() {
+    var is = data.incentivesSkills || {};
+    var h = vp('V-2.4', 'Incentives & Skills', '3\u20135 min') + ctxPanel('2.4');
+    h += '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Step 2.4: Incentives & Skills</h2><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:0 0 20px">Align incentives to reward responsible AI, and map the skills needed to sustain governance.</p>';
+    h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">Incentive Alignment</h3>' + ta('What leadership metrics will include governance?', 'is_leadershipMetrics', is.leadershipMetrics, 'e.g., Governance compliance rate, incident response time...', 2) + ta('What rewards or recognition will reinforce governance?', 'is_rewardMechanisms', is.rewardMechanisms, 'e.g., Include in performance reviews, team recognition...', 2) + ta('What counter-incentives currently undermine governance?', 'is_counterIncentives', is.counterIncentives, 'e.g., Speed-to-market pressure, cost reduction targets...', 2));
+    h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">Skills Gap Analysis</h3><p style="font-size:13px;color:rgba(138,130,120,.7);margin-bottom:12px">Responsible AI requires capabilities across four groups. Rate current capability (1=none, 5=strong) and identify priorities.</p>' +
+        likert('Leadership: Understands AI risk well enough to govern it', 'incentivesSkills.leadershipSkill', is.leadershipSkill, 'No capability', 'Strong') +
+        ta('Leadership priorities', 'is_leadershipPriorities', is.leadershipPriorities, 'e.g., Board AI literacy program, executive briefings on AI risk...', 2) +
+        likert('Technical teams: Bias detection, human-centered design, monitoring', 'incentivesSkills.technicalSkill', is.technicalSkill, 'No capability', 'Strong') +
+        ta('Technical priorities', 'is_technicalPriorities', is.technicalPriorities, 'e.g., Bias testing training, AI monitoring tool proficiency...', 2) +
+        likert('Frontline managers: Understand how AI changes their teams\' work', 'incentivesSkills.frontlineSkill', is.frontlineSkill, 'No capability', 'Strong') +
+        ta('Frontline priorities', 'is_frontlinePriorities', is.frontlinePriorities, 'e.g., AI impact awareness, change management skills...', 2) +
+        likert('Legal/compliance: Understand the evolving AI regulatory landscape', 'incentivesSkills.legalSkill', is.legalSkill, 'No capability', 'Strong') +
+        ta('Legal/compliance priorities', 'is_legalPriorities', is.legalPriorities, 'e.g., EU AI Act implications, AI-specific contract clauses...', 2));
+    h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">Development Plan</h3>' + ta('First 90 days', 'is_plan90', is.plan90, 'Immediate training and development actions...', 2) + ta('Long-term plan', 'is_planLong', is.planLong, '12-month development roadmap...', 2));
+    h += exToggle('aurora_is', 'Aurora Windows \u2014 Incentives & Skills Example', card('<p style="font-size:13px;line-height:1.7;color:#B09080"><strong>Incentives:</strong> Add governance compliance to quarterly reviews. Counter-incentive: production targets currently override safety concerns.</p><p style="font-size:13px;line-height:1.7;color:#B09080;margin-top:8px"><strong>Skills:</strong> Leadership 2/5, Technical 3/5, Frontline 1/5, Legal 2/5. Priority: AI ethics workshop for leadership team within 30 days.</p>', 'background:rgba(245,242,236,.03);border:1px solid #e8e8e4'));
+    h += doneBtn('saveIS()', false, 'Mark Complete', '#8B4513');
+    return h
+}
+
+function saveIS() {
+    if (!data.incentivesSkills) data.incentivesSkills = {};
+    ['leadershipMetrics', 'rewardMechanisms', 'counterIncentives', 'leadershipPriorities', 'technicalPriorities', 'frontlinePriorities', 'legalPriorities', 'plan90', 'planLong'].forEach(function(f) {
+        var v = val('is_' + f);
+        if (v) data.incentivesSkills[f] = v
+    });
+    if (!data.completedSteps) data.completedSteps = {};
+    data.completedSteps['2.4'] = true;
+    saveData();
+    render()
+}
+
+// === PHASE 3 STEPS ===
+function render31() {
+    var risks = data.risks || [];
+    var ef = data.ethicalFramework || {};
+    if (!risks.length) return vp('V-3.1', 'Apply Ethical Lens', '3\u20135 min') + ctxPanel('3.1') + '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Step 3.1: Apply Ethical Lens</h2>' + card('<div style="text-align:center;padding:48px"><p style="color:rgba(138,130,120,.5)">Complete Phase 1 to identify risks first.</p></div>');
+    var principles = ['fairness', 'humanOversight', 'workforceImpact', 'societalEffects', 'transparency'];
+    var pLabels = {
+        fairness: 'Fairness',
+        humanOversight: 'Human Oversight',
+        workforceImpact: 'Workforce Impact',
+        societalEffects: 'Societal Effects',
+        transparency: 'Transparency'
+    };
+    var h = vp('V-3.1', 'Apply Ethical Lens', '3\u20135 min') + ctxPanel('3.1');
+    h += '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Step 3.1: Apply Ethical Lens</h2><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:0 0 20px">Examine each risk through your ethical framework principles.</p>';
+    risks.forEach(function(r) {
+        var ethReview = r.ethReview || {};
+        h += card('<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><h4 style="font-size:14px;font-weight:700;margin:0">' + esc(r.name) + '</h4>' + postiTag(r.category) + sevTag(r.severity) + (r.ethicalFlag ? badge('Ethical', '#7B4F8A') : '') + '</div>' +
+            principles.map(function(p) {
+                var defined = !!ef[p];
+                return '<div style="padding:8px 12px;margin-bottom:4px;background:' + (defined ? '#fafafa' : '#f8f4f4') + ';border-radius:6px;border-left:3px solid ' + (defined ? '#C8860A' : '#ddd') + '"><div style="font-size:12px;font-weight:600;color:' + (defined ? '#C8860A' : '#999') + ';margin-bottom:4px">' + pLabels[p] + (defined ? '' : ' (not yet defined)') + '</div>' + (defined ? '<div style="margin-bottom:4px"><select id="eth_' + r.id + '_' + p + '" style="padding:6px;border:1px solid rgba(245,242,236,.12);border-radius:4px;font-size:12px;font-family:inherit"><option value=""' + (!(ethReview[p] || {}).relevance ? ' selected' : '') + '>Relevance?</option><option value="high"' + ((ethReview[p] || {}).relevance === 'high' ? ' selected' : '') + '>High</option><option value="medium"' + ((ethReview[p] || {}).relevance === 'medium' ? ' selected' : '') + '>Medium</option><option value="low"' + ((ethReview[p] || {}).relevance === 'low' ? ' selected' : '') + '>Low</option><option value="none"' + ((ethReview[p] || {}).relevance === 'none' ? ' selected' : '') + '>Not Relevant</option></select></div>' : '') + '</div>'
+            }).join(''), 'border-left:4px solid ' + '#C8860A' + ';margin-bottom:12px')
+    });
+    h += doneBtn('saveEthLens()', false, 'Mark Complete', '#C8860A');
+    return h
+}
+
+function saveEthLens() {
+    var risks = data.risks || [];
+    var principles = ['fairness', 'humanOversight', 'workforceImpact', 'societalEffects', 'transparency'];
+    risks.forEach(function(r) {
+        if (!r.ethReview) r.ethReview = {};
+        principles.forEach(function(p) {
+            var v = val('eth_' + r.id + '_' + p);
+            if (v) {
+                if (!r.ethReview[p]) r.ethReview[p] = {};
+                r.ethReview[p].relevance = v
+            }
+        })
+    });
+    data.risks = risks;
+    if (!data.completedSteps) data.completedSteps = {};
+    data.completedSteps['3.1'] = true;
+    saveData();
+    render()
+}
+
+function render32() {
+    var risks = data.risks || [];
+    if (!risks.length) return vp('V-3.2', 'LIT Assessment', '3\u20135 min') + ctxPanel('3.2') + '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Step 3.2: LIT Assessment</h2>' + card('<div style="text-align:center;padding:48px"><p style="color:rgba(138,130,120,.5)">Complete Phase 1 to identify risks first.</p></div>');
+    var h = vp('V-3.2', 'LIT Assessment', '3\u20135 min') + ctxPanel('3.2');
+    h += '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Step 3.2: LIT Assessment</h2><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:0 0 20px">Score each risk on Likelihood (1\u20135), Importance (1\u20135), and Timeframe (1\u20135). The composite LIT score (3\u201315) provides a rigorous priority ranking.</p>';
+    risks.forEach(function(r) {
+        h += card('<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><h4 style="font-size:14px;font-weight:700;margin:0">' + esc(r.name) + '</h4>' + postiTag(r.category) + sevTag(r.severity) + '</div><p style="font-size:12px;color:#8A8278;margin-bottom:12px">' + esc(r.description) + '</p>' +
+            '<div style="margin-bottom:12px">' +
+            likert('Likelihood (1\u20135)', 'risks.' + r.id + '.litL', r.litL, 'Very unlikely', 'Very likely') +
+            likert('Importance (1\u20135)', 'risks.' + r.id + '.litI', r.litI, 'Minor impact', 'Catastrophic') +
+            likert('Timeframe (1\u20135)', 'risks.' + r.id + '.litT', r.litT, 'Distant future', 'Imminent') + '</div>' +
+            (r.litL && r.litI && r.litT ? '<div style="text-align:center;padding:8px;background:rgba(200,134,10,.08);border-radius:8px;font-size:14px"><strong>LIT Composite: ' + (r.litL + r.litI + r.litT) + '/15</strong></div>' : ''), 'border-left:4px solid ' + '#C8860A' + ';margin-bottom:12px')
+    });
+    h += vizLITScatter();
+    h += doneBtn('saveLIT()', false, 'Mark Complete', '#C8860A');
+    return h
+}
+
+function setLIT(riskId, field, val) {
+    var risks = data.risks || [];
+    risks.forEach(function(r) {
+        if (r.id === riskId) r[field] = val
+    });
+    data.risks = risks;
+    saveData();
+    render()
+}
+
+function saveLIT() {
+    if (!data.completedSteps) data.completedSteps = {};
+    data.completedSteps['3.2'] = true;
+    saveData();
+    render()
+}
+
+function render33() {
+    var risks = data.risks || [];
+    var scored = risks.filter(function(r) {
+        return r.litL && r.litI
+    });
+    if (!scored.length) return vp('V-3.3', 'Classify & Prioritize', '3\u20135 min') + ctxPanel('3.3') + '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Step 3.3: Classify & Prioritize</h2>' + card('<div style="text-align:center;padding:48px"><p style="color:rgba(138,130,120,.5)">Complete Step 3.2 (LIT Assessment) first.</p></div>');
+    var h = vp('V-3.3', 'Classify & Prioritize', '3\u20135 min') + ctxPanel('3.3');
+    h += '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Step 3.3: Classify & Prioritize</h2><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:0 0 20px">Use the Significance \u00d7 Response Capacity matrix to classify each risk: Manage, Monitor Enhanced, or Monitor.</p>';
+    scored.forEach(function(r) {
+        var sig = getSignificance(r.litL, r.litI);
+        var resp = r.responseCapacity ? getResponse(sig, r.responseCapacity) : '';
+        h += card('<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px"><div><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><h4 style="font-size:14px;font-weight:700;margin:0">' + esc(r.name) + '</h4>' + postiTag(r.category) + badge('LIT: ' + (r.litL + r.litI + (r.litT || 0)) + '/15', '#C8860A') + '</div><p style="font-size:12px;color:#8A8278">' + esc(r.description) + '</p></div><div style="text-align:center;min-width:80px">' + badge(sigLabel(sig), sigColor(sig)) + '</div></div>' +
+            likert('Response Capacity (1\u20135)', 'risks.' + r.id + '.responseCapacity', r.responseCapacity, 'No capacity', 'Full capacity') +
+            (resp ? '<div style="padding:12px;background:' + respColor(resp) + '10;border:1px solid ' + respColor(resp) + '30;border-radius:8px;margin-top:8px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' + badge(respLabel(resp), respColor(resp)) + '<span style="font-size:13px;font-weight:600">\u2192 ' + respLabel(resp) + '</span></div><p style="font-size:12px;color:#8A8278">' + explainClassification(sig, r.responseCapacity) + '</p>' + (resp === 'manage' || resp === 'monitor-enhanced' ? ta('Response Plan', 'rp_' + r.id, r.responsePlan, 'What actions will you take to manage this risk?', 2) : '') + '</div>' : '') +
+            (resp ? '<div style="margin-top:8px">' + btn('Classify as ' + respLabel(resp), 'classifyRisk(\'' + r.id + '\',\'' + resp + '\')', respColor(resp), 'font-size:12px;padding:6px 14px') + '</div>' : ''), 'border-left:4px solid ' + (r.classification ? respColor(r.classification) : '#C8860A') + ';margin-bottom:12px')
+    });
+    h += vizSigMatrix();
+    var allClassified = scored.every(function(r) {
+        return r.classification
+    });
+    if (allClassified) h += doneBtn('saveDone33()', false, 'Mark Complete', '#C8860A');
+    return h
+}
+
+function classifyRisk(id, cls) {
+    var risks = data.risks || [];
+    risks.forEach(function(r) {
+        if (r.id === id) {
+            r.classification = cls;
+            r.status = 'assessed';
+            r.responsePlan = val('rp_' + id)
+        }
+    });
+    data.risks = risks;
+    saveData();
+    render()
+}
+
+function saveDone33() {
+    if (!data.completedSteps) data.completedSteps = {};
+    data.completedSteps['3.3'] = true;
+    saveData();
+    render()
+}
+
+// === PHASE 4 STEPS ===
+function render41() {
+    var systems = data.systems || [];
+    var risks = data.risks || [];
+    var exitPlans = data.exitPlans || {};
+    var highRiskSystems = systems.filter(function(s) {
+        return risks.some(function(r) {
+            return r.systemId === s.id && (r.severity === 'high' || r.classification === 'manage')
+        })
+    });
+    var allSystems = systems.length ? systems : [];
+    var h = vp('V-4.1', 'Build Exit Plans', '3\u20135 min') + ctxPanel('4.1');
+    h += '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Step 4.1: Build Exit Plans</h2><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:0 0 20px">Build documented shutdown procedures for high-risk AI systems \u2014 before you need them.</p>';
+    if (highRiskSystems.length) h += '<div style="padding:12px;background:rgba(155,45,63,.08);border-radius:8px;margin-bottom:20px;font-size:13px;color:#9B2D3F"><strong>' + highRiskSystems.length + '</strong> system' + (highRiskSystems.length !== 1 ? 's' : '') + ' with high-risk or Manage-classified risks need exit plans.</div>';
+    allSystems.forEach(function(s) {
+        var plan = exitPlans[s.id] || {};
+        var hasHighRisk = highRiskSystems.some(function(hs) {
+            return hs.id === s.id
+        });
+        h += card('<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><h4 style="font-size:14px;font-weight:700;margin:0">' + esc(s.name) + '</h4>' + (hasHighRisk ? badge('High Risk', '#9B2D3F') : badge('Standard', '#6B7F8D')) + '</div>' +
+            inp('Exit Director', 'ep_' + s.id + '_exitDirector', plan.exitDirector, 'Who owns the shutdown decision?') +
+            ta('Exit Triggers', 'ep_' + s.id + '_exitTriggers', plan.exitTriggers, 'Under what circumstances would this system be shut down?', 2) +
+            ta('Shutdown Sequence', 'ep_' + s.id + '_shutdownSequence', plan.shutdownSequence, 'Step-by-step: how do you turn this off safely?', 3) +
+            ta('Communication Plan', 'ep_' + s.id + '_communicationPlan', plan.communicationPlan, 'Who needs to know, and how will they be informed?', 2) +
+            ta('Fallback Process', 'ep_' + s.id + '_fallbackProcess', plan.fallbackProcess, 'What happens manually while the system is down?', 2) +
+            ta('Data Handling', 'ep_' + s.id + '_dataHandling', plan.dataHandling, 'What happens to data when the system is decommissioned?', 2), 'border-left:4px solid ' + (hasHighRisk ? '#9B2D3F' : '#3D4F5C') + ';margin-bottom:16px')
+    });
+    h += vizExitHealth();
+    h += doneBtn('saveExitPlans()', false, 'Mark Complete', '#3D4F5C');
+    return h
+}
+
+function saveExitPlans() {
+    if (!data.exitPlans) data.exitPlans = {};
+    (data.systems || []).forEach(function(s) {
+        data.exitPlans[s.id] = {};
+        ['exitDirector', 'exitTriggers', 'shutdownSequence', 'communicationPlan', 'fallbackProcess', 'dataHandling'].forEach(function(f) {
+            data.exitPlans[s.id][f] = val('ep_' + s.id + '_' + f)
+        })
+    });
+    if (!data.completedSteps) data.completedSteps = {};
+    data.completedSteps['4.1'] = true;
+    saveData();
+    render()
+}
+
+function render42() {
+    var gr = data.govRhythm || {};
+    var h = vp('V-4.2', 'Governance Rhythm', '3\u20135 min') + ctxPanel('4.2');
+    h += '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Step 4.2: Governance Rhythm</h2><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:0 0 20px">Establish the standing meetings, escalation protocols, and board reporting that sustain governance.</p>';
+    h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">Standing Governance Meeting</h3>' + sel('Meeting frequency', 'gr_meetingFrequency', gr.meetingFrequency, [{
+        v: '',
+        l: 'Select...'
+    }, {
+        v: 'weekly',
+        l: 'Weekly'
+    }, {
+        v: 'biweekly',
+        l: 'Biweekly'
+    }, {
+        v: 'monthly',
+        l: 'Monthly'
+    }, {
+        v: 'quarterly',
+        l: 'Quarterly'
+    }]) + inp('Duration', 'gr_meetingDuration', gr.meetingDuration, 'e.g., 60 minutes') + inp('Attendees *', 'gr_attendees', gr.attendees, 'e.g., Governance owner, system owners, legal...') + inp('First meeting date', 'gr_firstMeeting', gr.firstMeeting, '', 'date') + ta('Additional agenda', 'gr_additionalAgenda', gr.additionalAgenda, 'e.g., Risk register review, policy updates...', 2));
+    h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">Escalation & Reporting</h3>' + ta('Emergency escalation triggers', 'gr_emergencyTriggers', gr.emergencyTriggers, 'What triggers an immediate escalation outside the regular rhythm?', 2) + ta('Board/leadership reporting', 'gr_boardReporting', gr.boardReporting, 'How and when will governance be reported to the board?', 2));
+    h += doneBtn('saveGR()', false, 'Mark Complete', '#3D4F5C');
+    return h
+}
+
+function saveGR() {
+    if (!data.govRhythm) data.govRhythm = {};
+    ['meetingFrequency', 'meetingDuration', 'attendees', 'firstMeeting', 'additionalAgenda', 'emergencyTriggers', 'boardReporting'].forEach(function(f) {
+        data.govRhythm[f] = val('gr_' + f)
+    });
+    if (!data.completedSteps) data.completedSteps = {};
+    data.completedSteps['4.2'] = true;
+    saveData();
+    render()
+}
+
+function render43() {
+    var eo = data.embedOps || {};
+    var h = vp('V-4.3', 'Embed into Operations', '3\u20135 min') + ctxPanel('4.3');
+    h += '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Step 4.3: Embed into Operations</h2><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:0 0 20px">Make governance part of how your organization operates, not a separate activity.</p>';
+    h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">Deployment Gates</h3>' + ta('Full assessment gate *', 'eo_deploymentGate', eo.deploymentGate, 'What must be true before any new AI system can be deployed?', 3) + ta('Light assessment gate', 'eo_lightGate', eo.lightGate, 'What qualifies for a streamlined review?', 2));
+    h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">Reassessment Schedule</h3>' + sel('Reassessment frequency', 'eo_reassessFrequency', eo.reassessFrequency, [{
+        v: '',
+        l: 'Select...'
+    }, {
+        v: 'quarterly',
+        l: 'Quarterly'
+    }, {
+        v: 'biannual',
+        l: 'Every 6 months'
+    }, {
+        v: 'annual',
+        l: 'Annually'
+    }, {
+        v: 'risk-based',
+        l: 'Risk-based \u2014 frequency tied to classification level'
+    }]) + ta('Reassessment scope', 'eo_reassessScope', eo.reassessScope, 'What does a reassessment cover?', 2));
+    h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">Integration Points</h3>' + ta('Project management integration', 'eo_projectMgmt', eo.projectMgmt, 'How will governance checkpoints integrate with project workflows?', 2) + ta('HR integration', 'eo_hr', eo.hr, 'Governance requirements in job descriptions, onboarding, training?', 2) + ta('Procurement integration', 'eo_procurement', eo.procurement, 'Governance criteria for AI vendor selection and contracts?', 2));
+    h += doneBtn('saveEO()', false, 'Mark Complete', '#3D4F5C');
+    return h
+}
+
+function saveEO() {
+    if (!data.embedOps) data.embedOps = {};
+    ['deploymentGate', 'lightGate', 'reassessFrequency', 'reassessScope', 'projectMgmt', 'hr', 'procurement'].forEach(function(f) {
+        data.embedOps[f] = val('eo_' + f)
+    });
+    if (!data.completedSteps) data.completedSteps = {};
+    data.completedSteps['4.3'] = true;
+    saveData();
+    render()
+}
+
+function render44() {
+    var fr = data.firstReview || {};
+    var h = vp('V-4.4', 'First Governance Review', '3\u20135 min') + ctxPanel('4.4');
+    h += '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Step 4.4: First Governance Review</h2><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:0 0 20px">Assess what\'s working, what needs improvement, and plan the next iteration.</p>';
+    h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">Process Effectiveness</h3>' + likert('How effective was the risk identification process?', 'firstReview.riskIdEffectiveness', fr.riskIdEffectiveness, 'Ineffective', 'Very effective') + likert('How useful was the LIT assessment for prioritization?', 'firstReview.litEffectiveness', fr.litEffectiveness, 'Not useful', 'Very useful') + likert('How effective were the governance meetings?', 'firstReview.meetingEffectiveness', fr.meetingEffectiveness, 'Ineffective', 'Very effective') + likert('How well are deployment gates working?', 'firstReview.gateEffectiveness', fr.gateEffectiveness, 'Not working', 'Working well'));
+    h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">Culture Assessment</h3>' + likert('Has governance culture shifted since the start?', 'firstReview.cultureShift', fr.cultureShift, 'No change', 'Significant shift') + ta('Evidence of culture change', 'fr_cultureEvidence', fr.cultureEvidence, 'What behaviours or decisions demonstrate that governance is taking root?', 2));
+    h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">Improvement Plan</h3>' + ta('What\'s working well?', 'fr_working', fr.working, '', 2) + ta('What are the bottlenecks?', 'fr_bottlenecks', fr.bottlenecks, '', 2) + ta('What will you change for the next iteration?', 'fr_nextIteration', fr.nextIteration, '', 3));
+    h += doneBtn('saveFR()', false, 'Mark Complete \u2014 90-Day Build Complete', '#3D4F5C');
+    return h
+}
+
+function saveFR() {
+    if (!data.firstReview) data.firstReview = {};
+    ['cultureEvidence', 'working', 'bottlenecks', 'nextIteration'].forEach(function(f) {
+        data.firstReview[f] = val('fr_' + f)
+    });
+    if (!data.completedSteps) data.completedSteps = {};
+    data.completedSteps['4.4'] = true;
+    saveData();
+    render()
+}
+// === OUTCOME PAGES ===
+
+// Risk Assessment Report (Phase 1)
+function renderOutRiskAssess() {
+    var risks = data.risks || [];
+    var dr = data.decisionRights || {};
+    var ab = data.assessmentBattery || {};
+    var exp = ab.aiExposure || {};
+    var tol = ab.riskTolerance || {};
+    var ctrl = ab.existingControls || {};
+    if (!risks.length && !dr.approveDeployment) return '<h2 style="font-size:20px;font-weight:700">Risk Assessment Report</h2>' + card('<div style="text-align:center;padding:48px"><p style="color:rgba(138,130,120,.5)">Complete Phase 1 steps first.</p></div>');
+    var eVals = Object.values(exp).filter(function(v) {
+        return typeof v === 'number'
+    });
+    var expAvg = eVals.length ? (eVals.reduce(function(a, b) {
+        return a + b
+    }, 0) / eVals.length).toFixed(1) : '—';
+    var cVals = Object.values(ctrl).filter(function(v) {
+        return typeof v === 'number'
+    });
+    var ctrlAvg = cVals.length ? (cVals.reduce(function(a, b) {
+        return a + b
+    }, 0) / cVals.length).toFixed(1) : '—';
+    var gc = data.govCulture || {};
+    var gVals = Object.values(gc).filter(function(v) {
+        return typeof v === 'number'
+    });
+    var culAvg = gVals.length ? (gVals.reduce(function(a, b) {
+        return a + b
+    }, 0) / gVals.length).toFixed(1) : '—';
+    var highRisks = risks.filter(function(r) {
+        return r.severity === 'high'
+    });
+    var ethicalRisks = risks.filter(function(r) {
+        return r.ethicalFlag
+    });
+
+    var h = '<div style="display:flex;justify-content:space-between;margin-bottom:20px"><div><h2 style="font-size:20px;font-weight:700;margin:0 0 4px">Risk Assessment Report</h2><p style="color:rgba(138,130,120,.7);font-size:13px">From Phase 1: Map</p></div>' + btn('\u25be Download PDF', 'printPage()', '', 'font-size:13px') + '</div>';
+    h += card('<div style="font-size:12px;font-weight:700;color:' + '#1E6E6E' + ';text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Assessment Summary</div><div style="display:flex;gap:12px;margin-bottom:12px">' +
+        '<div style="flex:1;text-align:center;padding:12px;background:rgba(30,110,110,.06);border-radius:8px"><div style="font-size:20px;font-weight:800;color:' + '#1E6E6E' + '">' + expAvg + '/5</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">AI Exposure</div></div>' +
+        '<div style="flex:1;text-align:center;padding:12px;background:rgba(30,110,110,.06);border-radius:8px"><div style="font-size:20px;font-weight:800;color:' + '#1E6E6E' + '">' + ctrlAvg + '/5</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">Existing Controls</div></div>' +
+        '<div style="flex:1;text-align:center;padding:12px;background:rgba(30,110,110,.06);border-radius:8px"><div style="font-size:20px;font-weight:800;color:' + '#1E6E6E' + '">' + culAvg + '/5</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">Governance Culture</div></div></div>' +
+        '<p style="font-size:13px;color:#B09080;line-height:1.6">' + risks.length + ' risks identified: ' + highRisks.length + ' high, ' + risks.filter(function(r) {
+            return r.severity === 'medium'
+        }).length + ' medium, ' + risks.filter(function(r) {
+            return r.severity === 'low'
+        }).length + ' low. ' + ethicalRisks.length + ' carry ethical flags.</p>', 'background:rgba(30,110,110,.06);border:2px solid ' + '#1E6E6E' + ';margin-bottom:20px');
+
+    if (highRisks.length) {
+        h += '<h3 style="font-size:15px;font-weight:700;color:#9B2D3F;margin:0 0 12px">High-Severity Risks</h3>';
+        highRisks.forEach(function(r) {
+            h += card('<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><h4 style="font-size:14px;font-weight:700;margin:0">' + esc(r.name) + '</h4>' + postiTag(r.category) + (r.ethicalFlag ? badge('Ethical', '#7B4F8A') : '') + '</div><p style="font-size:12px;color:#8A8278">' + esc(r.description) + '</p>', 'border-left:4px solid #9B2D3F;margin-bottom:8px')
+        })
+    }
+    if (ethicalRisks.length) {
+        h += '<h3 style="font-size:15px;font-weight:700;color:#7B4F8A;margin:16px 0 12px">Ethical Risks</h3>';
+        ethicalRisks.forEach(function(r) {
+            h += card('<h4 style="font-size:14px;font-weight:700;margin:0 0 4px">' + esc(r.name) + '</h4><p style="font-size:12px;color:#7B4F8A">' + esc(r.ethicalDesc || r.description) + '</p>', 'border-left:4px solid #7B4F8A;margin-bottom:8px')
+        })
+    }
+    h += card('<h3 style="font-size:15px;font-weight:700;margin:0 0 8px">Decision Rights</h3><p style="font-size:13px;line-height:1.7"><strong>Approve:</strong> ' + esc(dr.approveDeployment || '\u2014') + '<br/><strong>Halt:</strong> ' + esc(dr.haltDeployment || '\u2014') + '<br/><strong>Gaps:</strong> ' + esc(dr.gaps || 'None noted') + '</p>');
+    h += riskViz('identified', {
+        identified: 'out-riskreg',
+        assessed: 'out-assessedreg',
+        managed: 'out-updatedreg',
+        resolved: 'out-updatedreg'
+    });
+    h += vizRadar();
+    return h
+}
+
+
+// Initial Risk Register (Phase 1)
+function renderOutRiskReg() {
+    var allRisks = data.risks || [];
+    var systems = data.systems || [];
+    var risks = allRisks.filter(function(r) {
+        return !r.classification && (r.status === 'identified' || !r.status)
+    });
+    var h = '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Initial Risk Register</h2><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:0 0 20px">Risks identified during Phase 1 mapping — not yet scored or classified.</p>';
+    h += riskViz('identified', {
+        identified: 'out-riskreg',
+        assessed: 'out-assessedreg',
+        managed: 'out-updatedreg',
+        resolved: 'out-updatedreg'
+    });
+    if (!risks.length) {
+        h += card('<div style="text-align:center;padding:48px"><p style="color:rgba(138,130,120,.5)">' + (allRisks.length ? 'All risks have progressed beyond identification. See Assessed or Updated registers.' : 'No risks identified yet. Complete Step 1.3.') + '</p></div>');
+        return h
+    }
+    risks.forEach(function(r) {
+        var sys = systems.find(function(s) {
+            return s.id === r.systemId
+        });
+        h += card('<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px"><h4 style="font-size:14px;font-weight:700;margin:0">' + esc(r.name) + '</h4>' + postiTag(r.category) + sevTag(r.severity) + trackTag(r.source) + (r.ethicalFlag ? badge('Ethical', '#7B4F8A') : '') + '</div><p style="font-size:12px;color:#8A8278;margin:4px 0">' + esc(r.description) + '</p>' + (sys ? '<div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7);margin-top:4px">System: ' + esc(sys.name) + '</div>' : ''), 'border-left:4px solid ' + (r.source === 'external' ? TC.external : TC.internal) + ';margin-bottom:8px')
+    });
+    return h
+}
+
+// Governance Readiness (Phase 2)
+function renderOutGovReady() {
+    var ef = data.ethicalFramework || {};
+    var os = data.ownership || {};
+    var rc = data.reviewCadence || {};
+    var is = data.incentivesSkills || {};
+    var co = data.completedSteps || {};
+    var stepsComplete = [co['2.1'], co['2.2'], co['2.3'], co['2.4']].filter(Boolean).length;
+    var efComplete = ['fairness', 'humanOversight', 'workforceImpact', 'societalEffects', 'transparency'].filter(function(k) {
+        return ef[k]
+    }).length;
+    var osComplete = [os.governanceOwner, os.govModel, os.escalation].filter(Boolean).length;
+    var sVals = [is.leadershipSkill, is.technicalSkill, is.frontlineSkill, is.legalSkill].filter(function(v) {
+        return typeof v === 'number'
+    });
+    var skillAvg = sVals.length ? (sVals.reduce(function(a, b) {
+        return a + b
+    }, 0) / sVals.length).toFixed(1) : '—';
+
+    var h = '<div style="display:flex;justify-content:space-between;margin-bottom:20px"><div><h2 style="font-size:20px;font-weight:700;margin:0 0 4px">Governance Readiness Summary</h2><p style="color:rgba(138,130,120,.7);font-size:13px">From Phase 2: Build</p></div>' + btn('\u25be Download PDF', 'printPage()', '', 'font-size:13px') + '</div>';
+    h += card('<div style="display:flex;gap:12px">' +
+        '<div style="flex:1;text-align:center;padding:12px;background:rgba(27,107,90,.06);border-radius:8px"><div style="font-size:20px;font-weight:800;color:' + '#8B4513' + '">' + stepsComplete + '/4</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">Steps</div></div>' +
+        '<div style="flex:1;text-align:center;padding:12px;background:rgba(27,107,90,.06);border-radius:8px"><div style="font-size:20px;font-weight:800;color:' + '#8B4513' + '">' + efComplete + '/5</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">Ethical Pillars</div></div>' +
+        '<div style="flex:1;text-align:center;padding:12px;background:rgba(27,107,90,.06);border-radius:8px"><div style="font-size:20px;font-weight:800;color:' + '#8B4513' + '">' + osComplete + '/3</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">Ownership</div></div>' +
+        '<div style="flex:1;text-align:center;padding:12px;background:rgba(27,107,90,.06);border-radius:8px"><div style="font-size:20px;font-weight:800;color:' + '#8B4513' + '">' + skillAvg + '/5</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">Skills Avg</div></div></div>', 'background:rgba(27,107,90,.06);border:2px solid ' + '#8B4513');
+    h += card('<h3 style="font-size:15px;font-weight:700;margin:0 0 8px">Ethical Framework</h3>' + ['fairness', 'humanOversight', 'workforceImpact', 'societalEffects', 'transparency'].map(function(k) {
+        var labels = {
+            fairness: 'Fairness',
+            humanOversight: 'Human Oversight',
+            workforceImpact: 'Workforce Impact',
+            societalEffects: 'Societal Effects',
+            transparency: 'Transparency'
+        };
+        return '<div style="padding:6px 0;border-bottom:1px solid rgba(245,242,236,.06);font-size:13px"><strong>' + labels[k] + ':</strong> ' + (ef[k] ? esc(ef[k].substring(0, 120)) + (ef[k].length > 120 ? '...' : '') : '<em style="color:rgba(138,130,120,.4)">Not defined</em>') + '</div>'
+    }).join(''));
+    h += card('<h3 style="font-size:15px;font-weight:700;margin:0 0 8px">Ownership</h3><p style="font-size:13px;line-height:1.7"><strong>Owner:</strong> ' + esc(os.governanceOwner || 'Not assigned') + '<br/><strong>Model:</strong> ' + (os.govModel ? {
+        centralized: 'Centralized',
+        decentralized: 'Decentralized',
+        hybrid: 'Hybrid',
+        committee: 'Committee'
+    } [os.govModel] || os.govModel : '<em style="color:#cc4444">Not selected</em>') + '<br/><strong>RACI Activities:</strong> ' + (data.raciMatrix || []).length + ' defined</p>');
+
+    h += card('<h3 style="font-size:15px;font-weight:700;margin:0 0 8px">Risk Review Cadence</h3><p style="font-size:13px;line-height:1.7"><strong>Risk Pulse:</strong> ' + esc(rc.pulseFrequency || 'Not set') + '<br/><strong>First meeting:</strong> ' + esc(rc.firstPulse || 'Not scheduled') + '<br/><strong>Full review trigger:</strong> ' + esc(rc.fullReviewTrigger || 'Not defined') + '</p>');
+
+    h += card('<h3 style="font-size:15px;font-weight:700;margin:0 0 8px">Skills Readiness</h3><p style="font-size:13px;line-height:1.7">Leadership: ' + (is.leadershipSkill || '\u2014') + '/5 \xb7 Technical: ' + (is.technicalSkill || '\u2014') + '/5 \xb7 Frontline: ' + (is.frontlineSkill || '\u2014') + '/5 \xb7 Legal: ' + (is.legalSkill || '\u2014') + '/5</p>');
+
+    // Governance Readiness Checklist
+    var chkItems = [{
+        check: !!ef.fairness,
+        label: 'Ethical principles defined'
+    }, {
+        check: !!os.governanceOwner,
+        label: 'Governance owner assigned'
+    }, {
+        check: (data.raciMatrix || []).length > 0,
+        label: 'RACI matrix built'
+    }, {
+        check: !!rc.pulseFrequency,
+        label: 'Risk Pulse cadence set'
+    }, {
+        check: !!rc.fullReviewTrigger,
+        label: 'Review thresholds defined'
+    }, {
+        check: !!(is.leadershipSkill && is.technicalSkill),
+        label: 'Skills gaps assessed'
+    }, {
+        check: !!is.plan90,
+        label: 'Development plan created'
+    }, {
+        check: !!os.govModel,
+        label: 'Governance model selected'
+    }];
+    var chkDone = chkItems.filter(function(c) {
+        return c.check
+    }).length;
+    var chkPct = Math.round(chkDone / chkItems.length * 100);
+    h += card('<h3 style="font-size:15px;font-weight:700;margin:0 0 12px">Governance Readiness Checklist</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">' + chkItems.map(function(item) {
+        return '<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:' + (item.check ? '#f0f8f0' : '#fafafa') + ';border-radius:6px"><div style="width:16px;height:16px;border-radius:8px;background:' + (item.check ? '#1B6B5A' : '#ddd') + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:var(--font-label);flex-shrink:0">' + (item.check ? '\u2713' : '') + '</div><span style="font-size:12px;color:' + (item.check ? '#1B6B5A' : '#999') + '">' + item.label + '</span></div>'
+    }).join('') + '</div><div style="margin-top:12px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:rgba(138,130,120,.7)">Readiness</span><span style="font-weight:700;color:' + (chkDone === 8 ? '#1B6B5A' : '#8B4513') + '">' + chkPct + '%</span></div><div style="height:8px;background:rgba(245,242,236,.06);border-radius:4px;overflow:hidden"><div style="height:100%;width:' + chkPct + '%;background:' + (chkDone === 8 ? '#1B6B5A' : '#8B4513') + ';border-radius:4px"></div></div></div>');
+    return h
+}
+
+// RACI Outcome
+function renderOutRaci2() {
+    var raci = data.raciMatrix || [];
+    var h = '<div style="display:flex;justify-content:space-between;margin-bottom:20px"><div><h2 style="font-size:20px;font-weight:700;margin:0 0 4px">RACI Matrix</h2><p style="color:rgba(138,130,120,.7);font-size:13px">AI Governance Responsibilities</p></div>' + (raci.length ? btn('\u25be Download PDF', 'printPage()', '', 'font-size:13px') : '') + '</div>';
+    if (!raci.length) {
+        h += card('<div style="text-align:center;padding:48px"><p style="color:rgba(138,130,120,.5)">Build your RACI matrix in Step 2.2.</p></div>');
+        return h
+    }
+    h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr><th style="text-align:left;padding:10px;border-bottom:2px solid ' + '#8B4513' + ';color:' + '#8B4513' + '">Activity</th><th style="padding:10px;border-bottom:2px solid ' + '#8B4513' + ';color:' + '#8B4513' + '">Responsible</th><th style="padding:10px;border-bottom:2px solid ' + '#8B4513' + ';color:' + '#8B4513' + '">Accountable</th><th style="padding:10px;border-bottom:2px solid ' + '#8B4513' + ';color:' + '#8B4513' + '">Consulted</th><th style="padding:10px;border-bottom:2px solid ' + '#8B4513' + ';color:' + '#8B4513' + '">Informed</th></tr></thead><tbody>';
+    raci.forEach(function(r, i) {
+        h += '<tr style="background:' + (i % 2 === 0 ? 'rgba(245,242,236,.03)' : 'transparent') + '"><td style="padding:10px;border-bottom:1px solid rgba(245,242,236,.06);font-weight:600">' + esc(r.activity) + '</td><td style="padding:10px;border-bottom:1px solid rgba(245,242,236,.06)">' + esc(r.responsible) + '</td><td style="padding:10px;border-bottom:1px solid rgba(245,242,236,.06)">' + esc(r.accountable) + '</td><td style="padding:10px;border-bottom:1px solid rgba(245,242,236,.06)">' + esc(r.consulted) + '</td><td style="padding:10px;border-bottom:1px solid rgba(245,242,236,.06)">' + esc(r.informed) + '</td></tr>'
+    });
+    h += '</tbody></table></div>';
+    return h
+}
+
+// Ethics Doc Outcome
+function renderOutEthicsDoc() {
+    var ef = data.ethicalFramework || {};
+    var sections = [{
+        k: 'fairness',
+        t: 'Fairness'
+    }, {
+        k: 'humanOversight',
+        t: 'Human Oversight'
+    }, {
+        k: 'workforceImpact',
+        t: 'Workforce Impact'
+    }, {
+        k: 'societalEffects',
+        t: 'Societal Effects'
+    }, {
+        k: 'transparency',
+        t: 'Transparency'
+    }];
+    var h = '<div style="display:flex;justify-content:space-between;margin-bottom:20px"><div><h2 style="font-size:20px;font-weight:700;margin:0 0 4px">Ethical Framework Document</h2><p style="color:rgba(138,130,120,.7);font-size:13px">Your organization\'s ethical AI principles</p></div>' + btn('\u25be Download PDF', 'printPage()', '', 'font-size:13px') + '</div>';
+    sections.forEach(function(s) {
+        h += card('<h3 style="font-size:15px;font-weight:700;color:' + '#8B4513' + ';margin:0 0 8px">' + s.t + '</h3>' + (ef[s.k] ? '<p style="font-size:13px;color:#B09080;line-height:1.7">' + esc(ef[s.k]) + '</p>' : '<p style="color:rgba(138,130,120,.4);font-style:italic">Not yet defined</p>') + (s.k === 'humanOversight' && ef.defaultAutonomy ? '<p style="font-size:12px;color:rgba(138,130,120,.7);margin-top:8px"><strong>Default autonomy:</strong> ' + esc(ef.defaultAutonomy) + '</p>' : '') + (s.k === 'fairness' && ef.biasProcess ? '<p style="font-size:12px;color:rgba(138,130,120,.7);margin-top:8px"><strong>Bias testing:</strong> ' + esc(ef.biasProcess) + '</p>' : '') + (s.k === 'workforceImpact' && ef.employeeCommitments ? '<p style="font-size:12px;color:rgba(138,130,120,.7);margin-top:8px"><strong>Employee commitments:</strong> ' + esc(ef.employeeCommitments) + '</p>' : ''), 'border-left:4px solid ' + '#8B4513' + ';margin-bottom:8px')
+    });
+    return h
+}
+
+// Assessed Risk Register (Phase 3)
+function renderOutAssessedReg() {
+    var allRisks = data.risks || [];
+    var risks = allRisks.filter(function(r) {
+        return r.litL || r.classification
+    });
+    var h = '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Assessed Risk Register</h2><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:0 0 20px">Risks with LIT scores and ethical assessments.</p>';
+    h += riskViz('assessed', {
+        identified: 'out-riskreg',
+        assessed: 'out-assessedreg',
+        managed: 'out-updatedreg',
+        resolved: 'out-updatedreg'
+    });
+    if (!risks.length) {
+        h += card('<div style="text-align:center;padding:48px"><p style="color:rgba(138,130,120,.5)">No risks assessed yet. Complete Phase 3 steps to score risks.</p></div>');
+        return h
+    }
+    risks.forEach(function(r) {
+        var composite = (r.litL || 0) + (r.litI || 0) + (r.litT || 0);
+        h += card('<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px"><h4 style="font-size:14px;font-weight:700;margin:0">' + esc(r.name) + '</h4>' + postiTag(r.category) + sevTag(r.severity) + (r.classification ? badge(respLabel(r.classification), respColor(r.classification)) : '') + (r.ethicalFlag ? badge('Ethical', '#7B4F8A') : '') + '</div><p style="font-size:12px;color:#8A8278">' + esc(r.description) + '</p></div>' + (r.litL ? '<div style="text-align:center;min-width:60px;padding:8px;background:rgba(200,134,10,.08);border-radius:8px"><div style="font-size:18px;font-weight:800;color:' + '#C8860A' + '">' + composite + '</div><div style="font-size:var(--font-control);color:rgba(138,130,120,.7)">/15</div></div>' : '') + '</div>', 'border-left:4px solid ' + (r.classification ? respColor(r.classification) : '#C8860A') + ';margin-bottom:8px')
+    });
+    return h
+}
+
+// Risk Classification Report (Phase 3)
+function renderOutRiskClass() {
+    var risks = data.risks || [];
+    var classified = risks.filter(function(r) {
+        return r.classification
+    });
+    var manage = classified.filter(function(r) {
+        return r.classification === 'manage'
+    });
+    var monEnh = classified.filter(function(r) {
+        return r.classification === 'monitor-enhanced'
+    });
+    var monitor = classified.filter(function(r) {
+        return r.classification === 'monitor'
+    });
+    var h = '<div style="display:flex;justify-content:space-between;margin-bottom:20px"><div><h2 style="font-size:20px;font-weight:700;margin:0 0 4px">Risk Classification Report</h2><p style="color:rgba(138,130,120,.7);font-size:13px">From Phase 3: Assess</p></div>' + (classified.length ? btn('\u25be Download PDF', 'printPage()', '', 'font-size:13px') : '') + '</div>';
+    if (!classified.length) {
+        h += card('<div style="text-align:center;padding:48px"><p style="color:rgba(138,130,120,.5)">Complete Step 3.3 to classify risks.</p></div>');
+        return h
+    }
+    h += card('<div style="display:flex;gap:12px;margin-bottom:16px"><div style="flex:1;text-align:center;padding:14px;background:#9B2D3F10;border-radius:8px;border:2px solid #9B2D3F30"><div style="font-size:28px;font-weight:800;color:#9B2D3F">' + manage.length + '</div><div style="font-size:var(--font-readable-sm);color:#9B2D3F;font-weight:600">Manage</div></div><div style="flex:1;text-align:center;padding:14px;background:#B5547A10;border-radius:8px;border:2px solid #B5547A30"><div style="font-size:28px;font-weight:800;color:#B5547A">' + monEnh.length + '</div><div style="font-size:var(--font-readable-sm);color:#B5547A;font-weight:600">Monitor Enhanced</div></div><div style="flex:1;text-align:center;padding:14px;background:#3A8B8B10;border-radius:8px;border:2px solid #3A8B8B30"><div style="font-size:28px;font-weight:800;color:#3A8B8B">' + monitor.length + '</div><div style="font-size:var(--font-readable-sm);color:#3A8B8B;font-weight:600">Monitor</div></div></div>');
+    [{
+        l: 'Manage',
+        items: manage,
+        c: '#9B2D3F'
+    }, {
+        l: 'Monitor Enhanced',
+        items: monEnh,
+        c: '#B5547A'
+    }, {
+        l: 'Monitor',
+        items: monitor,
+        c: '#3A8B8B'
+    }].forEach(function(g) {
+        if (g.items.length) {
+            h += '<h3 style="font-size:14px;font-weight:700;color:' + g.c + ';margin:16px 0 8px">' + g.l + ' (' + g.items.length + ')</h3>';
+            g.items.forEach(function(r) {
+                h += card('<div style="display:flex;justify-content:space-between"><div><h4 style="font-size:14px;font-weight:700;margin:0">' + esc(r.name) + '</h4>' + (r.responsePlan ? '<p style="font-size:12px;color:#8A8278;margin:4px 0">' + esc(r.responsePlan) + '</p>' : '') + '</div><div style="font-size:12px;color:rgba(138,130,120,.7)">LIT: ' + (r.litComposite || (r.litL || 0) + (r.litI || 0) + (r.litT || 0)) + '/15</div></div>', 'border-left:4px solid ' + g.c + ';margin-bottom:8px')
+            })
+        }
+    });
+    return h
+}
+
+// Governance Framework (Phase 4)
+function renderOutGovFW() {
+    var ef = data.ethicalFramework || {};
+    var os = data.ownership || {};
+    var dr = data.decisionRights || {};
+    var gr = data.govRhythm || {};
+    var eo = data.embedOps || {};
+    var rc = data.reviewCadence || {};
+    var h = '<div style="display:flex;justify-content:space-between;margin-bottom:20px"><div><h2 style="font-size:20px;font-weight:700;color:' + '#3D4F5C' + ';margin:0 0 4px">Governance Framework</h2><p style="color:rgba(138,130,120,.7);font-size:13px">Your complete AI governance framework from Phases 1\u20134</p></div>' + btn('\u25be Download PDF', 'printPage()', '', 'font-size:13px') + '</div>';
+    // Visual governance owner badge + decision rights + operational status
+    h += card('<div style="text-align:center;margin-bottom:16px"><div style="display:inline-block;padding:10px 24px;background:' + '#3D4F5C' + ';color:#fff;border-radius:8px;font-size:14px;font-weight:700;margin-bottom:8px">' + esc(os.governanceOwner || 'Governance Owner') + '</div></div>' +
+        '<div style="display:flex;justify-content:center;gap:8px;margin-bottom:8px">' + [{
+            label: 'Approve',
+            value: dr.approveDeployment,
+            icon: '\u25ce'
+        }, {
+            label: 'Halt',
+            value: dr.haltDeployment,
+            icon: '\u2297'
+        }, {
+            label: 'Review',
+            value: dr.requireReview,
+            icon: '\u25c7'
+        }].map(function(d) {
+            return '<div style="padding:8px 12px;background:rgba(245,242,236,.03);border-radius:6px;text-align:center;min-width:90px;border:1px solid rgba(245,242,236,.08)"><div style="font-size:14px">' + d.icon + '</div><div style="font-size:var(--font-control);font-weight:700;color:' + '#3D4F5C' + '">' + d.label + '</div><div style="font-size:var(--font-label);color:rgba(138,130,120,.7);margin-top:2px">' + (d.value ? (d.value.length > 20 ? esc(d.value.substring(0, 18)) + '\u2026' : esc(d.value)) : 'Not set') + '</div></div>'
+        }).join('') + '</div>' +
+        '<div style="display:flex;justify-content:center;gap:8px">' + [{
+            label: 'Risk Pulse',
+            value: rc.pulseFrequency,
+            icon: '\u21bb'
+        }, {
+            label: 'Gov Meeting',
+            value: gr.meetingFrequency,
+            icon: '\u25a1'
+        }, {
+            label: 'Deploy Gate',
+            value: eo.deploymentGate ? 'Active' : 'Not set',
+            icon: '\u25a4'
+        }, {
+            label: 'Reassessment',
+            value: eo.reassessFrequency,
+            icon: '\u229f'
+        }].map(function(d) {
+            return '<div style="padding:6px 10px;background:rgba(245,242,236,.03);border-radius:6px;text-align:center;min-width:80px;border:1px solid rgba(245,242,236,.08)"><div style="font-size:12px">' + d.icon + '</div><div style="font-size:var(--font-label);font-weight:600;color:#B09080">' + d.label + '</div><div style="font-size:var(--font-label);color:' + (d.value && d.value !== 'Not set' ? '#1B6B5A' : '#999') + '">' + (d.value || 'Not set') + '</div></div>'
+        }).join('') + '</div>', 'background:rgba(61,79,92,.08);border:none;margin-bottom:20px');
+    h += card('<h3 style="font-size:15px;font-weight:700;margin:0 0 8px">Governance Owner</h3><p style="font-size:13px;color:#B09080">' + esc(os.governanceOwner || 'Not assigned') + '</p>' + (os.ownerAuthority ? '<p style="font-size:12px;color:rgba(138,130,120,.7);margin-top:4px">Authority: ' + esc(os.ownerAuthority) + '</p>' : ''), 'border-left:4px solid ' + '#3D4F5C');
+    h += card('<h3 style="font-size:15px;font-weight:700;margin:0 0 8px">Decision Rights</h3><div style="font-size:13px;color:#B09080;line-height:1.8"><p><strong>Approve:</strong> ' + esc(dr.approveDeployment || 'Not defined') + '</p><p><strong>Halt:</strong> ' + esc(dr.haltDeployment || 'Not defined') + '</p><p><strong>Review:</strong> ' + esc(dr.requireReview || 'Not defined') + '</p></div>', 'border-left:4px solid ' + '#3D4F5C');
+    h += card('<h3 style="font-size:15px;font-weight:700;margin:0 0 8px">Governance Rhythm</h3><div style="font-size:13px;color:#B09080;line-height:1.8"><p><strong>Meeting:</strong> ' + esc(gr.meetingFrequency || 'Not set') + ' \u2014 ' + esc(gr.firstMeeting || 'date TBD') + '</p><p><strong>Risk Pulse:</strong> ' + esc(rc.pulseFrequency || 'Not set') + '</p><p><strong>Emergency triggers:</strong> ' + esc(gr.emergencyTriggers || 'Not defined') + '</p></div>', 'border-left:4px solid ' + '#3D4F5C');
+    h += card('<h3 style="font-size:15px;font-weight:700;margin:0 0 8px">Operational Integration</h3><div style="font-size:13px;color:#B09080;line-height:1.8"><p><strong>Deployment gates:</strong> ' + esc(eo.deploymentGate || 'Not defined') + '</p><p><strong>Reassessment:</strong> ' + esc(eo.reassessFrequency || 'Not set') + '</p></div>', 'border-left:4px solid ' + '#3D4F5C');
+    return h
+}
+
+// Exit Plan Portfolio (Phase 4)
+function renderOutExitPlans() {
+    var systems = data.systems || [];
+    var exitPlans = data.exitPlans || {};
+    var systemsWithPlans = systems.filter(function(s) {
+        return exitPlans[s.id] && (exitPlans[s.id].exitTriggers || exitPlans[s.id].shutdownSequence)
+    });
+    var h = '<div style="display:flex;justify-content:space-between;margin-bottom:20px"><div><h2 style="font-size:20px;font-weight:700;margin:0 0 4px">Exit Plan Portfolio</h2><p style="color:rgba(138,130,120,.7);font-size:13px">Documented shutdown procedures</p></div>' + (systemsWithPlans.length ? btn('\u25be Download PDF', 'printPage()', '', 'font-size:13px') : '') + '</div>';
+    if (!systemsWithPlans.length) {
+        h += card('<div style="text-align:center;padding:48px"><p style="color:rgba(138,130,120,.5)">Complete Step 4.1 to build exit plans.</p></div>');
+        return h
+    }
+    systemsWithPlans.forEach(function(s) {
+        var p = exitPlans[s.id] || {};
+        h += card('<h3 style="font-size:15px;font-weight:700;margin:0 0 12px">' + esc(s.name) + '</h3>' + [{
+            l: 'Exit Director',
+            v: p.exitDirector
+        }, {
+            l: 'Triggers',
+            v: p.exitTriggers
+        }, {
+            l: 'Shutdown Sequence',
+            v: p.shutdownSequence
+        }, {
+            l: 'Communication',
+            v: p.communicationPlan
+        }, {
+            l: 'Fallback Process',
+            v: p.fallbackProcess
+        }, {
+            l: 'Data Handling',
+            v: p.dataHandling
+        }].map(function(f) {
+            return '<div style="padding:6px 0;border-bottom:1px solid rgba(245,242,236,.06);font-size:13px"><strong>' + f.l + ':</strong> ' + esc(f.v || '\u2014') + '</div>'
+        }).join(''), 'border-left:4px solid ' + '#3D4F5C' + ';margin-bottom:12px')
+    });
+    return h
+}
+
+// Updated Risk Register (Phase 4)
+function renderOutUpdatedReg() {
+    var allRisks = data.risks || [];
+    var risks = allRisks.filter(function(r) {
+        return r.classification
+    });
+    var h = '<h2 style="font-size:20px;font-weight:700;margin:0 0 12px">Updated Risk Register</h2><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:0 0 20px">Current state of risks after classification and management actions.</p>';
+    h += riskViz('managed', {
+        identified: 'out-riskreg',
+        assessed: 'out-assessedreg',
+        managed: 'out-updatedreg',
+        resolved: 'out-updatedreg'
+    }, {
+        identified: allRisks.filter(function(r) {
+            return !r.classification && (r.status === 'identified' || !r.status)
+        }).length,
+        assessed: allRisks.filter(function(r) {
+            return !r.classification && r.status === 'assessed'
+        }).length,
+        managed: allRisks.filter(function(r) {
+            return r.classification
+        }).length,
+        resolved: allRisks.filter(function(r) {
+            return r.status === 'resolved'
+        }).length
+    });
+    if (!risks.length) {
+        h += card('<div style="text-align:center;padding:48px"><p style="color:rgba(138,130,120,.5)">' + (allRisks.length ? 'No risks classified yet. Complete Phase 3 to classify risks.' : 'No risks yet.') + '</p></div>');
+        return h
+    }
+    risks.forEach(function(r) {
+        h += card('<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px"><h4 style="font-size:14px;font-weight:700;margin:0">' + esc(r.name) + '</h4>' + postiTag(r.category) + sevTag(r.severity) + trackTag(r.source) + (r.classification ? badge(respLabel(r.classification), respColor(r.classification)) : '') + (r.ethicalFlag ? badge('Ethical', '#7B4F8A') : '') + '</div><p style="font-size:12px;color:#8A8278;margin:4px 0">' + esc(r.description) + '</p>' + (r.responsePlan ? '<p style="font-size:12px;color:#B09080;margin-top:4px"><strong>Plan:</strong> ' + esc(r.responsePlan) + '</p>' : '') + '</div>' + (r.litL ? '<div style="text-align:center;min-width:50px"><div style="font-size:16px;font-weight:800;color:' + '#3D4F5C' + '">' + ((r.litL || 0) + (r.litI || 0) + (r.litT || 0)) + '</div><div style="font-size:var(--font-control);color:rgba(138,130,120,.7)">/15</div></div>' : '') + '</div>', 'border-left:4px solid ' + (r.classification ? respColor(r.classification) : '#ddd') + ';margin-bottom:8px')
+    });
+    return h
+}
+
+// Phase 5 Dashboard - rewritten to match React
+function renderDashboardContent() {
+    var risks = data.risks || [];
+    var systems = data.systems || [];
+    var gr = data.govRhythm || {};
+    var rc = data.reviewCadence || {};
+    var managed = risks.filter(function(r) {
+        return r.classification === 'manage'
+    });
+    var monEnh = risks.filter(function(r) {
+        return r.classification === 'monitor-enhanced'
+    });
+    var monRisks = risks.filter(function(r) {
+        return r.classification === 'monitor'
+    });
+    var ethical = risks.filter(function(r) {
+        return r.ethicalFlag
+    });
+    var pipeCounts = {
+        identified: risks.filter(function(r) {
+            return !r.classification && (r.status === 'identified' || !r.status)
+        }).length,
+        assessed: risks.filter(function(r) {
+            return !r.classification && r.status === 'assessed'
+        }).length,
+        managed: risks.filter(function(r) {
+            return r.classification
+        }).length,
+        resolved: risks.filter(function(r) {
+            return r.status === 'resolved'
+        }).length
+    };
+
+    // If activeView is set, show filtered risk list
+    if (UI.activeView) {
+        var viewTitle = {
+            identified: 'Identified Risks',
+            assessed: 'Assessed Risks',
+            managed: 'Managed Risks',
+            resolved: 'Resolved Risks',
+            manage: 'Manage Classification',
+            'monitor-enhanced': 'Monitor Enhanced Classification',
+            monitor: 'Monitor Classification',
+            ethical: 'Ethical Risks'
+        };
+        var filtered = [];
+        if (UI.activeView === 'identified') filtered = risks.filter(function(r) {
+            return !r.classification && (r.status === 'identified' || !r.status)
+        });
+        else if (UI.activeView === 'assessed') filtered = risks.filter(function(r) {
+            return !r.classification && r.status === 'assessed'
+        });
+        else if (UI.activeView === 'managed') filtered = risks.filter(function(r) {
+            return r.classification
+        });
+        else if (UI.activeView === 'resolved') filtered = risks.filter(function(r) {
+            return r.status === 'resolved'
+        });
+        else if (UI.activeView === 'manage') filtered = managed;
+        else if (UI.activeView === 'monitor-enhanced') filtered = monEnh;
+        else if (UI.activeView === 'monitor') filtered = monRisks;
+        else if (UI.activeView === 'ethical') filtered = ethical;
+        var h = '<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">' + btnG('\u2190 Dashboard', 'UI.activeView=null;render()', 'color:' + '#2A5A5A' + ';font-weight:600') + '<h2 style="font-size:20px;font-weight:700;color:' + '#2A5A5A' + ';margin:0">' + (viewTitle[UI.activeView] || UI.activeView) + '</h2>' + badge(filtered.length + ' risk' + (filtered.length !== 1 ? 's' : ''), '#2A5A5A') + '</div>';
+        if (!filtered.length) h += card('<p style="text-align:center;color:rgba(138,130,120,.7);font-size:14px">No risks in this view.</p>', 'background:rgba(245,242,236,.03)');
+        filtered.sort(function(a, b) {
+            return ((b.litL || 0) + (b.litI || 0) + (b.litT || 0)) - ((a.litL || 0) + (a.litI || 0) + (a.litT || 0))
+        }).forEach(function(r) {
+            var cat = POSTI.find(function(p) {
+                return p.key === r.category
+            }) || {
+                color: '#ddd',
+                name: '?'
+            };
+            h += card('<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><strong style="font-size:14px">' + esc(r.name) + '</strong>' + (r.ethicalFlag ? badge('\u2691', '#7B4F8A') : '') + '</div><div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">' + badge(cat.name, cat.color) + (r.litL ? badge(((r.litL || 0) + (r.litI || 0) + (r.litT || 0)) + '/15', '#C8860A') : '') + (r.classification ? badge(respLabel(r.classification), respColor(r.classification)) : '') + badge(r.source === 'external' ? 'External' : 'Internal', r.source === 'external' ? TC.external : TC.internal) + (r.severity && !r.classification ? badge(r.severity, r.severity === 'high' ? '#9B2D3F' : r.severity === 'medium' ? '#D4A017' : '#5B7A3D') : '') + '</div><p style="font-size:13px;color:#B09080;line-height:1.5">' + esc(r.description) + '</p>', 'border-left:4px solid ' + (r.classification ? respColor(r.classification) : cat.color) + ';padding:16px')
+        });
+        return h
+    }
+
+    // Main dashboard view
+    var h = badge('Govern \xb7 Ongoing', '#2A5A5A') + '<h1 style="font-size:28px;font-weight:800;line-height:1.2;margin:8px 0 8px">Risk Governance Dashboard</h1><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:8px 0 20px">Your operational governance hub. Monitor risks, track the governance rhythm, and access all reports.</p>';
+
+    // Meeting cards
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">';
+    h += card('<div style="font-size:var(--font-readable-sm);font-weight:700;color:rgba(138,130,120,.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Next Risk Pulse</div><div style="font-size:18px;font-weight:800;color:' + '#2A5A5A' + '">' + (rc.pulseFrequency ? rc.pulseFrequency.charAt(0).toUpperCase() + rc.pulseFrequency.slice(1) : 'Not scheduled') + '</div><div style="font-size:12px;color:rgba(138,130,120,.7);margin-top:4px">' + (rc.firstPulse || 'Date not set') + '</div><div style="font-size:12px;color:rgba(138,130,120,.7)">' + esc((rc.pulseAttendees || '').substring(0, 60)) + ((rc.pulseAttendees || '').length > 60 ? '...' : '') + '</div>', 'background:rgba(61,79,92,.08)');
+    h += card('<div style="font-size:var(--font-readable-sm);font-weight:700;color:rgba(138,130,120,.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Next Governance Review</div><div style="font-size:18px;font-weight:800;color:' + '#2A5A5A' + '">' + (gr.meetingFrequency ? gr.meetingFrequency.charAt(0).toUpperCase() + gr.meetingFrequency.slice(1) : 'Not scheduled') + '</div><div style="font-size:12px;color:rgba(138,130,120,.7);margin-top:4px">' + (gr.firstMeeting || 'Date not set') + '</div><div style="font-size:12px;color:rgba(138,130,120,.7)">' + esc(gr.meetingDuration || '') + '</div>', 'background:rgba(61,79,92,.08)');
+    h += '</div>';
+
+    // Risk pipeline (clickable)
+    h += '<div style="margin-bottom:24px">' + riskViz(pipeCounts.managed > 0 ? 'managed' : pipeCounts.assessed > 0 ? 'assessed' : pipeCounts.identified > 0 ? 'identified' : null, {
+        identified: 'identified',
+        assessed: 'assessed',
+        managed: 'managed',
+        resolved: 'resolved'
+    }, pipeCounts).replace(/goModule\('([^']+)'\)/g, "UI.activeView='$1';render()") + '</div>';
+
+    // Classification cards (clickable)
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:24px">';
+    [{
+        k: 'manage',
+        l: 'Manage',
+        c: '#9B2D3F',
+        n: managed.length
+    }, {
+        k: 'monitor-enhanced',
+        l: 'Monitor Enh.',
+        c: '#B5547A',
+        n: monEnh.length
+    }, {
+        k: 'monitor',
+        l: 'Monitor',
+        c: '#3A8B8B',
+        n: monRisks.length
+    }, {
+        k: 'ethical',
+        l: 'Ethical',
+        c: '#7B4F8A',
+        n: ethical.length
+    }].forEach(function(x) {
+        h += card('<div style="text-align:center;cursor:pointer" onclick="UI.activeView=\'' + x.k + '\';render()"><div style="font-size:28px;font-weight:800;color:' + x.c + '">' + x.n + '</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7);font-weight:600">' + x.l.toUpperCase() + '</div></div>', 'border-bottom:3px solid ' + x.c)
+    });
+    h += '</div>';
+
+    // Active Management Required
+    if (managed.length > 0) {
+        h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 8px">Active Management Required</h3>' + managed.slice(0, 5).map(function(r) {
+            var cat = POSTI.find(function(p) {
+                return p.key === r.category
+            }) || {
+                color: '#999',
+                name: '?'
+            };
+            return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid rgba(245,242,236,.04)">' + badge((r.litL ? ((r.litL || 0) + (r.litI || 0) + (r.litT || 0)) : '?') + '/15', '#9B2D3F') + '<span style="font-size:13px;font-weight:600">' + esc(r.name) + '</span>' + (r.ethicalFlag ? badge('\u2691', '#7B4F8A') : '') + badge(cat.name, cat.color) + '</div>'
+        }).join('') + (managed.length > 5 ? '<div style="font-size:12px;color:rgba(138,130,120,.7);margin-top:8px;cursor:pointer" onclick="UI.activeView=\'manage\';render()">+ ' + (managed.length - 5) + ' more \u2192</div>' : ''), 'border-left:4px solid #9B2D3F;margin-bottom:24px')
+    }
+
+    // Quick Stats + Systems Health
+    h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">';
+    h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 8px">Quick Stats</h3><div style="font-size:13px;color:#B09080;line-height:1.8"><p><strong>' + systems.length + '</strong> AI systems tracked</p><p><strong>' + risks.length + '</strong> risks in register</p><p><strong>' + Object.keys(data.exitPlans || {}).filter(function(k) {
+        return (data.exitPlans || {})[k] && (data.exitPlans || {})[k].exitDirector
+    }).length + '</strong> exit plans drafted</p><p><strong>' + (data.raciMatrix || []).length + '</strong> RACI activities defined</p></div>', 'background:rgba(245,242,236,.04)');
+    h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 8px">Systems Health</h3>' + systems.slice(0, 4).map(function(s) {
+        var sysRisks = risks.filter(function(r) {
+            return r.systemId === s.id
+        });
+        var lvl = sysRisks.some(function(r) {
+            return r.classification === 'manage'
+        }) ? 'manage' : sysRisks.some(function(r) {
+            return r.classification === 'monitor-enhanced'
+        }) ? 'monitor-enhanced' : 'monitor';
+        return '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:12px"><div style="width:8px;height:8px;border-radius:4px;background:' + (sysRisks.length > 0 ? respColor(lvl) : '#ddd') + '"></div><span>' + esc(s.name) + '</span><span style="color:rgba(138,130,120,.7);margin-left:auto">' + sysRisks.length + ' risk' + (sysRisks.length !== 1 ? 's' : '') + '</span></div>'
+    }).join(''), 'background:rgba(245,242,236,.04)');
+    h += '</div>';
+
+    // Data Bank with icons
+    var reports = [{
+        id: 'out-riskassess',
+        name: 'Risk Assessment Report',
+        phase: 'Phase 1',
+        color: '#1E6E6E',
+        icon: '\u25a3'
+    }, {
+        id: 'out-riskreg',
+        name: 'Initial Risk Register',
+        phase: 'Phase 1',
+        color: '#1E6E6E',
+        icon: '\u25c7'
+    }, {
+        id: 'out-govready',
+        name: 'Governance Readiness',
+        phase: 'Phase 2',
+        color: '#8B4513',
+        icon: '\u25ce'
+    }, {
+        id: 'out-raci2',
+        name: 'RACI Matrix',
+        phase: 'Phase 2',
+        color: '#8B4513',
+        icon: '\u25a1'
+    }, {
+        id: 'out-ethicsdoc',
+        name: 'Ethical Framework',
+        phase: 'Phase 2',
+        color: '#8B4513',
+        icon: '\u25a4'
+    }, {
+        id: 'out-assessedreg',
+        name: 'Assessed Register',
+        phase: 'Phase 3',
+        color: '#C8860A',
+        icon: '\u2295'
+    }, {
+        id: 'out-riskclass',
+        name: 'Classification Report',
+        phase: 'Phase 3',
+        color: '#C8860A',
+        icon: '\u22a1'
+    }, {
+        id: 'out-govfw',
+        name: 'Governance Framework',
+        phase: 'Phase 4',
+        color: '#3D4F5C',
+        icon: '\u25b3'
+    }, {
+        id: 'out-exitplans',
+        name: 'Exit Plans',
+        phase: 'Phase 4',
+        color: '#3D4F5C',
+        icon: '\u25fb'
+    }, {
+        id: 'out-updatedreg',
+        name: 'Updated Register',
+        phase: 'Phase 4',
+        color: '#3D4F5C',
+        icon: '\u229f'
+    }];
+    h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">Data Bank</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">' + reports.map(function(r) {
+        return '<div onclick="goModule(\'' + r.id + '\')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(245,242,236,.04);border-radius:8px;cursor:pointer;border-left:3px solid ' + r.color + '"><span style="font-size:18px">' + r.icon + '</span><div><div style="font-size:12px;font-weight:600">' + r.name + '</div><div style="font-size:var(--font-control);color:rgba(138,130,120,.7)">' + r.phase + '</div></div></div>'
+    }).join('') + '</div>');
+    return h
+}
+
+// Likert setter for nested paths like 'assessmentBattery.aiExposure.directCriticality'
+// Likert setter override for nested paths
+likSet = function(path, n) {
+    var parts = path.split('.');
+    if (parts.length === 3) {
+        if (parts[0] === 'risks') {
+            var risks = data.risks || [];
+            risks.forEach(function(r) {
+                if (r.id === parts[1]) r[parts[2]] = n
+            });
+            data.risks = risks;
+            saveData();
+            render();
+            return
+        }
+        if (!data[parts[0]]) data[parts[0]] = {};
+        if (!data[parts[0]][parts[1]]) data[parts[0]][parts[1]] = {};
+        data[parts[0]][parts[1]][parts[2]] = n;
+        saveData();
+        render();
+        return
+    }
+    if (parts.length === 2) {
+        if (!data[parts[0]]) data[parts[0]] = {};
+        data[parts[0]][parts[1]] = n;
+        saveData();
+        render();
+        return
+    }
+    data[parts[0]] = n;
+    saveData();
+    render()
+};
+
+
+function printPage() {
+    var titleEl = document.querySelector('#app h2');
+    var title = titleEl ? titleEl.textContent : 'Report';
+    var app = document.getElementById('app');
+    if (!app) return;
+    var content = app.innerHTML;
+    // Remove buttons, interactive elements
+    content = content.replace(/<button[^>]*>.*?<\/button>/gi, '');
+    content = content.replace(/onclick="[^"]*"/gi, '');
+    content = content.replace(/cursor:pointer/gi, 'cursor:default');
+    var w = window.open('');
+    w.document.write('<html><head><title>' + (title || 'Report') + '</title>' +
+        '<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;500;700&display=swap" rel="stylesheet">' +
+        '<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:"DM Sans",sans-serif;max-width:800px;margin:40px auto;padding:0 40px;color:#1a1a1a;line-height:1.7;font-size:14px;background:#fff}' +
+        'h1,h2,h3,h4{color:#1a1a1a}svg{max-width:100%}' +
+        '.cd{background:#f9f9f7;border:1px solid #e8e8e8;border-radius:10px;padding:24px;margin-bottom:20px;page-break-inside:avoid}' +
+        '.bg{display:inline-block;padding:4px 10px;border-radius:12px;font-size:var(--font-readable-sm);font-weight:700}' +
+        '.tag{font-size:var(--font-readable-sm);font-weight:var(--weight-readable);letter-spacing:.12em;text-transform:uppercase;padding:4px 10px;border:1px solid;display:inline-block}' +
+        '[style*="color:var(--paper)"],[style*="color:#F5F2EC"],[style*="color: var(--paper)"]{color:#1a1a1a !important}' +
+        '[style*="color:var(--stone)"],[style*="color:#B09080"],[style*="color:#8A8278"]{color:#555 !important}' +
+        '[style*="color:rgba(138,130,120"]{color:#777 !important}' +
+        '[style*="background:rgba(245,242,236"]{background:#f5f5f4 !important}' +
+        '[style*="background:rgba(30,110,110"]{background:#e8f5f0 !important}' +
+        '[style*="background:rgba(27,107,90"]{background:#e8f5f0 !important}' +
+        '[style*="border:1px solid rgba(245,242,236"]{border-color:#ddd !important}' +
+        '[style*="border:2px solid"]{border-color:inherit !important}' +
+        '[style*="border-bottom:1px solid rgba(245,242,236"]{border-color:#eee !important}' +
+        'p{color:#333}strong{color:#1a1a1a}' +
+        '@media print{body{margin:20px auto}}' +
+        '<\/style></head><body>' + content +
+        '<div style="margin-top:40px;border-top:2px solid #eee;padding-top:12px;font-size:var(--font-control);color:#999;text-align:center">Next Chapter Academy · 90-Day Responsible AI Governance</div>' +
+        '</body></html>');
+    w.document.close();
+    setTimeout(function() {
+        w.print()
+    }, 600);
+}
+
+// === OUTCOME PAGE ROUTER ===
+function renderOutcomePage() {
+    var id = currentStep;
+    var h = '<div style="padding-top:110px;max-width:900px;margin:0 auto;padding-left:48px;padding-right:48px;padding-bottom:80px">';
+    h += '<button class="btn-ghost" style="font-size:var(--font-label);padding:6px 14px;margin-bottom:24px" onclick="go(\'phase\',\'' + (currentPhase ? currentPhase.id : 1) + '\')">← ' + (currentPhase ? currentPhase.name + ' Overview' : 'Back') + '</button>';
+    if (id === 'out-riskreg') h += renderOutRiskReg();
+    else if (id === 'out-riskassess') h += renderOutRiskAssess();
+    else if (id === 'out-ethicsdoc') h += renderOutEthicsDoc();
+    else if (id === 'out-raci2') h += renderOutRaci2();
+    else if (id === 'out-govready') h += renderOutGovReady();
+    else if (id === 'out-assessedreg') h += renderOutAssessedReg();
+    else if (id === 'out-riskclass') h += renderOutRiskClass();
+    else if (id === 'out-govfw') h += renderOutGovFW();
+    else if (id === 'out-exitplans') h += renderOutExitPlans();
+    else if (id === 'out-updatedreg') h += renderOutUpdatedReg();
+    else h += '<p style="color:var(--stone)">Output not found.</p>';
+    h += '</div>';
+    return h;
+}
+
+// === PHASE LANDING PAGE ROUTER ===
+function renderPhaseLandingPage() {
+    if (!currentPhase) return renderPipeline();
+    var phaseId = currentPhase.id;
+    var h = '<div style="padding-top:110px;max-width:900px;margin:0 auto;padding-left:48px;padding-right:48px;padding-bottom:80px">';
+    h += '<button class="btn-ghost" style="font-size:var(--font-label);padding:6px 14px;margin-bottom:24px" onclick="go(\'pipeline\')">← Framework Overview</button>';
+    h += renderPhaseLanding(phaseId);
+    h += '</div>';
+    return h;
+}
+
+// === PHASE 5 WRAPPER (with padding) ===
+function renderPhase5() {
+    var h = '<div style="padding-top:110px"><div class="content-inner">';
+    h += renderDashboardContent();
+    h += '</div></div>';
+    return h;
+}
+
+
+// === MODULE OVERVIEW (sidebar Overview page) ===
+function renderModuleOverview() {
+    var risks = data.risks || [],
+        systems = data.systems || [],
+        co = data.completedSteps || {};
+    var h = '<div style="padding-top:110px;max-width:900px;margin:0 auto;padding-left:48px;padding-right:48px;padding-bottom:80px">';
+    h += badge('Module I', '#1E6E6E') + '<h1 style="font-family:var(--serif);font-size:clamp(32px,4vw,48px);font-weight:300;line-height:1.1;margin:8px 0 8px;color:var(--paper)">90-Day Responsible AI <em style="color:var(--gold);font-style:italic">Governance</em></h1><p style="color:var(--stone);font-size:15px;line-height:1.6;margin:8px 0 24px">Build the governance infrastructure to deploy AI your board trusts.</p>';
+    h += vp('V0', 'Module Overview: Why Responsible AI Governance Matters Now', '15 min');
+    h += vizTimeline(0);
+    // Three pillars
+    h += card('<h2 style="font-size:20px;font-weight:700;color:#1E6E6E;margin:0 0 12px">Three Pillars of Responsible AI</h2><p style="font-size:13px;color:var(--stone);line-height:1.6;margin-bottom:16px">Governance efforts fail for predictable reasons. They succeed when three foundations are in place.</p><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">' +
+        card('<div style="font-size:13px;font-weight:700;color:#1E6E6E;margin-bottom:6px">Ethical Foundations</div><p style="font-size:12px;color:var(--stone);line-height:1.5">Before developing specific policies, you need clarity about what your organisation stands for.</p>', 'border-top:4px solid #1E6E6E') +
+        card('<div style="font-size:13px;font-weight:700;color:#8B4513;margin-bottom:6px">Accountability &amp; Oversight</div><p style="font-size:12px;color:var(--stone);line-height:1.5">Responsible AI fails when nobody owns it. You need clear answers: Who can approve? Who can halt?</p>', 'border-top:4px solid #8B4513') +
+        card('<div style="font-size:13px;font-weight:700;color:#3D4F5C;margin-bottom:6px">Human Impact</div><p style="font-size:12px;color:var(--stone);line-height:1.5">Every AI deployment affects real people. Design for fairness, dignity, and augmentation.</p>', 'border-top:4px solid #3D4F5C') + '</div>', 'background:rgba(30,110,110,.06);border:none;margin-bottom:24px');
+    // Phase cards
+    h += card('<h2 style="font-size:20px;font-weight:700;margin:0 0 12px;color:var(--paper)">The 90-Day Plan</h2><p style="font-size:13px;color:var(--stone);line-height:1.6;margin-bottom:16px">Four phases take you from mapping your AI landscape to an embedded governance system.</p>' +
+        PHASES.slice(0, 4).map(function(p) {
+            var desc = p.id === 1 ? 'See the full picture of your AI risk landscape.' : p.id === 2 ? 'Construct governance infrastructure: ethical framework, ownership, cadence.' : p.id === 3 ? 'Run your first risk assessments. Apply the ethical lens, score with LIT, classify.' : 'Make governance operational. Exit plans, rhythm, embed oversight.';
+            return '<div onclick="goModule(\'phase-' + p.id + '\')" style="display:flex;gap:16px;margin-bottom:16px;padding:12px 16px;cursor:pointer;border-radius:8px;transition:background .2s"><div style="width:48px;height:48px;border-radius:24px;background:' + p.color + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;flex-shrink:0">' + p.id + '</div><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-size:15px;font-weight:700;color:var(--paper)">' + p.name + '</span>' + badge(p.days, p.color) + '</div><div style="font-size:13px;color:var(--stone);line-height:1.5;margin-bottom:8px">' + desc + '</div><div style="display:flex;gap:6px;flex-wrap:wrap">' + p.steps.map(function(s) {
+                return '<span onclick="event.stopPropagation();goModule(\'' + s.id + '\')" style="font-size:var(--font-readable-sm);padding:3px 8px;background:' + p.color + '18;color:' + p.color + ';border-radius:4px;font-weight:600;cursor:pointer">' + s.name + '</span>'
+            }).join('') + '</div></div></div>'
+        }).join(''), 'margin-bottom:24px');
+    // Phase 5 + Risk pipeline
+    h += card('<h2 style="font-size:20px;font-weight:700;margin:0 0 12px;color:var(--paper)">Phase 5: Govern \u2014 Ongoing</h2><p style="font-size:13px;color:var(--stone);line-height:1.6;margin-bottom:12px">After the 90-day build, the module transitions into your operational governance dashboard.</p>' + riskViz(risks.some(function(r) {
+        return r.classification
+    }) ? 'managed' : risks.length > 0 ? 'identified' : null, {
+        identified: '5.0',
+        assessed: '5.0',
+        managed: '5.0',
+        resolved: '5.0'
+    }, {
+        identified: risks.filter(function(r) {
+            return !r.classification && (r.status === 'identified' || !r.status)
+        }).length,
+        assessed: risks.filter(function(r) {
+            return !r.classification && r.status === 'assessed'
+        }).length,
+        managed: risks.filter(function(r) {
+            return r.classification
+        }).length,
+        resolved: risks.filter(function(r) {
+            return r.status === 'resolved'
+        }).length
+    }), 'margin-bottom:24px');
+    // Progress
+    if (systems.length > 0 || risks.length > 0) h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 8px;color:var(--paper)">Progress Summary</h3><div style="font-size:13px;color:var(--stone);line-height:1.8"><p><strong style="color:var(--paper)">' + systems.length + '</strong> system' + (systems.length !== 1 ? 's' : '') + ' mapped \xb7 <strong style="color:var(--paper)">' + risks.length + '</strong> risk' + (risks.length !== 1 ? 's' : '') + ' identified</p></div>', 'background:rgba(245,242,236,.04)');
+    h += '</div>';
+    return h
+}
+
+
+// === SIDEBAR ===
+function renderSidebar() {
+    var sb = document.getElementById('govSidebar');
+    if (!sb) return;
+    // Only show sidebar on framework/dashboard pages
+    var showSidebar = (currentPage === 'step' || currentPage === 'phase' || currentPage === 'phase5' || currentPage === 'outcome' || currentPage === 'pipeline' || currentPage === 'overview');
+    sb.style.display = showSidebar ? 'flex' : 'none';
+    var mc = document.getElementById('mainContent');
+    if (mc) {
+        mc.style.marginLeft = (showSidebar && sidebarOpen) ? '260px' : '0';
+    }
+    var btn = document.getElementById('sidebarToggle');
+    if (btn) btn.style.display = showSidebar ? 'block' : 'none';
+    if (!showSidebar) return;
+    var h = '<div class="sidebar-inner">';
+    h += '<div class="sidebar-header"><div class="sidebar-logo">AI <span>Governance</span></div></div>';
+    h += '<div class="sidebar-scroll">';
+    h += '<div class="sidebar-home' + (currentPage === 'overview' ? ' active' : '') + '" onclick="go(\'overview\')">Overview</div>';
+    for (var i = 0; i < PH.length; i++) {
+        var ph = PH[i];
+        var isPhaseActive = (currentPage === 'phase' && currentStep === String(ph.id));
+        h += '<div class="sidebar-phase-group">';
+        h += '<div class="sidebar-phase-head" onclick="go(\'phase\',\'' + ph.id + '\')">';
+        h += '<div class="sidebar-phase-dot" style="background:' + ph.color + '"></div>';
+        h += '<span class="sidebar-phase-name" style="color:' + (isPhaseActive ? 'var(--paper)' : ph.color) + '">' + ph.name + '</span>';
+        h += '<span class="sidebar-phase-days">' + ph.days + '</span>';
+        h += '</div>';
+        for (var j = 0; j < ph.steps.length; j++) {
+            var s = ph.steps[j];
+            var isActive = (currentPage === 'step' && currentStep === s.id);
+            var isDone = isStepDone(s.id);
+            var cls = 'sidebar-step' + (isActive ? ' active' : isDone ? ' done' : '');
+            h += '<div class="' + cls + '" onclick="go(\'step\',\'' + s.id + '\')">' + (isDone && !isActive ? '' : s.icon + ' ') + s.name + '</div>';
+        }
+        if (ph.outcomes && ph.outcomes.length > 0) {
+            h += '<div class="sidebar-outcomes-label">Outputs</div>';
+            for (var k = 0; k < ph.outcomes.length; k++) {
+                var o = ph.outcomes[k];
+                var isOActive = (currentPage === 'outcome' && currentStep === o.id);
+                h += '<div class="sidebar-outcome' + (isOActive ? ' active' : '') + '" onclick="go(\'outcome\',\'' + o.id + '\')">→ ' + o.name + '</div>';
+            }
+        }
+        h += '</div>';
+    }
+    h += '</div>';
+    h += '<div class="sidebar-footer"><div class="sidebar-footer-text">Next Chapter Academy · Governance v3</div></div>';
+    h += '</div>';
+    sb.innerHTML = h;
+    updateSidebarState();
+}
+
+function updateSidebarState() {
+    var sb = document.getElementById('govSidebar');
+    var mc = document.getElementById('mainContent');
+    var showSidebar = (currentPage === 'step' || currentPage === 'phase' || currentPage === 'phase5' || currentPage === 'outcome' || currentPage === 'pipeline' || currentPage === 'overview');
+    if (sb) {
+        sb.className = 'sidebar' + (sidebarOpen ? '' : ' collapsed');
+        sb.style.display = showSidebar ? 'flex' : 'none';
+    }
+    if (mc) {
+        mc.style.marginLeft = (showSidebar && sidebarOpen) ? '260px' : '0';
+    }
+    var btn = document.getElementById('sidebarToggle');
+    if (btn) {
+        btn.style.display = showSidebar ? 'block' : 'none';
+        btn.style.left = sidebarOpen ? '270px' : '16px';
+    }
+}
+
+function toggleSidebar() {
+    sidebarOpen = !sidebarOpen;
+    updateSidebarState();
+}
+
+// === OUTCOME PAGES ===
+function renderOutcome() {
+    var id = currentStep;
+    var ph = currentPhase;
+    var risks = data.risks || [];
+    var rc = data.riskClasses || {};
+    var ls = data.litScores || {};
+
+    var h = '<div class="outcome-page">';
+    h += '<button class="btn-ghost" style="font-size:var(--font-label);padding:6px 14px;margin-bottom:24px" onclick="go(\'phase\',\'' + (ph ? ph.id : 1) + '\')">';
+    h += '← ' + (ph ? ph.name + ' Overview' : 'Back') + '</button>';
+
+    if (id === 'out-riskreg') {
+        h += '<div class="outcome-header"><div class="step-eyebrow">Phase 1 Output</div><div class="section-title">Initial <em>Risk Register</em></div></div>';
+        if (risks.length === 0) {
+            h += '<p style="color:var(--stone)">No risks mapped yet. Complete Step 1.3 first.</p>';
+        } else {
+            h += '<p style="font-size:14px;color:var(--stone);margin-bottom:24px;line-height:1.7">' + risks.length + ' risk' + (risks.length === 1 ? '' : 's') + ' identified across your AI landscape. This is your initial register — risks will be scored and classified in Phase 3.</p>';
+            for (var i = 0; i < risks.length; i++) {
+                var r = risks[i];
+                h += '<div class="idea-card" style="margin-bottom:8px">';
+                h += '<div class="idea-name">' + esc(r.name) + '</div>';
+                h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">' + postiTag(r.category) + sevTag(r.severity) + (r.ethicalFlag ? '<span class="tag tag-eth">⚑ Ethical</span>' : '') + '</div>';
+                if (r.description) h += '<div style="font-size:12px;color:var(--stone);margin-top:6px;line-height:1.5">' + esc(r.description) + '</div>';
+                h += '</div>';
+            }
+        }
+    } else if (id === 'out-riskassess') {
+        h += '<div class="outcome-header"><div class="step-eyebrow">Phase 1 Output</div><div class="section-title">Risk Assessment <em>Report</em></div></div>';
+        var exp = data.exposure || {};
+        var tol = data.tolerance || {};
+        var ctrl = data.controls || {};
+        var expAvg = ((exp.directCriticality || 0) + (exp.thirdPartyDependency || 0) + (exp.adoptionPace || 0)) / 3;
+        var tolAvg = ((tol.decisionAccuracy || 0) + (tol.biasTolerance || 0) + (tol.jobImpact || 0)) / 3;
+        var ctrlAvg = ((ctrl.policyAdherence || 0) + (ctrl.oversightEffectiveness || 0) + (ctrl.reviewFrequency || 0)) / 3;
+        h += '<div class="outcome-summary"><div class="outcome-summary-title">Assessment Summary</div>';
+        h += '<div class="outcome-data-grid">';
+        h += '<div class="outcome-data-item"><div class="outcome-data-label">AI Exposure Score</div><div class="outcome-data-val" style="font-family:var(--serif);font-size:28px;color:var(--gold)">' + (expAvg ? expAvg.toFixed(1) : '—') + '/5</div></div>';
+        h += '<div class="outcome-data-item"><div class="outcome-data-label">Risk Tolerance Score</div><div class="outcome-data-val" style="font-family:var(--serif);font-size:28px;color:var(--gold)">' + (tolAvg ? tolAvg.toFixed(1) : '—') + '/5</div></div>';
+        h += '<div class="outcome-data-item"><div class="outcome-data-label">Controls Effectiveness</div><div class="outcome-data-val" style="font-family:var(--serif);font-size:28px;color:var(--gold)">' + (ctrlAvg ? ctrlAvg.toFixed(1) : '—') + '/5</div></div>';
+        h += '<div class="outcome-data-item"><div class="outcome-data-label">AI Systems Mapped</div><div class="outcome-data-val" style="font-family:var(--serif);font-size:28px;color:var(--gold)">' + (data.systems || []).length + '</div></div>';
+        h += '</div></div>';
+        if (risks.length > 0) {
+            h += svgHeatMap();
+        }
+        if (exp.currentSystems) h += '<div style="margin-top:16px"><div style="font-family:var(--mono);font-size:var(--font-control);font-weight:var(--weight-readable);letter-spacing:.12em;text-transform:uppercase;color:var(--stone);margin-bottom:6px">Current AI Systems</div><div style="font-size:14px;color:var(--paper);line-height:1.6">' + esc(exp.currentSystems) + '</div></div>';
+        h += '<button class="action-btn" onclick="printRiskAssessReport()" style="margin-top:24px">⬇ Export Report</button>';
+    } else if (id === 'out-ethicsdoc') {
+        h += '<div class="outcome-header"><div class="step-eyebrow">Phase 2 Output</div><div class="section-title">Ethical Framework <em>Document</em></div></div>';
+        var ef = data.ethicalFramework || {};
+        var pillars = [{
+            k: 'fairness',
+            t: 'Fairness & Non-Discrimination'
+        }, {
+            k: 'humanOversight',
+            t: 'Human Oversight & Autonomy'
+        }, {
+            k: 'workforceImpact',
+            t: 'Workforce Impact'
+        }, {
+            k: 'societalEffects',
+            t: 'Societal Effects'
+        }, {
+            k: 'transparency',
+            t: 'Transparency'
+        }];
+        var filled = pillars.filter(function(p) {
+            return ef[p.k] && ef[p.k].trim();
+        }).length;
+        if (filled === 0) {
+            h += '<p style="color:var(--stone)">Complete Step 2.1 to generate your ethical framework document.</p>';
+        } else {
+            h += '<p style="font-size:14px;color:var(--stone);margin-bottom:32px;line-height:1.7">' + filled + '/5 ethical pillars defined. This document captures your organization\'s foundational AI ethics commitments.</p>';
+            if (ef.defaultAutonomy) h += '<div style="padding:16px 20px;border:1px solid var(--rule);margin-bottom:24px;font-family:var(--mono);font-size:var(--font-readable-sm)"><span style="color:var(--gold)">Default Autonomy Position: </span>' + ef.defaultAutonomy + '</div>';
+            for (var i = 0; i < pillars.length; i++) {
+                var p = pillars[i];
+                if (ef[p.k]) {
+                    h += '<div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--rule)">';
+                    h += '<div style="font-family:var(--mono);font-size:var(--font-control);font-weight:var(--weight-readable);letter-spacing:.15em;text-transform:uppercase;color:var(--ph2);margin-bottom:8px">' + p.t + '</div>';
+                    h += '<div style="font-size:14px;color:var(--paper);line-height:1.7">' + esc(ef[p.k]) + '</div>';
+                    h += '</div>';
+                }
+            }
+            h += '<button class="action-btn" onclick="printPage()" style="margin-top:24px">⬇ Export Framework Document</button>';
+        }
+    } else if (id === 'out-raci2') {
+        h += '<div class="outcome-header"><div class="step-eyebrow">Phase 2 Output</div><div class="section-title">RACI <em>Matrix</em></div></div>';
+        var raci = data.raciMatrix || [];
+        if (raci.length === 0) {
+            h += '<p style="color:var(--stone)">Complete Step 2.2 to build your RACI matrix.</p>';
+        } else {
+            h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="border-bottom:1px solid var(--rule)"><th style="text-align:left;padding:10px 14px;font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);letter-spacing:.12em;text-transform:uppercase;color:var(--stone)">Activity</th>';
+            ['Responsible', 'Accountable', 'Consulted', 'Informed'].forEach(function(l) {
+                h += '<th style="text-align:left;padding:10px 14px;font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);letter-spacing:.12em;text-transform:uppercase;color:var(--ph2)">' + l + '</th>';
+            });
+            h += '</tr></thead><tbody>';
+            for (var i = 0; i < raci.length; i++) {
+                var r2 = raci[i];
+                h += '<tr style="border-bottom:1px solid rgba(245,240,236,.06)"><td style="padding:10px 14px;color:var(--paper);font-weight:var(--weight-readable)">' + esc(r2.activity) + '</td><td style="padding:10px 14px;color:var(--stone)">' + esc(r2.responsible) + '</td><td style="padding:10px 14px;color:var(--stone)">' + esc(r2.accountable) + '</td><td style="padding:10px 14px;color:var(--stone)">' + esc(r2.consulted) + '</td><td style="padding:10px 14px;color:var(--stone)">' + esc(r2.informed) + '</td></tr>';
+            }
+            h += '</tbody></table></div>';
+            h += '<button class="action-btn" onclick="printRaciReport()" style="margin-top:24px">⬇ Export RACI Matrix</button>';
+        }
+    } else if (id === 'out-govready') {
+        h += '<div class="outcome-header"><div class="step-eyebrow">Phase 2 Output</div><div class="section-title">Governance <em>Readiness</em></div></div>';
+        var scores = [];
+        var ef2 = data.ethicalFramework || {};
+        var os = data.ownership || {};
+        var rc3 = data.reviewCadence || {};
+        var inc = data.incentives || {};
+        scores.push({
+            label: 'Ethical Framework',
+            val: [ef2.fairness, ef2.humanOversight, ef2.workforceImpact, ef2.societalEffects, ef2.transparency].filter(function(v) {
+                return v && v.trim();
+            }).length * 20,
+            note: '% of pillars defined'
+        });
+        scores.push({
+            label: 'Ownership Assigned',
+            val: os.governanceOwner ? 100 : 0,
+            note: os.governanceOwner ? os.governanceOwner : 'Not assigned'
+        });
+        scores.push({
+            label: 'Review Cadence',
+            val: rc3.pulseFrequency && rc3.pulseAttendees && rc3.triggers ? 100 : rc3.pulseFrequency ? 50 : 0,
+            note: rc3.pulseFrequency || 'Not set'
+        });
+        scores.push({
+            label: 'Incentives Aligned',
+            val: (inc.changes && (inc.metrics || []).length >= 2 && inc.skillsGaps) ? 100 : (inc.changes ? 50 : 0),
+            note: (inc.metrics || []).length + ' metrics tracked'
+        });
+        h += '<div style="display:grid;grid-template-columns:1fr 200px;gap:24px;margin-bottom:32px;align-items:start">';
+        h += '<div class="grid-4" style="margin-bottom:0">';
+        for (var i = 0; i < scores.length; i++) {
+            var sc = scores[i];
+            var color = sc.val >= 80 ? 'var(--ph1)' : sc.val >= 40 ? 'var(--ph3)' : '#9B2D3F';
+            h += '<div class="dash-stat" style="border-top:3px solid ' + color + '"><div class="dash-stat-num" style="color:' + color + '">' + sc.val + '%</div><div class="dash-stat-label">' + sc.label + '</div><div style="font-size:var(--font-readable-sm);color:var(--stone);margin-top:4px">' + sc.note + '</div></div>';
+        }
+        h += '</div>';
+        h += svgGovernanceRadar();
+        h += '</div>';
+        h += '<button class="action-btn" onclick="printGovFramework()" style="margin-bottom:24px">⬇ Export Governance Framework</button>';
+    } else if (id === 'out-assessedreg') {
+        h += '<div class="outcome-header"><div class="step-eyebrow">Phase 3 Output</div><div class="section-title">Assessed <em>Risk Register</em></div></div>';
+        var scored = risks.filter(function(r) {
+            var s = (data.litScores || {})[r.id] || {};
+            return s.likelihood && s.importance;
+        });
+        h += '<p style="font-size:14px;color:var(--stone);margin-bottom:24px;line-height:1.7">' + scored.length + ' of ' + risks.length + ' risks scored with LIT assessment.</p>';
+        if (scored.length > 0) {
+            h += svgLITScatter();
+        }
+        var sorted = risks.slice().sort(function(a, b) {
+            var la = (ls[a.id] || {});
+            var lb = (ls[b.id] || {});
+            return ((lb.likelihood || 0) * (lb.importance || 0)) - ((la.likelihood || 0) * (la.importance || 0));
+        });
+        for (var i = 0; i < sorted.length; i++) {
+            var r = sorted[i];
+            var s = (ls[r.id] || {});
+            var score = (s.likelihood || 0) * (s.importance || 0);
+            h += '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(245,240,236,.06)">';
+            h += '<div style="font-family:var(--serif);font-size:24px;font-weight:300;color:' + (score >= 15 ? '#9B2D3F' : score >= 9 ? 'var(--ph3)' : 'var(--ph1)') + ';min-width:48px">' + score + '</div>';
+            h += '<div style="flex:1"><div style="font-size:14px;color:var(--paper)">' + esc(r.name) + '</div>';
+            h += '<div style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--stone);margin-top:2px">L:' + (s.likelihood || '?') + ' × I:' + (s.importance || '?') + (r.ethicalFlag ? ' · ⚑ Ethical' : '') + '</div></div>';
+            h += '<span class="tag ' + (score >= 15 ? 'tag-high' : score >= 9 ? 'tag-med' : 'tag-low') + '">' + (score >= 15 ? 'Priority' : score >= 9 ? 'Significant' : 'Manageable') + '</span>';
+            h += '</div>';
+        }
+        h += '<button class="action-btn" onclick="printAssessedRegister()" style="margin-top:24px">⬇ Export Assessed Register</button>';
+    } else if (id === 'out-riskclass') {
+        h += '<div class="outcome-header"><div class="step-eyebrow">Phase 3 Output</div><div class="section-title">Risk <em>Classification</em></div></div>';
+        var manage = risks.filter(function(r) {
+            return rc[r.id] === 'manage';
+        });
+        var monEnh = risks.filter(function(r) {
+            return rc[r.id] === 'monitorEnh';
+        });
+        var monitor = risks.filter(function(r) {
+            return rc[r.id] === 'monitor';
+        });
+        if (manage.length + monEnh.length + monitor.length > 0) {
+            h += svgSigMatrix();
+        }
+        h += '<div class="grid-3" style="margin-bottom:32px">';
+        [{
+            l: 'Manage',
+            c: '#9B2D3F',
+            r: manage
+        }, {
+            l: 'Monitor Enhanced',
+            c: 'var(--ph3)',
+            r: monEnh
+        }, {
+            l: 'Monitor',
+            c: 'var(--ph1)',
+            r: monitor
+        }].forEach(function(g) {
+            h += '<div class="dash-stat" style="border-top:3px solid ' + g.c + '"><div class="dash-stat-num" style="color:' + g.c + '">' + g.r.length + '</div><div class="dash-stat-label">' + g.l + '</div></div>';
+        });
+        h += '</div>';
+        manage.concat(monEnh).concat(monitor).forEach(function(r) {
+            var cl = rc[r.id];
+            var clColor = cl === 'manage' ? '#9B2D3F' : cl === 'monitorEnh' ? 'var(--ph3)' : 'var(--ph1)';
+            h += '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(245,240,236,.06)">';
+            h += '<div style="width:6px;height:6px;border-radius:50%;background:' + clColor + ';flex-shrink:0"></div>';
+            h += '<div style="flex:1;font-size:14px;color:var(--paper)">' + esc(r.name) + '</div>';
+            h += '<span class="tag" style="border-color:' + clColor + '40;color:' + clColor + '">' + cl + '</span>';
+            h += '</div>';
+        });
+        h += '<button class="action-btn" onclick="printAssessedRegister()" style="margin-top:24px">⬇ Export Risk Classification</button>';
+    } else if (id === 'out-exitplans') {
+        h += '<div class="outcome-header"><div class="step-eyebrow">Phase 4 Output</div><div class="section-title">Exit Plan <em>Portfolio</em></div></div>';
+        var ep = data.exitPlans || {};
+        var rc4 = data.riskClasses || {};
+        var managed = risks.filter(function(r) {
+            return rc4[r.id] === 'manage';
+        });
+        var monEnh2 = risks.filter(function(r) {
+            return rc4[r.id] === 'monitorEnh';
+        });
+        var targets = managed.concat(monEnh2);
+        if (targets.length === 0) {
+            h += '<p style="color:var(--stone)">No Manage or Monitor Enhanced risks. Complete Phase 3 first.</p>';
+        } else {
+            targets.forEach(function(r) {
+                var p = ep[r.id] || {};
+                var cl = rc4[r.id];
+                h += '<div class="port-card ' + (cl === 'manage' ? 'red' : 'ph3') + '" style="margin-bottom:12px">';
+                h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="idea-name">' + esc(r.name) + '</div><span class="tag ' + (cl === 'manage' ? 'tag-high' : 'tag-med') + '">' + cl + '</span></div>';
+                if (p.exitDirector) h += '<div style="font-family:var(--mono);font-size:var(--font-control);font-weight:var(--weight-readable);color:var(--gold);margin-bottom:4px">Director: ' + esc(p.exitDirector) + '</div>';
+                if (p.trigger) h += '<div style="font-size:12px;color:var(--stone);margin-bottom:4px"><strong style="color:var(--paper)">Trigger:</strong> ' + esc(p.trigger) + '</div>';
+                if (p.procedure) h += '<div style="font-size:12px;color:var(--stone);margin-bottom:4px"><strong style="color:var(--paper)">Procedure:</strong> ' + esc(p.procedure) + '</div>';
+                if (p.fallback) h += '<div style="font-size:12px;color:var(--stone)"><strong style="color:var(--paper)">Fallback:</strong> ' + esc(p.fallback) + '</div>';
+                h += '</div>';
+            });
+        }
+    } else if (id === 'out-govfw') {
+        h += '<div class="outcome-header"><div class="step-eyebrow">Phase 4 Output</div><div class="section-title">Governance <em>Framework</em></div></div>';
+        var gr = data.govRhythm || {};
+        var eo = data.embedOps || {};
+        h += svgGovernanceRadar();
+        h += '<div class="grid-2" style="margin-bottom:24px">';
+        h += '<div class="dash-stat" style="border-top:3px solid var(--ph4)"><div class="dash-stat-num" style="color:var(--ph4);font-size:28px">' + (gr.meeting ? gr.meeting : 'Not set') + '</div><div class="dash-stat-label">Standing Meeting</div></div>';
+        h += '<div class="dash-stat" style="border-top:3px solid var(--ph4)"><div class="dash-stat-num" style="color:var(--ph4);font-size:28px">' + (gr.reportAudience ? gr.reportAudience : 'Not set') + '</div><div class="dash-stat-label">Report Audience</div></div>';
+        h += '</div>';
+        if (gr.escalationTriggers) h += '<div style="margin-bottom:16px"><div style="font-family:var(--mono);font-size:var(--font-control);font-weight:var(--weight-readable);letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Escalation Triggers</div><div style="font-size:14px;color:var(--paper);line-height:1.7">' + esc(gr.escalationTriggers) + '</div></div>';
+        if (eo.deploymentGate) h += '<div style="margin-bottom:16px"><div style="font-family:var(--mono);font-size:var(--font-control);font-weight:var(--weight-readable);letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Deployment Gate Checklist</div><div style="font-size:14px;color:var(--paper);line-height:1.7">' + esc(eo.deploymentGate) + '</div></div>';
+        h += '<button class="action-btn" onclick="printGovFramework()" style="margin-top:24px">⬇ Export Governance Framework</button>';
+    } else {
+        h += '<div style="padding:40px;text-align:center;color:var(--stone);font-family:var(--serif);font-size:20px;font-style:italic">Output: ' + id + '</div>';
+    }
+
+    h += '</div>';
+    return h;
+}
+
+// ── INSIGHTS ─────────────────────────────────────────────────────────────────
+// Uses Claude API to fetch & parse RSS — bypasses browser CORS restrictions
+// ─────────────────────────────────────────────────────────────────────────────
+
+var INSIGHT_FEEDS = [{
+        id: 'fastco',
+        label: 'Fast Company',
+        shortLabel: 'Fast Co.',
+        color: '#E8A020',
+        type: 'article',
+        icon: 'FC',
+        profileUrl: 'https://www.fastcompany.com/user/faisal-hoque',
+        feedUrl: 'https://www.fastcompany.com/user/faisal-hoque/rss.xml',
+        seed: [{
+                title: 'Why Right Now Is Exactly the Wrong Time to Stop Innovating',
+                date: '2025-03',
+                url: 'https://www.fastcompany.com/91301426/why-right-now-is-exactly-the-wrong-time-to-stop-innovating',
+                excerpt: 'Organizations that pause innovation during turbulence don\'t recover. The companies gaining ground right now are leaning in while others retreat.'
+            },
+            {
+                title: 'Middle Managers Are the Ethical Backbone of AI Deployment',
+                date: '2024-11',
+                url: 'https://www.fastcompany.com/90993000/middle-managers-ai',
+                excerpt: 'Senior leaders set direction. Frontline teams execute. Middle managers see both simultaneously — that dual visibility is an irreplaceable ethical function.'
+            },
+            {
+                title: 'The Hidden Cost of AI Without Governance',
+                date: '2025-01',
+                url: 'https://www.fastcompany.com/90994728/ai-governance',
+                excerpt: 'Deploying AI without accountability isn\'t speed — it\'s liability accumulation at scale. The reckoning always arrives later than the deployment.'
+            },
+            {
+                title: 'Saudi Arabia and the New AI Frontier',
+                date: '2024-12',
+                url: 'https://www.fastcompany.com/91210000/saudi-ai',
+                excerpt: 'The Middle East is not catching up to the AI race. In several domains it has moved to the front.'
+            },
+            {
+                title: 'The Demand Desert: What AI Job Displacement Really Means',
+                date: '2024-10',
+                url: 'https://www.fastcompany.com/90988000/demand-desert',
+                excerpt: 'When AI automates middle-skill work faster than new categories emerge, aggregate demand contracts. We need to name this before we can address it.'
+            }
+        ]
+    },
+    {
+        id: 'psych',
+        label: 'Psychology Today',
+        shortLabel: 'Psych Today',
+        color: '#2E9E7A',
+        type: 'article',
+        icon: 'PT',
+        profileUrl: 'https://www.psychologytoday.com/us/contributors/faisal-hoque',
+        feedUrl: 'https://www.psychologytoday.com/us/contributors/faisal-hoque/feed',
+        seed: [{
+                title: 'Your Next Chapter in the Age of AI',
+                date: '2025-02',
+                url: 'https://www.psychologytoday.com/us/blog/next-chapter/202502/your-next-chapter',
+                excerpt: 'A six-part personal transformation framework for navigating the most consequential shift of our professional lifetimes — with intention, not reaction.'
+            },
+            {
+                title: 'The Psychology of Letting Machines Decide',
+                date: '2025-01',
+                url: 'https://www.psychologytoday.com/us/blog/next-chapter/202501/letting-machines-decide',
+                excerpt: 'When we automate judgment we don\'t save time — we outsource accountability in ways that gradually hollow out human leadership capacity.'
+            },
+            {
+                title: 'Resilience Is Not a Personality Trait',
+                date: '2024-11',
+                url: 'https://www.psychologytoday.com/us/blog/next-chapter/202411/resilience',
+                excerpt: 'Organizations conflating resilience with temperament produce cultures that punish vulnerability rather than building systems that create real durability.'
+            },
+            {
+                title: 'Why Difficulty Has Value',
+                date: '2024-10',
+                url: 'https://www.psychologytoday.com/us/blog/next-chapter/202410/difficulty',
+                excerpt: 'The friction we are aggressively removing from work and learning is often the mechanism through which capability is built.'
+            },
+            {
+                title: 'Cognitive Diversity Is National Security Infrastructure',
+                date: '2024-09',
+                url: 'https://www.psychologytoday.com/us/blog/next-chapter/202409/cognitive-diversity',
+                excerpt: 'The most complex threats require perspectives that monocultures cannot generate. Diversity isn\'t virtue signaling. It\'s structural defense.'
+            }
+        ]
+    },
+    {
+        id: 'hbr',
+        label: 'Harvard Business Review',
+        shortLabel: 'HBR',
+        color: '#C41E3A',
+        type: 'article',
+        icon: 'HBR',
+        profileUrl: 'https://hbr.org/search?term=faisal+hoque',
+        feedUrl: null,
+        seed: [{
+                title: 'OPEN: A Framework for Navigating AI Transformation',
+                date: '2024-06',
+                url: 'https://hbr.org/2024/06/open-framework-ai-transformation',
+                excerpt: 'Objectives, People, Ethics/Enablers, Numbers — a four-part architecture for organizations moving fast on AI without losing the human elements that make strategy viable.'
+            },
+            {
+                title: 'The CARE Framework for Managing AI Risk',
+                date: '2024-03',
+                url: 'https://hbr.org/2024/03/care-framework-ai-risk',
+                excerpt: 'Catastrophize, Assess, Regulate, Exit — four disciplines that turn reactive AI risk management into a proactive governance posture.'
+            },
+            {
+                title: 'Why AI Strategy Fails Without Human Infrastructure',
+                date: '2023-11',
+                url: 'https://hbr.org/2023/11/ai-strategy-human-infrastructure',
+                excerpt: 'Every AI transformation that has stalled did so for a human reason — misaligned incentives, missing accountability, or a culture that couldn\'t sustain the change.'
+            }
+        ]
+    },
+    {
+        id: 'mitsloan',
+        label: 'MIT Sloan Mgmt Review',
+        shortLabel: 'MIT SMR',
+        color: '#8B0000',
+        type: 'article',
+        icon: 'MIT',
+        profileUrl: 'https://sloanreview.mit.edu/search/?term=faisal+hoque',
+        feedUrl: null,
+        seed: [{
+                title: 'Building AI Governance Into Organizational DNA',
+                date: '2024-09',
+                url: 'https://sloanreview.mit.edu/article/building-ai-governance-organizational-dna/',
+                excerpt: 'Governance that lives only in policy documents dies when pressure arrives. Organizations that sustain responsible AI embed accountability into every process and incentive structure.'
+            },
+            {
+                title: 'The 90-Day AI Innovation Pipeline',
+                date: '2024-05',
+                url: 'https://sloanreview.mit.edu/article/90-day-ai-innovation-pipeline/',
+                excerpt: 'A phased operating framework for moving AI from pilot chaos to production discipline — without the false starts that kill most enterprise AI programs.'
+            }
+        ]
+    },
+    {
+        id: 'imd',
+        label: 'IMD Business School',
+        shortLabel: 'IMD',
+        color: '#4A5C6E',
+        type: 'article',
+        icon: 'IMD',
+        profileUrl: 'https://www.imd.org/search/?q=faisal+hoque',
+        feedUrl: null,
+        seed: [{
+                title: 'The Responsible AI Index: A New Standard for Governance',
+                date: '2025-04',
+                url: 'https://www.imd.org/research-knowledge/innovation/articles/responsible-ai-index/',
+                excerpt: 'RAI-X is the first empirically validated benchmark for organizational AI governance maturity — designed for boards and executives, not just technology teams.'
+            },
+            {
+                title: 'AI Innovation Management: From Strategy to Execution',
+                date: '2025-02',
+                url: 'https://www.imd.org/research-knowledge/innovation/articles/ai-innovation-management/',
+                excerpt: 'The 90-Day AI Innovation Pipeline framework closes the gap between executive ambition and operational AI capability.'
+            },
+            {
+                title: 'Middle Management in the Age of AI',
+                date: '2024-10',
+                url: 'https://www.imd.org/research-knowledge/leadership/articles/middle-management-ai/',
+                excerpt: 'The most endangered organizational layer is also its most critical ethical circuit breaker. Eliminating it may be the most expensive mistake of the AI era.'
+            },
+            {
+                title: 'Building the Governance-Ready Organization',
+                date: '2024-08',
+                url: 'https://www.imd.org/research-knowledge/technology/articles/governance-ready/',
+                excerpt: 'Governance is not a compliance checkbox. It is an operating model for responsible scale. Organizations treating it as the former will be unprepared when it matters.'
+            }
+        ]
+    },
+    {
+        id: 'linkedin',
+        label: 'LinkedIn',
+        shortLabel: 'LinkedIn',
+        color: '#0A66C2',
+        type: 'post',
+        icon: 'in',
+        profileUrl: 'https://www.linkedin.com/in/faisalhoque',
+        feedUrl: null,
+        seed: [{
+                title: 'Twenty Seconds to Kill',
+                date: '2025-03',
+                url: 'https://www.linkedin.com/pulse/twenty-seconds-kill-faisal-hoque',
+                excerpt: 'The autonomous weapons debate isn\'t really about weapons. It\'s about whether we are prepared to remove humans from the moral chain of command — permanently.'
+            },
+            {
+                title: 'The AI Governance Failure Nobody Is Talking About',
+                date: '2025-03',
+                url: 'https://www.linkedin.com/pulse/ai-governance-failure-faisal-hoque',
+                excerpt: 'We keep asking whether AI is safe. We rarely ask whether the organizations deploying it are governed well enough to use it responsibly at scale.'
+            },
+            {
+                title: 'Why the Middle Is Where Ethics Lives',
+                date: '2025-02',
+                url: 'https://www.linkedin.com/pulse/middle-ethics-faisal-hoque',
+                excerpt: 'Middle managers are the only people who see both strategy and execution simultaneously — that dual visibility is an irreplaceable ethical function.'
+            },
+            {
+                title: 'AI as a New Life Form',
+                date: '2025-01',
+                url: 'https://www.linkedin.com/pulse/ai-new-life-form-faisal-hoque',
+                excerpt: 'We keep forcing AI into categories we already have — tool, threat, partner. What if it is genuinely new? What would that mean for how we govern it?'
+            },
+            {
+                title: 'The Kidnapper\'s Ransom Problem',
+                date: '2024-12',
+                url: 'https://www.linkedin.com/pulse/kidnappers-ransom-faisal-hoque',
+                excerpt: 'Organizations are paying operational ransoms to AI they don\'t understand, can\'t audit, and can\'t exit. This is a governance failure, not a technology problem.'
+            }
+        ]
+    },
+    {
+        id: 'convergence',
+        label: 'CONVERGENCE Podcast',
+        shortLabel: 'Podcast',
+        color: '#C96838',
+        type: 'podcast',
+        icon: '\u25b6',
+        profileUrl: 'https://www.buzzsprout.com/convergence',
+        feedUrl: 'https://feeds.buzzsprout.com/2361658.rss',
+        seed: [{
+                title: 'AI as a New Life Form',
+                date: '2025-03',
+                url: 'https://www.buzzsprout.com/convergence',
+                excerpt: 'What if AI isn\'t a tool or a threat — but something genuinely new? Faisal and Lauren Hawker Zafer explore the philosophical and practical stakes of that framing for leaders.',
+                duration: '48 min'
+            },
+            {
+                title: 'The Demand Desert — Job Displacement in the Age of AI',
+                date: '2025-02',
+                url: 'https://www.buzzsprout.com/convergence',
+                excerpt: 'When AI automates middle-skill work faster than new job categories emerge, aggregate demand contracts. What can leadership do about it?',
+                duration: '52 min'
+            },
+            {
+                title: 'Agentic Enterprise — When AI Acts Without Asking',
+                date: '2025-01',
+                url: 'https://www.buzzsprout.com/convergence',
+                excerpt: 'Agentic AI initiates, delegates, and completes multi-step tasks. That changes everything about governance, accountability, and organizational trust.',
+                duration: '44 min'
+            },
+            {
+                title: 'The Governance Gap — Why Policy Lags Deployment',
+                date: '2024-12',
+                url: 'https://www.buzzsprout.com/convergence',
+                excerpt: 'Regulation moves in years. AI deployment moves in weeks. The space between is where organizations either build responsible practices or accumulate invisible risk.',
+                duration: '39 min'
+            },
+            {
+                title: 'Human Infrastructure — The Underrated Variable in AI Success',
+                date: '2024-11',
+                url: 'https://www.buzzsprout.com/convergence',
+                excerpt: 'Culture, incentives, accountability structures — the human operating system that AI runs on top of. Every failed AI program failed here first.',
+                duration: '55 min'
+            }
+        ]
+    }
+];
+
+var insightsState = {
+    filter: 'all',
+    view: 'grid',
+    loading: false,
+    liveLoaded: {}
+};
+
+function renderInsights() {
+    var h = '<div style="padding:88px 0 0">';
+
+    // Hero
+    h += '<div style="padding:48px 48px 0">';
+    h += '<div class="section-label">Insights</div>';
+    h += '<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:32px">';
+    h += '<div><h1 class="section-title" style="margin-bottom:8px">Ideas &amp; <em>Conversations</em></h1>';
+    h += '<p style="font-size:15px;color:var(--stone);line-height:1.7;max-width:580px">Articles, posts, and podcast episodes by Faisal Hoque — Fast Company, Psychology Today, HBR, MIT Sloan, IMD, LinkedIn, and CONVERGENCE.</p></div>';
+    h += '<div style="display:flex;gap:8px;align-items:center;flex-shrink:0">';
+    h += '<button id="insightViewGrid" class="insight-view-btn' + (insightsState.view === 'grid' ? ' active' : '') + '" onclick="setInsightView(\'grid\')" title="Grid">⊞</button>';
+    h += '<button id="insightViewList" class="insight-view-btn' + (insightsState.view === 'list' ? ' active' : '') + '" onclick="setInsightView(\'list\')" title="List">☰</button>';
+    h += '<button class="btn-ghost" id="insightRefreshBtn" style="font-size:var(--font-control);padding:8px 16px;margin-left:4px" onclick="fetchLiveInsights()">⟳ Refresh Live</button>';
+    h += '</div></div>';
+
+    // Filter strip
+    var total = _insightCount('all');
+    h += '<div style="display:flex;gap:6px;flex-wrap:wrap;padding-bottom:24px;border-bottom:1px solid var(--rule)">';
+    h += '<button class="insight-filter' + (insightsState.filter === 'all' ? ' active' : '') + '" data-feed="all" onclick="filterInsights(\'all\')">All <span style="opacity:.5;font-size:var(--font-label)">' + total + '</span></button>';
+    for (var i = 0; i < INSIGHT_FEEDS.length; i++) {
+        var f = INSIGHT_FEEDS[i];
+        var cnt = _insightCount(f.id);
+        var pre = f.type === 'podcast' ? '▶ ' : f.type === 'post' ? '✍ ' : '';
+        h += '<button class="insight-filter' + (insightsState.filter === f.id ? ' active' : '') + '" data-feed="' + f.id + '" onclick="filterInsights(\'' + f.id + '\')" style="--fc:' + f.color + '">' + pre + f.shortLabel + ' <span style="opacity:.5;font-size:var(--font-label)">' + cnt + '</span></button>';
+    }
+    h += '</div>';
+    h += '</div>';
+
+    // Status
+    h += '<div id="insightStatusBar" style="padding:10px 48px;min-height:32px;display:flex;align-items:center;gap:12px">';
+    h += '<div id="insightStatusText" style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--stone);letter-spacing:.1em">Showing curated content — click Refresh Live to fetch latest.</div>';
+    h += '<div id="insightSpinner" style="display:none;font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--gold)">&#9679;&#9679;&#9679; Fetching live feeds via AI…</div>';
+    h += '</div>';
+
+    // Cards
+    h += '<div id="insightGrid" style="padding:4px 48px 80px">';
+    h += buildInsightCards(insightsState.filter, insightsState.view);
+    h += '</div></div>';
+
+    return h;
+}
+
+function _insightCount(feedId) {
+    var n = 0;
+    for (var i = 0; i < INSIGHT_FEEDS.length; i++) {
+        var f = INSIGHT_FEEDS[i];
+        if (feedId !== 'all' && f.id !== feedId) continue;
+        n += (f._live && f._live.length ? f._live : f.seed).length;
+    }
+    return n;
+}
+
+function buildInsightCards(filterId, view) {
+    var allItems = [];
+    for (var i = 0; i < INSIGHT_FEEDS.length; i++) {
+        var f = INSIGHT_FEEDS[i];
+        if (filterId !== 'all' && f.id !== filterId) continue;
+        var items = f._live && f._live.length ? f._live : f.seed;
+        for (var j = 0; j < items.length; j++) allItems.push({
+            feed: f,
+            item: items[j]
+        });
+    }
+    // Sort by date desc
+    allItems.sort(function(a, b) {
+        var da = a.item.date ? new Date(a.item.date.length === 7 ? a.item.date + '-01' : a.item.date) : new Date(0);
+        var db = b.item.date ? new Date(b.item.date.length === 7 ? b.item.date + '-01' : b.item.date) : new Date(0);
+        return db - da;
+    });
+    if (!allItems.length) return '<div style="padding:64px;text-align:center;color:var(--stone);font-family:var(--serif);font-size:20px;font-style:italic">No items found.</div>';
+
+    var isList = (view === 'list');
+    var h = isList ?
+        '<div style="display:flex;flex-direction:column">' :
+        '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px;margin-top:4px">';
+
+    for (var k = 0; k < allItems.length; k++) {
+        var f2 = allItems[k].feed,
+            it = allItems[k].item;
+        var isPodcast = (f2.type === 'podcast');
+        var d = it.date ? new Date(it.date.length === 7 ? it.date + '-01' : it.date) : null;
+        var ds = d && !isNaN(d.getTime()) ? d.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short'
+        }) : '';
+        var url = it.url || f2.profileUrl;
+        var ex = it.excerpt || '';
+        if (ex.length > 210) ex = ex.slice(0, 207) + '\u2026';
+
+        if (isList) {
+            h += '<div class="insight-list-row" onclick="window.open(\'' + url + '\',\'_blank\')">';
+            h += '<div class="insight-badge" style="background:' + f2.color + '18;color:' + f2.color + ';border-color:' + f2.color + '35;font-size:var(--font-label);padding:3px 8px;white-space:nowrap;min-width:72px;justify-content:center">' + f2.shortLabel + '</div>';
+            h += '<div style="flex:1;min-width:0"><div class="insight-list-title">' + (isPodcast ? '<span style="color:' + f2.color + '">▶ </span>' : '') + esc(it.title) + '</div>';
+            if (ex) h += '<div class="insight-list-excerpt">' + esc(ex) + '</div></div>';
+            h += '<div class="insight-list-meta">';
+            if (ds) h += '<div style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--stone);white-space:nowrap">' + ds + '</div>';
+            if (isPodcast && it.duration) h += '<div style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--stone);margin-top:3px">\u23f1 ' + esc(it.duration) + '</div>';
+            h += '</div></div>';
+        } else {
+            h += '<div class="insight-card' + (isPodcast ? ' insight-card--podcast' : '') + '" onclick="window.open(\'' + url + '\',\'_blank\')">';
+            if (isPodcast) h += '<div style="height:2px;margin:-22px -20px 14px;background:' + f2.color + ';opacity:.5"></div>';
+            h += '<div class="insight-card-header">';
+            h += '<span class="insight-badge" style="background:' + f2.color + '18;color:' + f2.color + ';border-color:' + f2.color + '35">' + (isPodcast ? '▶ ' : '') + f2.shortLabel + '</span>';
+            if (ds) h += '<span style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--stone)">' + ds + '</span>';
+            h += '</div>';
+            h += '<div class="insight-title' + (isPodcast ? ' insight-title--podcast' : '') + '">' + (insightsState.liveLoaded[f2.id] ? '<span style="color:' + f2.color + ';font-size:var(--font-readable-sm);font-family:var(--mono);margin-right:4px;vertical-align:middle">●</span>' : '') + esc(it.title) + '</div>';
+            if (ex) h += '<div class="insight-excerpt">' + esc(ex) + '</div>';
+            h += '<div class="insight-card-foot">';
+            if (isPodcast && it.duration) h += '<span style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--stone)">\u23f1 ' + esc(it.duration) + '</span>';
+            else h += '<span></span>';
+            h += '<span class="insight-cta">' + (isPodcast ? 'Listen' : 'Read') + ' \u2192</span>';
+            h += '</div></div>';
+        }
+    }
+    h += '</div>';
+    return h;
+}
+
+function filterInsights(feedId) {
+    insightsState.filter = feedId;
+    document.querySelectorAll('.insight-filter').forEach(function(b) {
+        b.classList.toggle('active', b.getAttribute('data-feed') === feedId);
+    });
+    var g = document.getElementById('insightGrid');
+    if (g) g.innerHTML = buildInsightCards(feedId, insightsState.view);
+}
+
+function setInsightView(v) {
+    insightsState.view = v;
+    var gb = document.getElementById('insightViewGrid'),
+        lb = document.getElementById('insightViewList');
+    if (gb) gb.classList.toggle('active', v === 'grid');
+    if (lb) lb.classList.toggle('active', v === 'list');
+    var g = document.getElementById('insightGrid');
+    if (g) g.innerHTML = buildInsightCards(insightsState.filter, v);
+}
+
+function setInsightStatus(msg, loading) {
+    var st = document.getElementById('insightStatusText');
+    var sp = document.getElementById('insightSpinner');
+    if (st) st.textContent = msg;
+    if (sp) sp.style.display = loading ? 'block' : 'none';
+    if (st) st.style.display = loading ? 'none' : 'block';
+}
+
+// ── Live feed fetcher (uses Claude web_search — server-side, no CORS) ────────
+function fetchLiveInsights() {
+    if (insightsState.loading) return;
+    insightsState.loading = true;
+    var btn = document.getElementById('insightRefreshBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '\u23f3 Fetching\u2026';
+    }
+    setInsightStatus('', true);
+
+    // Build one search request per source that has a profileUrl
+    // We batch them: ask Claude to search all sources in one call using web_search
+    var sourceList = INSIGHT_FEEDS.map(function(f, i) {
+        return (i + 1) + '. ' + f.label + ' — profile: ' + f.profileUrl + (f.feedUrl ? ' / rss: ' + f.feedUrl : '');
+    }).join('\n');
+
+    var systemPrompt = 'You are a research assistant. Use web_search to find the 3–4 most recent public articles, posts, or podcast episodes for each source listed. Return ONLY a JSON object — no markdown, no explanation. Format:\n{\n  "fastco": [{title,date,url,excerpt},...],\n  "psych": [...],\n  "hbr": [...],\n  "mitsloan": [...],\n  "imd": [...],\n  "linkedin": [...],\n  "convergence": [{title,date,url,excerpt,duration},...]\n}\nFor podcasts include duration if found. Excerpts should be 1–2 sentences. Dates as YYYY-MM-DD or YYYY-MM.';
+
+    var userMsg = 'Find the latest content from Faisal Hoque at these sources:\n' + sourceList + '\n\nReturn only the JSON object described.';
+
+    fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'claude-sonnet-4-20250514',
+                max_tokens: 4000,
+                system: systemPrompt,
+                tools: [{
+                    type: 'web_search_20250305',
+                    name: 'web_search'
+                }],
+                messages: [{
+                    role: 'user',
+                    content: userMsg
+                }]
+            })
+        })
+        .then(function(r) {
+            if (!r.ok) throw new Error('API ' + r.status);
+            return r.json();
+        })
+        .then(function(data) {
+            insightsState.loading = false;
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '\u21bb Refresh Live';
+            }
+
+            // Collect all text blocks from the response (Claude may use tool + then respond)
+            var text = '';
+            if (data.content && data.content.length) {
+                for (var i = 0; i < data.content.length; i++) {
+                    if (data.content[i].type === 'text') text += data.content[i].text;
+                }
+            }
+
+            // Extract JSON from response text
+            var parsed = null;
+            try {
+                var s = text.indexOf('{'),
+                    e = text.lastIndexOf('}');
+                if (s >= 0 && e > s) parsed = JSON.parse(text.slice(s, e + 1));
+            } catch (err) {
+                parsed = null;
+            }
+
+            if (parsed) {
+                var liveCount = 0;
+                for (var i = 0; i < INSIGHT_FEEDS.length; i++) {
+                    var f = INSIGHT_FEEDS[i];
+                    if (parsed[f.id] && Array.isArray(parsed[f.id]) && parsed[f.id].length) {
+                        f._live = parsed[f.id].slice(0, 6);
+                        insightsState.liveLoaded[f.id] = true;
+                        liveCount++;
+                    }
+                }
+                _refreshInsightGrid();
+                var total = _insightCount('all');
+                setInsightStatus('\u2713 ' + total + ' items \u00b7 ' + liveCount + ' source' + (liveCount !== 1 ? 's' : '') + ' live \u00b7 ' + new Date().toLocaleTimeString(), false);
+            } else {
+                setInsightStatus('Live fetch complete. Feed data unavailable \u2014 showing curated content.', false);
+            }
+        })
+        .catch(function(err) {
+            insightsState.loading = false;
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '\u21bb Refresh Live';
+            }
+            setInsightStatus('Fetch failed (' + err.message + '). Showing curated content.', false);
+            console.error('Insights fetch error:', err);
+        });
+}
+
+function _refreshInsightGrid() {
+    // Rebuild filter strip counts too
+    var filters = document.querySelectorAll('.insight-filter');
+    filters.forEach(function(b) {
+        var fid = b.getAttribute('data-feed');
+        var cnt = _insightCount(fid);
+        b.innerHTML = (fid === 'all' ? 'All' :
+            (function() {
+                var f = INSIGHT_FEEDS.filter(function(x) {
+                    return x.id === fid;
+                })[0];
+                return f ? (f.type === 'podcast' ? '&#9654; ' : f.type === 'post' ? '&#9998; ' : '') + f.shortLabel : fid;
+            }())
+        ) + ' <span style="opacity:.5;font-size:var(--font-label)">' + cnt + '</span>';
+        b.classList.toggle('active', fid === insightsState.filter);
+    });
+    var g = document.getElementById('insightGrid');
+    if (g) g.innerHTML = buildInsightCards(insightsState.filter, insightsState.view);
+} // ── AI-powered live feed fetcher ───────────────────────────────────────────
+function fetchLiveInsights() {
+    if (insightsState.loading) return;
+    insightsState.loading = true;
+    var btn = document.getElementById('insightRefreshBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '\u23f3 Fetching\u2026';
+    }
+    setInsightStatus('', true);
+
+    // Build list of feeds with URLs to try
+    var feedsWithUrls = INSIGHT_FEEDS.filter(function(f) {
+        return f.feedUrl;
+    });
+    var feedNames = feedsWithUrls.map(function(f) {
+        return f.label + ' (' + f.feedUrl + ')';
+    }).join(', ');
+
+    var prompt = 'You are an RSS aggregator. Please fetch and parse the following RSS/podcast feeds and return the 5 most recent items from each as JSON.\n\nFeeds to fetch:\n' +
+        feedsWithUrls.map(function(f, i) {
+            return (i + 1) + '. ' + f.label + ': ' + f.feedUrl;
+        }).join('\n') +
+        '\n\nFor each feed, return an array of items with fields: title, date (YYYY-MM-DD), url, excerpt (2-3 sentences, plain text), duration (podcasts only).\n\nReturn ONLY a JSON object like:\n{"fastco":[...],"psych":[...],"convergence":[...]}\n\nUse the feed IDs: ' + feedsWithUrls.map(function(f) {
+            return f.id;
+        }).join(', ') + '\n\nIf a feed is unreachable, return an empty array for that key. Return pure JSON only, no markdown.';
+
+    fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'claude-sonnet-4-20250514',
+                max_tokens: 4000,
+                messages: [{
+                    role: 'user',
+                    content: prompt
+                }]
+            })
+        })
+        .then(function(r) {
+            return r.json();
+        })
+        .then(function(data) {
+            insightsState.loading = false;
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '\u21bb Refresh Live';
+            }
+            var text = '';
+            if (data.content && data.content.length) {
+                for (var i = 0; i < data.content.length; i++) {
+                    if (data.content[i].type === 'text') text += data.content[i].text;
+                }
+            }
+            // Parse JSON from response
+            var clean = text.replace(/```json|```/g, '').trim();
+            // Find JSON object
+            var start = clean.indexOf('{'),
+                end = clean.lastIndexOf('}');
+            if (start >= 0 && end > start) {
+                try {
+                    var parsed = JSON.parse(clean.slice(start, end + 1));
+                    var liveCount = 0;
+                    for (var i = 0; i < INSIGHT_FEEDS.length; i++) {
+                        var f = INSIGHT_FEEDS[i];
+                        if (parsed[f.id] && parsed[f.id].length) {
+                            f._live = parsed[f.id];
+                            insightsState.liveLoaded[f.id] = true;
+                            liveCount++;
+                        }
+                    }
+                    var g = document.getElementById('insightGrid');
+                    if (g) g.innerHTML = buildInsightCards(insightsState.filter, insightsState.view);
+                    // Update filter counts
+                    if (currentPage === 'insights') {
+                        render();
+                    }
+                    setInsightStatus('\u2713 Live feeds updated \u2014 ' + liveCount + ' source' + (liveCount !== 1 ? 's' : '') + ' refreshed \u00b7 ' + new Date().toLocaleTimeString(), false);
+                } catch (e) {
+                    setInsightStatus('Could not parse feed data. Showing curated content.', false);
+                }
+            } else {
+                setInsightStatus('Live fetch returned no data. Showing curated content.', false);
+            }
+        })
+        .catch(function(e) {
+            insightsState.loading = false;
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '\u21bb Refresh Live';
+            }
+            setInsightStatus('Live fetch failed. Showing curated content.', false);
+        });
+}
+
+
+function completeStep(id) {
+    if (!data.completedSteps) data.completedSteps = {};
+    data.completedSteps[id] = true;
+    saveData();
+    render();
+}
+
+// === COACH ===
+function toggleCoach() {
+    coachOpen = !coachOpen;
+    $('coachFab').className = 'coach-fab' + (coachOpen ? ' open' : '');
+    $('fabPulse').style.display = coachOpen ? 'none' : 'block';
+    $('coachPanel').className = 'coach-panel' + (coachOpen ? ' open' : '');
+    if (coachOpen) renderCoachPanel();
+}
+
+function renderCoachPanel() {
+    var panel = $('coachPanel');
+    if (!panel) return;
+    var ctx = currentStep ? ('Step ' + currentStep) : 'Overview';
+    var h = '<div class="coach-header"><div class="coach-header-title"><span>✦</span> AI Coach</div><button class="coach-close" onclick="toggleCoach()">×</button></div>';
+    h += '<div style="padding:10px 24px;border-bottom:1px solid rgba(245,242,236,.06);background:rgba(245,242,236,.02);flex-shrink:0"><div style="font-family:var(--mono);font-size:var(--font-control);font-weight:var(--weight-readable);letter-spacing:.08em;color:var(--stone)">Context: ' + esc(ctx) + '</div></div>';
+    h += '<div class="coach-msgs" id="coachMsgsEl">';
+    for (var i = 0; i < coachMsgs.length; i++) {
+        var m = coachMsgs[i];
+        h += '<div class="coach-msg ' + m.role + '"><div class="coach-sender">' + (m.role === 'ai' ? 'AI Coach' : 'You') + '</div>' + esc(m.text) + '</div>'
+    }
+    h += '</div>';
+    h += '<div class="coach-presets">';
+    var presets = ['Where do I start?', 'Help with this step', 'What\'s a stage gate?', 'FIRST framework?', 'Portfolio vs. projects'];
+    for (var i = 0; i < presets.length; i++) h += '<button class="coach-preset" onclick="sendCoachPreset(\'' + presets[i] + '\')">' + presets[i] + '</button>';
+    h += '</div>';
+    h += '<div class="coach-input-row"><textarea id="coachInput" placeholder="Ask about any step, concept, or challenge..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendCoach()}"></textarea><button class="coach-send" onclick="sendCoach()">→</button></div>';
+    panel.innerHTML = h;
+    var msgs = document.getElementById('coachMsgsEl');
+    if (msgs) msgs.scrollTop = msgs.scrollHeight;
+}
+
+function sendCoachPreset(t) {
+    var inp = document.getElementById('coachInput');
+    if (inp) inp.value = t;
+    sendCoach();
+}
+
+function sendCoach() {
+    var inp = document.getElementById('coachInput');
+    if (!inp || !inp.value.trim()) return;
+    var userText = inp.value.trim();
+    inp.value = '';
+    coachMsgs.push({
+        role: 'user',
+        text: userText
+    });
+    renderCoachPanel();
+    var ctx = 'User is working on: ' + (currentStep ? 'Step ' + currentStep + ' (' + currentPhase?.name + ')' : 'the pipeline overview');
+    var sysPrompt = 'You are the AI Coach for Faisal Hoque\'s 90-Day AI Innovation Pipeline — a framework grounded in the OPEN and CARE frameworks and published in Fast Company, HBR, and MIT Sloan Management Review. You help leaders build structured AI innovation pipelines through five phases: Diagnose, Organize, Prepare, Ignite, Navigate. Be direct, insightful, and strategic. Maximum 150 words per response. No bullets unless absolutely essential.';
+
+    fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 300,
+            messages: [{
+                role: 'user',
+                content: sysPrompt + '\n\n' + ctx + '\n\nUser question: ' + userText
+            }]
+        })
+    }).then(function(r) {
+        return r.json()
+    }).then(function(j) {
+        var text = '';
+        if (j.content)
+            for (var i = 0; i < j.content.length; i++)
+                if (j.content[i].text) text += j.content[i].text;
+        if (!text) text = 'Could not generate response. Try again.';
+        coachMsgs.push({
+            role: 'ai',
+            text: text
+        });
+        renderCoachPanel();
+    }).catch(function() {
+        coachMsgs.push({
+            role: 'ai',
+            text: 'Connection error. Please try again.'
+        });
+        renderCoachPanel()
+    });
+}
+
+
+// === GROUP CHAT ===
+var gchatOpen = false;
+var gchatMsgs = [];
+var gchatUnreadCount = 0;
+
+function formatChatTimestamp(dateString) {
+    if (!dateString) return '';
+    var date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    var hours = date.getHours() % 12 || 12;
+    var minutes = (date.getMinutes() < 10 ? '0' : '') + date.getMinutes();
+    var ampm = date.getHours() >= 12 ? 'PM' : 'AM';
+    return hours + ':' + minutes + ' ' + ampm;
+}
+
+function getDynamicGChatMessages() {
+    if (typeof TeamChat === 'undefined') return gchatMsgs;
+    var state = TeamChat.getState();
+    if (state && state.activeTeam && state.messages && state.messages[state.activeTeam]) {
+        return state.messages[state.activeTeam].map(function(msg) {
+            return {
+                who: msg.initials ? msg.initials.charAt(0) : '?',
+                name: msg.user_name || 'Unknown',
+                ts: formatChatTimestamp(msg.created_at),
+                text: msg.message || '',
+                userId: msg.user_id || ''
+            };
+        });
+    }
+    return gchatMsgs;
+}
+
+
+function gchatColor(who) {
+    var map = {
+        F: '#B8892A',
+        L: '#5a7fbc',
+        E: '#5c9e78',
+        T: '#9b6fa8'
+    };
+    return map[who] || 'rgba(138,130,120,.7)'
+}
+
+function toggleGChat() {
+    gchatOpen = !gchatOpen;
+    var fab = document.getElementById('gchatFab');
+    var panel = document.getElementById('gchatPanel');
+    if (fab) fab.className = 'gchat-fab' + (gchatOpen ? ' open' : '');
+    if (panel) panel.className = 'gchat-panel' + (gchatOpen ? ' open' : '');
+    if (gchatOpen) {
+        gchatUnreadCount = 0;
+        var u = document.getElementById('gchatUnread');
+        if (u) {
+            u.style.display = 'none';
+            u.textContent = '0';
+        }
+        renderGChatPanel();
+    }
+}
+
+function renderGChatPanel() {
+    var panel = document.getElementById('gchatPanel');
+    if (!panel) return;
+    var existingInput = document.getElementById('gchatInput');
+    var draft = existingInput ? existingInput.value : '';
+    var selectionStart = existingInput ? existingInput.selectionStart : null;
+    var selectionEnd = existingInput ? existingInput.selectionEnd : null;
+    var gchatMembers = typeof TeamChat !== 'undefined' ? TeamChat.getGchatMembers() : [];
+    var activeTeamName = '';
+    if (typeof TeamChat !== 'undefined') {
+        var state = TeamChat.getState();
+        if (state && state.activeTeam) {
+            var activeTeam = state.teams.find(function(t) {
+                return t.id === state.activeTeam;
+            });
+            activeTeamName = activeTeam ? activeTeam.name : '';
+        }
+    }
+    var avHtml = '';
+    for (var i = 0; i < gchatMembers.length; i++) {
+        avHtml += '<div class="gchat-av" style="background:' + gchatMembers[i].color + ';color:#fff">' + esc(gchatMembers[i].initials || '?') + '</div>';
+    }
+    var memHtml = '';
+    for (var i = 0; i < gchatMembers.length; i++) {
+        var m = gchatMembers[i];
+        memHtml += '<div class="gchat-member"><div class="gchat-member-av" style="background:' + m.color + ';color:#fff">' + esc(m.initials || '?') + '</div>' + esc(m.name || 'Unknown') + (m.online ? '<div class="gchat-online"></div>' : '') + '</div>';
+    }
+    var msgsList = getDynamicGChatMessages();
+    var h = '<div class="gchat-header"><div class="gchat-header-title"><div class="gchat-avatars">' + avHtml + '</div>' + (activeTeamName ? esc(activeTeamName) + ' Team Room' : 'Team Room') + '</div><button class="gchat-close" onclick="toggleGChat()">×</button></div>';
+    if (gchatMembers.length > 0) {
+        h += '<div class="gchat-members">' + memHtml + '</div>';
+    }
+    h += '<div class="gchat-msgs" id="gchatMsgsEl">';
+    if (msgsList.length === 0) {
+        h += '<div class="gchat-day-div">No messages yet. Start the conversation.</div>';
+    } else {
+        h += '<div class="gchat-day-div">Today</div>';
+        for (var i = 0; i < msgsList.length; i++) {
+            var msg = msgsList[i];
+            var isMe = msg.userId && window.currentUser && msg.userId === window.currentUser.id;
+            var cls = isMe ? 'me' : 'them';
+            var col = gchatColor(msg.who);
+            h += '<div class="gchat-msg ' + cls + '">';
+            h += '<div class="gchat-msg-av" style="background:' + col + ';color:#fff">' + esc(msg.who || '?') + '</div>';
+            h += '<div class="gchat-msg-body">';
+            h += '<div class="gchat-msg-meta">' + esc(isMe ? 'You' : msg.name || 'Unknown') + ' · ' + esc(msg.ts || '') + '</div>';
+            h += '<div class="gchat-msg-text">' + esc(msg.text || '') + '</div>';
+            h += '</div></div>';
+        }
+    }
+    h += '</div>';
+    h += '<div class="gchat-typing" id="gchatTyping"></div>';
+    h += '<div class="gchat-input-row"><textarea id="gchatInput" placeholder="Message the team..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendGChat()}"></textarea><button class="gchat-send" onclick="sendGChat()">Send</button></div>';
+    panel.innerHTML = h;
+    var restoredInput = document.getElementById('gchatInput');
+    if (restoredInput && draft) {
+        restoredInput.value = draft;
+        if (selectionStart !== null && selectionEnd !== null) {
+            restoredInput.setSelectionRange(selectionStart, selectionEnd);
+        }
+    }
+    var msgs = document.getElementById('gchatMsgsEl');
+    if (msgs) msgs.scrollTop = msgs.scrollHeight;
+}
+
+function sendGChat() {
+    var inp = document.getElementById('gchatInput');
+    if (!inp || !inp.value.trim()) return;
+    var text = inp.value.trim();
+    if (typeof TeamChat === 'undefined') {
+        var now = new Date();
+        var ts = formatChatTimestamp(now.toISOString());
+        gchatMsgs.push({
+            who: 'F',
+            name: 'You',
+            ts: ts,
+            text: text
+        });
+        inp.value = '';
+        renderGChatPanel();
+        return;
+    }
+
+    var state = TeamChat.getState();
+    if (!state || !state.activeTeam) {
+        alert('Please open a team chat before sending a message.');
+        return;
+    }
+
+    TeamChat.sendMessage(state.activeTeam, text).then(function(sent) {
+        if (sent === false) return;
+        var currentInp = document.getElementById('gchatInput');
+        if (currentInp && currentInp.value.trim() === text) currentInp.value = '';
+        renderGChatPanel();
+    });
+}
+
+// === NOTES ===
+function toggleNotes() {
+    notesOpen = !notesOpen;
+    $('notesFab').className = 'notes-fab' + (notesOpen ? ' open' : '');
+    $('notesPanel').className = 'notes-panel' + (notesOpen ? ' open' : '');
+    if (notesOpen) renderNotesPanel();
+}
+
+function updateNotesCount() {
+    var el = $('notesCount');
+    if (el) el.textContent = (data.notes || []).length;
+}
+
+function renderNotesPanel() {
+    var panel = $('notesPanel');
+    if (!panel) return;
+    var h = '<div class="notes-header"><div class="notes-header-title">&#9998; Notes</div><button class="notes-close" onclick="toggleNotes()">×</button></div>';
+    h += '<div class="notes-list">';
+    var notes = data.notes || [];
+    if (!notes.length) h += '<div class="notes-empty">Capture insights as you work through the pipeline.</div>';
+    else
+        for (var i = notes.length - 1; i >= 0; i--) {
+            var n = notes[i];
+            h += '<div class="note-card"><div class="note-text">' + esc(n.text) + '</div><div class="note-meta"><span class="note-date">' + (n.step ? 'Step ' + n.step + ' · ' : '') + fmt(n.createdAt) + '</span><button class="note-del" onclick="deleteNote(\'' + n.id + '\')">×</button></div></div>'
+        }
+    h += '</div>';
+    h += '<div class="notes-input-row"><textarea id="notesInput" placeholder="Write a note..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();addNote()}"></textarea><button class="notes-send" onclick="addNote()">&#9998;</button></div>';
+    panel.innerHTML = h;
+}
+
+function addNote() {
+    var inp = document.getElementById('notesInput');
+    if (!inp || !inp.value.trim()) return;
+    if (!data.notes) data.notes = [];
+    data.notes.push({
+        id: uid(),
+        text: inp.value.trim(),
+        step: currentStep,
+        createdAt: Date.now()
+    });
+    saveData();
+    renderNotesPanel();
+    updateNotesCount();
+}
+
+function deleteNote(id) {
+    data.notes = (data.notes || []).filter(function(n) {
+        return n.id !== id
+    });
+    saveData();
+    renderNotesPanel();
+    updateNotesCount();
+}
+
+// === HELP MODAL ===
+var currentModal = null;
+
+function openHelp() {
+    currentModal = 'help';
+    renderModal();
+}
+
+function closeModal() {
+    currentModal = null;
+    var mr = $('modalRoot');
+    if (mr) mr.innerHTML = '';
+}
+
+function renderModal() {
+    var mr = $('modalRoot');
+    if (!mr) return;
+    if (!currentModal) {
+        mr.innerHTML = '';
+        return;
+    }
+    var h = '<div class="modal-bg" onclick="if(event.target===this)closeModal()">';
+    h += '<div class="modal">';
+    h += '<h3>90-Day Responsible AI Governance</h3>';
+
+    h += '<div style="background:rgba(46,122,102,.08);border-left:2px solid var(--ph1);padding:16px 20px;margin-bottom:28px;font-family:var(--serif);font-size:17px;font-style:italic;font-weight:300;line-height:1.55;color:var(--gold-pale)">The gap between AI deployment and AI governance is where organizations get hurt. This framework closes that gap.</div>';
+    h += '<div style="margin-bottom:24px"><div class="section-label" style="margin-bottom:12px">What This App Does</div>';
+    h += '<p style="font-size:14px;color:var(--stone);line-height:1.75">A guided implementation of the 90-Day Responsible AI Governance framework from Faisal Hoque. Five phases take you from AI risk mapping through to a living governance discipline \u2014 structured forms, research-backed context panels, ten output documents, a live risk dashboard, and a step-aware AI Coach. All data is saved locally in your browser.</p></div>';
+    h += '<div style="margin-bottom:24px"><div class="section-label" style="margin-bottom:12px">Navigation</div>';
+    h += '<div style="font-size:14px;color:var(--stone);line-height:2"><strong style="color:var(--paper)">Top nav</strong> \u2014 Overview \xb7 Learn \xb7 Framework \xb7 Risk Dashboard (always visible)<br><strong style="color:var(--paper)">Left sidebar</strong> \u2014 visible on Framework and Dashboard pages only. Jump directly to any phase, step, or output. Click \u2630 to collapse.<br><strong style="color:var(--paper)">Phase landings</strong> \u2014 click a phase in the sidebar or Framework overview for progress metrics, step flow, and output links.</div></div>';
+    h += '<div style="margin-bottom:24px"><div class="section-label" style="margin-bottom:12px">The Five Phases</div>';
+    h += '<div style="display:grid;gap:12px">';
+    var gphases = [{
+            n: '01',
+            t: 'Map (Days 1\u201330)',
+            d: 'Run the three-dimension Assessment Battery. Inventory every AI system. Catastrophize risks across five POSTi categories (Privacy, Ops, Security, Trust, IP). Triage by severity. Map decision rights and governance culture.'
+        },
+        {
+            n: '02',
+            t: 'Build (Days 31\u201350)',
+            d: 'Define your CARE ethical framework (Consent, Accountability, Responsibility, Equity). Assign governance ownership via RACI matrix. Set the Risk Pulse review cadence. Align incentives and identify skills gaps.'
+        },
+        {
+            n: '03',
+            t: 'Assess (Days 51\u201370)',
+            d: 'Apply your ethical framework as an overlay to each risk. Score every risk on Likelihood, Impact, and Timeframe (LIT 1\u20135). Classify into Manage, Monitor Enhanced, or Monitor based on composite score.'
+        },
+        {
+            n: '04',
+            t: 'Embed (Days 71\u201390)',
+            d: 'Build exit plans for Manage-classified systems with triggers and timelines. Establish governance rhythm with standing meetings and escalation paths. Embed deployment gates into operations. Run the first formal governance review.'
+        },
+        {
+            n: '05',
+            t: 'Govern (Ongoing)',
+            d: 'The live Risk Dashboard. Track all risks through the pipeline: Identified \u2192 Assessed \u2192 Managed \u2192 Resolved. View by classification (Manage, Monitor Enhanced, Monitor) and ethical flags. The 90 days build the foundation \u2014 the discipline runs forever.'
+        }
+    ];
+    for (var i = 0; i < gphases.length; i++) {
+        var gph = gphases[i];
+        h += '<div style="display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:start"><div style="font-family:var(--serif);font-size:24px;font-weight:300;color:var(--gold)">' + gph.n + '</div><div><div style="font-size:14px;color:var(--paper);font-weight:var(--weight-readable);margin-bottom:2px">' + gph.t + '</div><div style="font-size:13px;color:var(--stone);line-height:1.6">' + gph.d + '</div></div></div>';
+    }
+    h += '</div></div>';
+    h += '<div style="margin-bottom:24px"><div class="section-label" style="margin-bottom:12px">POSTi Risk Framework</div>';
+    h += '<p style="font-size:14px;color:var(--stone);line-height:1.75;margin-bottom:8px">Five dimensions used to categorize AI risk throughout the framework:</p>';
+    h += '<div style="font-family:var(--mono);font-size:var(--font-readable-sm);font-weight:var(--weight-readable);color:var(--stone);line-height:2;padding:12px 16px;border:1px solid var(--rule)">';
+    for (var i = 0; i < POSTI.length; i++) {
+        var gp = POSTI[i];
+        h += '<span style="color:' + gp.color + '">' + gp.key + '</span> \u2014 ' + gp.name + '<br>';
+    }
+    h += '</div></div>';
+    h += '<div style="margin-bottom:24px"><div class="section-label" style="margin-bottom:12px">LIT Scoring</div>';
+    h += '<p style="font-size:14px;color:var(--stone);line-height:1.75;margin-bottom:8px">Each risk is scored 1\u20135 on three dimensions in Phase 3:</p>';
+    h += '<div style="font-family:var(--mono);font-size:var(--font-readable-sm);font-weight:var(--weight-readable);color:var(--stone);line-height:2;padding:12px 16px;border:1px solid var(--rule)">L \u2014 Likelihood (how probable)<br>I \u2014 Impact (how severe)<br>T \u2014 Timeframe (how imminent)<br><span style="color:var(--gold)">Composite = L + I + T (max 15)</span></div></div>';
+    h += '<div style="margin-bottom:24px"><div class="section-label" style="margin-bottom:12px">Phase Outputs</div>';
+    h += '<p style="font-size:14px;color:var(--stone);line-height:1.75;margin-bottom:16px">Each phase produces output documents accessible from the sidebar or phase landing page.</p>';
+    h += '<div style="display:grid;gap:8px">';
+    var helpOutputs = [{
+            ph: 'Phase 1 \u2014 Map',
+            items: 'Initial Risk Register \xb7 Risk Assessment Report'
+        },
+        {
+            ph: 'Phase 2 \u2014 Build',
+            items: 'Ethical Framework Doc \xb7 RACI Matrix \xb7 Governance Readiness'
+        },
+        {
+            ph: 'Phase 3 \u2014 Assess',
+            items: 'Assessed Risk Register \xb7 Risk Classification Report'
+        },
+        {
+            ph: 'Phase 4 \u2014 Embed',
+            items: 'Exit Plan Portfolio \xb7 Governance Framework Doc'
+        }
+    ];
+    for (var i = 0; i < helpOutputs.length; i++) {
+        var ho = helpOutputs[i];
+        h += '<div style="display:grid;grid-template-columns:140px 1fr;gap:12px;padding:10px 14px;background:rgba(253,248,244,.03);border:1px solid rgba(253,248,244,.08)">';
+        h += '<div style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);padding-top:1px">' + ho.ph + '</div>';
+        h += '<div style="font-size:13px;color:var(--stone);line-height:1.6">' + ho.items + '</div>';
+        h += '</div>';
+    }
+    h += '</div></div>';
+    h += '<div style="margin-bottom:24px"><div class="section-label" style="margin-bottom:12px">Phase Landing Pages</div>';
+    h += '<p style="font-size:14px;color:var(--stone);line-height:1.75">Click any phase header in the sidebar or the Framework overview to open its landing page. Each shows: phase title and description, completion percentage, live metrics (systems mapped, risks identified, etc.) that link directly to the relevant step, a step flow card row, and all phase output links.</p></div>';
+    h += '<div style="margin-bottom:24px"><div class="section-label" style="margin-bottom:12px">Framework as Centerpiece</div>';
+    h += '<p style="font-size:14px;color:var(--stone);line-height:1.75">The left sidebar appears on every Framework and Dashboard page, keeping all five phases permanently visible. Clicking a phase goes straight to its landing. The sidebar collapses with ☰ when you need more screen space.</p></div>';
+    h += '<div style="margin-bottom:24px"><div class="section-label" style="margin-bottom:12px">Timeline &amp; Visual Overview</div>';
+    h += '<p style="font-size:14px;color:var(--stone);line-height:1.75">The Framework tab shows the 5-phase timeline grid with day ranges and step counts. Phase landing pages show a live progress bar, completion percentage, data metrics that link to their source step, a horizontal step flow with completion indicators, and direct links to all phase outputs.</p></div>';
+    h += '<div style="margin-bottom:24px"><div class="section-label" style="margin-bottom:12px">Risk Dashboard</div>';
+    h += '<p style="font-size:14px;color:var(--stone);line-height:1.75">Phase 5 is the live Risk Dashboard. It shows the risk pipeline (Identified \u2192 Assessed \u2192 Managed \u2192 Resolved) with clickable stage counts, four classification portfolio cards (Manage, Monitor Enhanced, Monitor, Ethical), active management priorities, a coverage heat map across POSTi categories and severity levels, a Data Bank linking to all ten output documents, and key governance rhythm metrics. Click any portfolio card to drill into its risks.</p></div>';
+    h += '<div style="margin-bottom:24px"><div class="section-label" style="margin-bottom:12px">Floating Tools \u2014 bottom-right stack</div>';
+    h += '<div style="font-size:14px;color:var(--stone);line-height:2"><span style="color:var(--gold)">✦ AI Coach</span> \u2014 top. Context-aware for your current step. Ask about POSTi, LIT scoring, CARE framework, exit plans, or anything in the governance model.<br><span style="color:var(--paper)">\u25ce Voice</span> \u2014 middle. Hands-free navigation. Say: <span style="font-family:var(--mono);font-size:var(--font-readable-sm)">&ldquo;learn&rdquo; &middot; &ldquo;framework&rdquo; &middot; &ldquo;dashboard&rdquo; &middot; &ldquo;open coach&rdquo; &middot; &ldquo;open notes&rdquo; &middot; &ldquo;close&rdquo;</span><br><span style="color:var(--paper)">✎ Notes</span> \u2014 bottom. Capture insights tagged to your current step. Persists across sessions.</div></div>';
+    h += '<div style="margin-bottom:24px"><div class="section-label" style="margin-bottom:12px">Data &amp; Privacy</div>';
+    h += '<p style="font-size:14px;color:var(--stone);line-height:1.75">All data is saved to your browser\'s local storage. The AI Coach calls the Anthropic API with your question and current step context only. Use Reset in the nav to clear everything.</p></div>';
+    h += '<div style="text-align:center;padding-top:8px"><button class="btn-gold" onclick="closeModal()">Got It</button></div>';
+    '</div></div>';
+    mr.innerHTML = h;
+}
+
+// === VOICE ACTIVATION ===
+var voiceActive = false,
+    recognition = null,
+    voiceTimeout = null;
+
+function toggleVoice() {
+    if (voiceActive) {
+        voiceActive = false;
+        if (recognition) {
+            try {
+                recognition.stop()
+            } catch (e) {}
+        }
+        updateVoiceUI();
+        return;
+    }
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+        showVoiceToast('Voice not supported', 'Use Chrome, Edge, or Safari');
+        return
+    }
+    recognition = new SR();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    recognition.maxAlternatives = 1;
+    recognition.onstart = function() {
+        voiceActive = true;
+        updateVoiceUI();
+        showVoiceToast('Listening\u2026', 'Try: "learn" \u00b7 "framework" \u00b7 "dashboard" \u00b7 "open coach"')
+    };
+    recognition.onresult = function(e) {
+        var final = '',
+            interim = '';
+        for (var i = 0; i < e.results.length; i++) {
+            if (e.results[i].isFinal) final += e.results[i][0].transcript;
+            else interim += e.results[i][0].transcript
+        }
+        var display = final || interim;
+        if (display) {
+            var t = $('voiceToast');
+            if (t) {
+                t.innerHTML = '<div class="voice-transcript">\u201c' + display.trim() + '\u201d</div>';
+                t.classList.add('show')
+            }
+        }
+        if (final) {
+            processVoice(final.trim().toLowerCase())
+        }
+    };
+    recognition.onerror = function(e) {
+        if (e.error === 'not-allowed') showVoiceToast('Microphone blocked', 'Allow mic access in browser settings');
+        else if (e.error !== 'no-speech' && e.error !== 'aborted') showVoiceToast('Error: ' + e.error, '')
+    };
+    recognition.onend = function() {
+        voiceActive = false;
+        recognition = null;
+        updateVoiceUI();
+        clearTimeout(voiceTimeout);
+        voiceTimeout = setTimeout(function() {
+            var t = $('voiceToast');
+            if (t) t.classList.remove('show')
+        }, 4000)
+    };
+    try {
+        recognition.start()
+    } catch (e) {
+        showVoiceToast('Could not start mic', '' + e.message);
+        voiceActive = false;
+        updateVoiceUI()
+    }
+}
+
+function updateVoiceUI() {
+    var fab = $('voiceFab'),
+        lbl = $('voiceLabel');
+    if (fab) {
+        if (voiceActive) {
+            fab.classList.add('listening');
+            if (lbl) lbl.textContent = 'Listening\u2026'
+        } else {
+            fab.classList.remove('listening');
+            if (lbl) lbl.textContent = 'Voice'
+        }
+    }
+    var nb = $('navVoiceBtn');
+    if (nb) {
+        if (voiceActive) {
+            nb.style.borderColor = 'var(--gold)';
+            nb.style.color = 'var(--gold)';
+            nb.textContent = '◉ Listening\u2026'
+        } else {
+            nb.style.borderColor = '';
+            nb.style.color = '';
+            nb.innerHTML = '◉ Voice'
+        }
+    }
+}
+
+function showVoiceToast(msg, sub) {
+    var t = $('voiceToast');
+    if (!t) return;
+    t.innerHTML = '<div>' + msg + '</div>' + (sub ? '<div class="voice-cmd">' + sub + '</div>' : '');
+    t.classList.add('show');
+    clearTimeout(voiceTimeout);
+    voiceTimeout = setTimeout(function() {
+        t.classList.remove('show')
+    }, 6000);
+}
+
+function processVoice(text) {
+    var matched = true;
+    if (text.match(/\b(overview|home|go home|main|start)\b/)) go('home');
+    else if (text.match(/\b(learn|read|research|library|articles?|books?|videos?|podcast)\b/)) go('learn');
+    else if (text.match(/\b(framework|pipeline|phases?|journey|steps?)\b/)) go('pipeline');
+    else if (text.match(/\b(navigate|dashboard|operational|live|govern)\b/)) go('phase5');
+    else if (text.match(/\b(help)\b|how does this work/)) {
+        openHelp();
+        showVoiceToast('\u2713 Opening help', '')
+    } else if (text.match(/\b(coach)\b|ask.*coach|open.*coach/)) {
+        if (!coachOpen) toggleCoach();
+        showVoiceToast('\u2713 Opening AI Coach', '')
+    } else if (text.match(/\b(notes?)\b|open.*note/)) {
+        if (!notesOpen) toggleNotes();
+        showVoiceToast('\u2713 Opening notes', '')
+    } else if (text.match(/\b(close|stop|cancel|never mind|dismiss)\b/)) {
+        closeModal();
+        if (coachOpen) toggleCoach();
+        if (notesOpen) toggleNotes();
+        showVoiceToast('Closed', '')
+    } else {
+        matched = false;
+        showVoiceToast('Didn\u2019t catch that', 'Try: "learn" \u00b7 "framework" \u00b7 "coach" \u00b7 "dashboard"')
+    }
+    if (matched && !text.match(/close|stop|cancel/)) showVoiceToast('\u2713 ' + text, '');
+}
+
+// Init
+initApp();
+// Auto-expand textareas
+document.addEventListener('input', function(e) {
+    if (e.target.tagName === 'TEXTAREA') {
+        e.target.style.height = 'auto';
+        e.target.style.height = e.target.scrollHeight + 'px'
+    }
+});
