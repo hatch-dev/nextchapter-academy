@@ -782,10 +782,80 @@ function updateAccountSubscription(string $accountId, array $fields): void {
     getDB()->prepare($sql)->execute($values);
 }
 
+function huggingFaceChat(array $messages): string {
+    if (HUGGINGFACE_API_KEY === '') {
+        err('Hugging Face is not configured on this server', 503);
+    }
+
+    $payload = [
+        'model' => HUGGINGFACE_CHAT_MODEL,
+        'stream' => false,
+        'messages' => $messages,
+    ];
+
+    $ch = curl_init('https://router.huggingface.co/v1/chat/completions');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Authorization: Bearer ' . HUGGINGFACE_API_KEY,
+        'Content-Type: application/json',
+    ]);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+
+    $response = curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+
+    if ($response === false || $curlError) {
+        err('Unable to connect to Hugging Face', 502);
+    }
+
+    $data = json_decode($response ?: '{}', true);
+    if ($code >= 400) {
+        err($data['error']['message'] ?? $data['error'] ?? 'Hugging Face request failed', 502);
+    }
+
+    $text = '';
+    foreach (($data['choices'] ?? []) as $choice) {
+        $content = $choice['message']['content'] ?? '';
+        if (is_string($content) && trim($content) !== '') {
+            $text .= $content;
+        }
+    }
+
+    if (trim($text) === '') {
+        err('Hugging Face returned an empty response', 502);
+    }
+
+    return trim($text);
+}
+
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $path = routePath();
 
 try {
+
+if ($method === 'POST' && $path === '/ai/coach') {
+    requireDashboardUser();
+    $body = jsonBody();
+    $message = trim((string)($body['message'] ?? ''));
+    $context = trim((string)($body['context'] ?? ''));
+
+    if ($message === '') {
+        err('message is required');
+    }
+
+    $systemPrompt = "";
+    $userPrompt = $message;
+
+    ok([
+        'text' => huggingFaceChat([
+            ['role' => 'system', 'content' => $systemPrompt],
+            ['role' => 'user', 'content' => $userPrompt],
+        ]),
+    ]);
+}
 
 function ensureTeamSchema(): void {
     getDB()->exec("

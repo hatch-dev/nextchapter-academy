@@ -1006,9 +1006,16 @@ function toggleProfileMenu() {
     if (p) p.classList.toggle('open')
 }
 
+function profileInitials() {
+    var source = (currentUser && (currentUser.name || currentUser.email)) || 'Account';
+    var parts = String(source).trim().split(/\s+/).filter(Boolean);
+    if (parts.length > 1) return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+    return source.charAt(0).toUpperCase()
+}
+
 function renderProfileMenu() {
     var name = esc(currentUser ? (currentUser.name || currentUser.email || 'Account') : 'Account');
-    return '<div class="profile-menu"><button class="btn-ghost profile-trigger" style="font-size:var(--font-control);padding:8px 18px" onclick="toggleProfileMenu()">Profile</button><div class="profile-panel" id="profilePanel"><div class="profile-name">' + name + '</div><button class="profile-item" onclick="closeProfileMenu();openHelp()">Help</button><button class="profile-item" onclick="closeProfileMenu();clearData()">Reset</button><button class="profile-item" onclick="closeProfileMenu();go(`users`)">Users</button><button class="profile-item" onclick="closeProfileMenu();go(`billing`)">Billing</button><button class="profile-item" onclick="closeProfileMenu();signOut()">Sign Out</button></div></div>'
+    return '<div class="profile-menu"><button class="profile-trigger" type="button" aria-label="Account menu">' + esc(profileInitials()) + '</button><div class="profile-panel" id="profilePanel"><div class="profile-name">' + name + '</div><button class="profile-item" onclick="closeProfileMenu();openHelp()">Help</button><button class="profile-item" onclick="closeProfileMenu();clearData()">Reset</button><button class="profile-item" onclick="closeProfileMenu();go(`users`)">Users</button><button class="profile-item" onclick="closeProfileMenu();go(`billing`)">Billing</button><button class="profile-item" onclick="closeProfileMenu();signOut()">Sign Out</button></div></div>'
 }
 
 function toggleModuleMenu(ev) {
@@ -5621,28 +5628,12 @@ function sendCoach() {
     });
     renderCoachPanel();
     var ctx = 'User is working on: ' + (currentStep ? 'Step ' + currentStep + ' (' + currentPhase?.name + ')' : 'the pipeline overview');
-    var sysPrompt = 'You are the AI Coach for Faisal Hoque\'s 90-Day AI Innovation Pipeline — a framework grounded in the OPEN and CARE frameworks and published in Fast Company, HBR, and MIT Sloan Management Review. You help leaders build structured AI innovation pipelines through five phases: Diagnose, Organize, Prepare, Ignite, Navigate. Be direct, insightful, and strategic. Maximum 150 words per response. No bullets unless absolutely essential.';
 
-    fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            model: 'claude-sonnet-4-6',
-            max_tokens: 300,
-            messages: [{
-                role: 'user',
-                content: sysPrompt + '\n\n' + ctx + '\n\nUser question: ' + userText
-            }]
-        })
-    }).then(function(r) {
-        return r.json()
-    }).then(function(j) {
-        var text = '';
-        if (j.content)
-            for (var i = 0; i < j.content.length; i++)
-                if (j.content[i].text) text += j.content[i].text;
+    apiPost('/ai/coach', {
+        message: userText,
+        context: ctx
+    }).then(function(res) {
+        var text = (res && res.text) ? res.text : '';
         if (!text) text = 'Could not generate response. Try again.';
         coachMsgs.push({
             role: 'ai',
