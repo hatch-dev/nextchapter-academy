@@ -877,7 +877,7 @@ function renderHome() {
     ];
     for (var i = 0; i < stats.length; i++) {
         var s = stats[i];
-        h += '<div class="reveal" style="display:flex;gap:24px;padding:20px 0;border-bottom:1px solid var(--rule)">' + '<div style="font-family:var(--serif);font-size:32px;font-weight:300;color:var(--gold);min-width:48px;line-height:1">' + s.n + '</div>' + '<div><div style="font-family:var(--serif);font-size:18px;font-weight:300;margin-bottom:4px;color:var(--paper)">' + s.t + '</div><div style="font-size:13px;color:var(--stone);line-height:1.6">' + s.d + '</div></div></div>'
+        h += '<div class="reveal" style="display:flex;gap:24px;padding:20px 0;border-bottom:1px solid var(--rule)">' + '<div style="font-family:var(--serif);font-size:32px;font-weight:300;color:var(--gold);min-width:48px;line-height:1">' + s.n + '</div>' + '<div><div style="font-family:var(--serif);font-size:26px;font-weight:300;margin-bottom:4px;color:var(--paper)">' + s.t + '</div><div style="font-size:14px;color:var(--stone);line-height:1.6">' + s.d + '</div></div></div>'
     }
     h += '</div></div>';
     h += '</div>';
@@ -920,7 +920,7 @@ function renderHome() {
     for (var i = 0; i < cards.length; i++) {
         var c = cards[i];
         var click = c.url ? 'window.open(\'' + c.url + '\')' : 'go(\'' + c.pg + '\')';
-        h += '<div class="card card-link reveal" style="padding:24px;display:flex;flex-direction:column;gap:12px;min-height:160px" onclick="' + click + '"><div style="font-family:var(--mono);font-size:var(--font-control);font-weight:var(--weight-readable);letter-spacing:.12em;text-transform:uppercase;color:var(--gold)">' + c.t + '</div><div style="font-family:var(--serif);font-size:18px;font-weight:300;line-height:1.3;flex:1">' + c.d + '</div><div class="card-arrow">' + c.btn + '</div></div>'
+        h += '<div class="card card-link reveal" style="padding:24px;display:flex;flex-direction:column;gap:12px;min-height:160px" onclick="' + click + '"><div style="font-family:var(--sans);font-size:var(--font-control);font-weight:var(--weight-readable);letter-spacing:.12em;text-transform:uppercase;color:var(--gold)">' + c.t + '</div><div style="font-family:var(--serif);font-size:26px;font-weight:300;line-height:1.3;flex:1">' + c.d + '</div><div class="card-arrow">' + c.btn + '</div></div>'
     }
     h += '</div></div></div></div>';
     return h;
@@ -1005,9 +1005,9 @@ function renderLearn() {
     for (var i = 0; i < ARTICLES.length; i++) {
         var a = ARTICLES[i];
         h += '<a href="' + a.url + '" target="_blank" rel="noopener" class="card card-link reveal" style="padding:28px;display:flex;flex-direction:column;gap:12px;min-height:180px;text-decoration:none;color:inherit">';
-        h += '<div style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);letter-spacing:.15em;text-transform:uppercase;color:var(--gold)">' + a.tag + '</div>';
-        h += '<div style="font-family:var(--serif);font-size:20px;font-weight:300;line-height:1.3;flex:1">' + a.title + '</div>';
-        h += '<div style="font-size:13px;color:rgba(245,240,236,.72);line-height:1.6">' + a.desc + '</div>';
+        h += '<div style="font-family:var(--sans);font-size:var(--font-label);font-weight:var(--weight-readable);letter-spacing:.15em;text-transform:uppercase;color:var(--gold)">' + a.tag + '</div>';
+        h += '<div style="font-family:var(--serif);font-size:28px;font-weight:300;line-height:1.3;flex:1">' + a.title + '</div>';
+        h += '<div style="font-size:16px;color:var(--pale);line-height:1.6">' + a.desc + '</div>';
         h += '<div class="card-arrow" style="margin-top:auto">Read Article</div>';
         h += '</a>'
     }
@@ -1016,7 +1016,7 @@ function renderLearn() {
     h += '<div class="grid-2" style="gap:12px">';
     for (var i = 0; i < BOOKS.length; i++) {
         var b = BOOKS[i];
-        h += '<div class="card reveal" style="padding:24px;display:flex;gap:16px"><div style="font-family:var(--serif);font-size:32px;color:var(--gold);line-height:1">◈</div><div><div style="font-family:var(--serif);font-size:18px;font-weight:300">' + b.t + '</div><div style="font-family:var(--mono);font-size:var(--font-control);font-weight:var(--weight-readable);letter-spacing:.1em;color:var(--gold);margin:4px 0">' + b.a + '</div><div style="font-size:12px;color:var(--stone);line-height:1.6">' + b.d + '</div></div></div>'
+        h += '<div class="card reveal" style="padding:24px;display:flex;gap:16px"><div style="font-family:var(--serif);font-size:32px;color:var(--gold);line-height:1">◈</div><div><div style="font-family:var(--serif);font-size:26px;font-weight:300">' + b.t + '</div><div style="font-family:var(--sans);font-size:var(--font-readable-sm);font-weight:var(--weight-readable);letter-spacing:.1em;color:var(--gold);margin:10px 0">' + b.a + '</div><div style="font-size:16px;color:var(--pale);line-height:1.6">' + b.d + '</div></div></div>'
     }
     h += '</div>';
     var VIDEOS = [{
@@ -1068,9 +1068,9 @@ function renderLearn() {
         var v = VIDEOS[i];
         h += '<a href="' + v.url + '" target="_blank" rel="noopener" class="card card-link reveal" style="padding:24px;display:flex;gap:16px;text-decoration:none;color:inherit">';
         h += '<div style="width:40px;height:40px;border-radius:20px;background:rgba(30,110,110,.12);border:1px solid var(--rule);display:flex;align-items:center;justify-content:center;flex-shrink:0"><span style="font-size:12px;color:var(--ph1);margin-left:2px">▶</span></div>';
-        h += '<div style="flex:1"><div style="font-family:var(--serif);font-size:17px;font-weight:300;line-height:1.3;margin-bottom:4px">' + v.t + '</div>';
-        h += '<div style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);letter-spacing:.1em;color:var(--gold);margin-bottom:6px">' + v.a + ' · ' + v.dur + '</div>';
-        h += '<div style="font-size:12px;color:var(--stone);line-height:1.6">' + v.d + '</div></div>';
+        h += '<div style="flex:1"><div style="font-family:var(--serif);font-size:26px;font-weight:300;line-height:1.3;margin-bottom:10px">' + v.t + '</div>';
+        h += '<div style="font-family:var(--sans);font-size:var(--font-readable-sm);font-weight:var(--weight-readable);letter-spacing:.1em;color:var(--gold);margin-bottom:10px">' + v.a + ' · ' + v.dur + '</div>';
+        h += '<div style="font-size:16px;color:var(--pale);line-height:1.6">' + v.d + '</div></div>';
         h += '</a>'
     }
     h += '</div></div>';
@@ -1124,10 +1124,10 @@ function renderLearn() {
         var isConv = p.tag === 'CONVERGENCE';
         h += '<a href="' + p.url + '" target="_blank" rel="noopener" class="card card-link reveal" style="padding:24px;display:flex;gap:16px;text-decoration:none;color:inherit' + (isConv ? ';border-color:rgba(30,110,110,.2);background:rgba(30,110,110,.03)' : '') + '">';
         h += '<div style="width:40px;height:40px;border-radius:20px;background:rgba(184,137,42,.12);border:1px solid var(--rule);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🎙</div>';
-        h += '<div style="flex:1"><div style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);letter-spacing:.15em;color:' + (isConv ? 'var(--gold)' : 'var(--stone)') + ';text-transform:uppercase;margin-bottom:6px">' + p.tag + '</div>';
-        h += '<div style="font-family:var(--serif);font-size:17px;font-weight:300;line-height:1.3;margin-bottom:4px">' + p.t + '</div>';
-        h += '<div style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);letter-spacing:.08em;color:var(--stone);margin-bottom:6px">' + p.a + '</div>';
-        h += '<div style="font-size:12px;color:var(--stone);line-height:1.6">' + p.d + '</div></div>';
+        h += '<div style="flex:1"><div style="font-family:var(--sans);font-size:var(--font-readable-sm);font-weight:var(--weight-readable);letter-spacing:.15em;color:' + (isConv ? 'var(--gold)' : 'var(--stone)') + ';text-transform:uppercase;margin-bottom:6px">' + p.tag + '</div>';
+        h += '<div style="font-family:var(--serif);font-size:26px;font-weight:300;line-height:1.3;margin-bottom:10px">' + p.t + '</div>';
+        h += '<div style="font-family:var(--sans);font-size:var(--font-readbale-sm);font-weight:var(--weight-readable);letter-spacing:.08em;color:var(--ph1);margin-bottom:6px;font-weight:500;">' + p.a + '</div>';
+        h += '<div style="font-size:16px;color:var(--pale);line-height:1.6">' + p.d + '</div></div>';
         h += '</a>'
     }
     h += '</div></div>';
@@ -1166,7 +1166,7 @@ function renderPipeline() {
         h += '<div class="pipe-stage" onclick="go(\'phase5\')">';
         h += '<div class="pipe-stage-name" style="color:' + rs2.c + '">' + rs2.n + '</div>';
         h += '<div class="pipe-stage-count" style="color:' + rs2.c + '">' + rs2.v + '</div>';
-        h += '<div style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--stone);margin-top:4px;letter-spacing:.08em">RISKS</div>';
+        h += '<div style="font-family:var(--sans);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--stone);margin-top:4px;letter-spacing:.08em">RISKS</div>';
         h += '</div>'
     }
     h += '</div>';
@@ -1215,7 +1215,7 @@ function renderStep() {
     // Breadcrumb
     h += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:32px">';
     h += '<button class="btn-ghost" style="font-size:var(--font-label);padding:6px 14px" onclick="go(\'pipeline\')">← Pipeline</button>';
-    h += '<div style="font-family:var(--mono);font-size:var(--font-control);font-weight:var(--weight-readable);color:var(--stone);letter-spacing:.08em">Phase ' + ph.id + ' · ' + ph.name + ' <span style="color:var(--gold)">/ ' + stepObj.name + '</span></div>';
+    h += '<div style="font-family:var(--sans);font-size:var(--font-control);font-weight:var(--weight-readable);color:var(--stone);letter-spacing:.08em">Phase ' + ph.id + ' · ' + ph.name + ' <span style="color:var(--gold)">/ ' + stepObj.name + '</span></div>';
     h += '</div>';
 
     // Step nav
@@ -1971,7 +1971,7 @@ function ctxPanel(sid) {
     var c = STEP_CTX[sid];
     if (!c) return '';
     var open = UI.ctxOpen[sid];
-    return '<div style="margin-bottom:20px"><div onclick="UI.ctxOpen[\'' + sid + '\']=!UI.ctxOpen[\'' + sid + '\'];render()" style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(245,242,236,.03);border-radius:' + (open ? '10px 10px 0 0' : '10px') + ';cursor:pointer;border:1px solid rgba(200,104,56,.15)"><span style="font-family:var(--mono);font-size:15px;color:var(--stone)">\u25c8</span><span style="font-size:13px;font-weight:600;color:#B09080;flex:1">Why This Matters</span><span style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.5)">' + (open ? '\u25be' : '\u25b8') + '</span></div>' + (open ? '<div style="padding:16px 20px;background:rgba(245,242,236,.03);border:1px solid rgba(200,104,56,.15);border-top:none;border-radius:0 0 10px 10px"><p style="font-size:13px;color:#c8bfb4;line-height:1.7;font-style:italic;margin-bottom:12px">\u201c' + esc(c.i) + '\u201d</p>' + (c.s ? '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(245,242,236,.04);border-radius:6px;margin-bottom:12px"><span style="font-family:var(--mono);font-size:13px;color:var(--stone)">\u25ce</span><span style="font-size:12px;color:#B09080">' + esc(c.s) + '</span></div>' : '') + '<div style="display:flex;align-items:center;gap:6px;font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)"><span style=\"font-family:var(--mono);font-size:var(--font-readable-sm);font-weight:var(--weight-readable);color:var(--stone)\">\u25b8</span><span style="font-weight:600">' + esc(c.a) + '</span><span>\xb7 ' + esc(c.src) + '</span></div></div>' : '') + '</div>'
+    return '<div style="margin-bottom:20px"><div onclick="UI.ctxOpen[\'' + sid + '\']=!UI.ctxOpen[\'' + sid + '\'];render()" style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(245,242,236,.03);border-radius:' + (open ? '10px 10px 0 0' : '10px') + ';cursor:pointer;border:1px solid rgba(200,104,56,.15)"><span style="font-family:var(--sans);font-size:15px;color:var(--stone)">\u25c8</span><span style="font-size:13px;font-weight:600;color:#B09080;flex:1">Why This Matters</span><span style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.5)">' + (open ? '\u25be' : '\u25b8') + '</span></div>' + (open ? '<div style="padding:16px 20px;background:rgba(245,242,236,.03);border:1px solid rgba(200,104,56,.15);border-top:none;border-radius:0 0 10px 10px"><p style="font-size:13px;color:#c8bfb4;line-height:1.7;font-style:italic;margin-bottom:12px">\u201c' + esc(c.i) + '\u201d</p>' + (c.s ? '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(245,242,236,.04);border-radius:6px;margin-bottom:12px"><span style="font-family:var(--sans);font-size:13px;color:var(--stone)">\u25ce</span><span style="font-size:12px;color:#B09080">' + esc(c.s) + '</span></div>' : '') + '<div style="display:flex;align-items:center;gap:6px;font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)"><span style=\"font-family:var(--sans);font-size:var(--font-readable-sm);font-weight:var(--weight-readable);color:var(--stone)\">\u25b8</span><span style="font-weight:600">' + esc(c.a) + '</span><span>\xb7 ' + esc(c.src) + '</span></div></div>' : '') + '</div>'
 }
 
 function milestone(sid) {
@@ -2148,7 +2148,7 @@ function vizSystems() {
         govStatus[s.govStatus || 'none']++
     });
     var h = '<h3 style="font-size:16px;font-weight:700;margin:0 0 12px">AI Systems Overview</h3>';
-    h += '<div style="display:flex;gap:12px;margin-bottom:16px"><div style="flex:1;text-align:center;padding:12px;background:rgba(27,107,90,.08);border-radius:8px;border:1px solid rgba(27,107,90,.2)"><div style="font-size:24px;font-weight:800;color:' + TC.internal + '">' + int.length + '</div><div style="font-size:var(--font-readable-sm);color:' + TC.internal + ';font-weight:600">Internal</div></div><div style="flex:1;text-align:center;padding:12px;background:rgba(160,82,45,.08);border-radius:8px;border:1px solid rgba(160,82,45,.2)"><div style="font-size:24px;font-weight:800;color:' + TC.external + '">' + ext.length + '</div><div style="font-size:var(--font-readable-sm);color:' + TC.external + ';font-weight:600">External</div></div></div>';
+    h += '<div style="display:flex;gap:12px;margin-bottom:16px"><div style="flex:1;text-align:center;padding:12px;background:rgba(27,107,90,.08);border-radius:8px;border:1px solid rgba(27,107,90,.2)"><div style="font-size:24px;font-weight:500;color:' + TC.internal + '">' + int.length + '</div><div style="font-size:var(--font-readable-sm);color:' + TC.internal + ';font-weight:600">Internal</div></div><div style="flex:1;text-align:center;padding:12px;background:rgba(160,82,45,.08);border-radius:8px;border:1px solid rgba(160,82,45,.2)"><div style="font-size:24px;font-weight:500;color:' + TC.external + '">' + ext.length + '</div><div style="font-size:var(--font-readable-sm);color:' + TC.external + ';font-weight:600">External</div></div></div>';
     h += '<div style="display:flex;gap:8px;margin-bottom:8px">';
     [{
         k: 'none',
@@ -2240,7 +2240,7 @@ function vizTriageSummary() {
         c: unTriaged.length,
         cl: '#999'
     }].forEach(function(g) {
-        h += '<div style="flex:1;text-align:center;padding:12px;background:' + g.cl + '10;border-radius:8px;border:1px solid ' + g.cl + '30"><div style="font-size:20px;font-weight:800;color:' + g.cl + '">' + g.c + '</div><div style="font-size:var(--font-control);color:' + g.cl + ';font-weight:600">' + g.l + '</div></div>'
+        h += '<div style="flex:1;text-align:center;padding:12px;background:' + g.cl + '10;border-radius:8px;border:1px solid ' + g.cl + '30"><div style="font-size:20px;font-weight:500;color:' + g.cl + '">' + g.c + '</div><div style="font-size:var(--font-control);color:' + g.cl + ';font-weight:600">' + g.l + '</div></div>'
     });
     h += '</div>';
     return card(h, 'margin-top:20px')
@@ -2287,7 +2287,7 @@ function vizEthicsWheel() {
         var mid = (a1 + a2) / 2;
         svg += '<text x="' + (cx + (R * 0.6) * Math.cos(mid)) + '" y="' + (cy + (R * 0.6) * Math.sin(mid)) + '" text-anchor="middle" font-size="12" font-weight="600" fill="' + s.c + '" font-family="DM Sans">' + (filled ? '\u2713' : '\u25cb') + '</text>'
     });
-    svg += '<text x="' + cx + '" y="' + (cy - 4) + '" text-anchor="middle" font-size="18" font-weight="800" fill="#F5F2EC" font-family="DM Sans">' + done + '</text><text x="' + cx + '" y="' + (cy + 12) + '" text-anchor="middle" font-size="12" fill="rgba(138,130,120,.7)" font-family="DM Sans">of ' + n + '</text></svg>';
+    svg += '<text x="' + cx + '" y="' + (cy - 4) + '" text-anchor="middle" font-size="18" font-weight="500" fill="#F5F2EC" font-family="DM Sans">' + done + '</text><text x="' + cx + '" y="' + (cy + 12) + '" text-anchor="middle" font-size="12" fill="rgba(138,130,120,.7)" font-family="DM Sans">of ' + n + '</text></svg>';
     var legend = sections.map(function(s) {
         return '<span style="font-size:var(--font-readable-sm);color:' + s.c + '"><strong>' + (ef[s.k] ? '\u2713' : '\u25cb') + '</strong> ' + s.l + '</span>'
     }).join(' \xb7 ');
@@ -2356,7 +2356,7 @@ function vizSigMatrix() {
         c: monitor.length,
         cl: '#3A8B8B'
     }].forEach(function(g) {
-        h += '<div style="flex:1;text-align:center;padding:14px;background:' + g.cl + '10;border-radius:8px;border:2px solid ' + g.cl + '30"><div style="font-size:28px;font-weight:800;color:' + g.cl + '">' + g.c + '</div><div style="font-size:var(--font-readable-sm);color:' + g.cl + ';font-weight:600">' + g.l + '</div></div>'
+        h += '<div style="flex:1;text-align:center;padding:14px;background:' + g.cl + '10;border-radius:8px;border:2px solid ' + g.cl + '30"><div style="font-size:28px;font-weight:500;color:' + g.cl + '">' + g.c + '</div><div style="font-size:var(--font-readable-sm);color:' + g.cl + ';font-weight:600">' + g.l + '</div></div>'
     });
     h += '</div>';
     classified.forEach(function(r) {
@@ -2471,7 +2471,7 @@ function renderPhaseLanding(phaseId) {
     var pct = total ? Math.round(done / total * 100) : 0;
 
     var h = vizTimeline(phaseId);
-    h += '<div style="display:flex;align-items:center;gap:16px;margin-bottom:24px"><div style="width:64px;height:64px;border-radius:32px;background:' + p.color + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;flex-shrink:0">' + phaseId + '</div><div><div style="display:flex;align-items:center;gap:8px"><h1 style="font-size:24px;font-weight:800;margin:0">' + p.name + '</h1>' + badge(p.days, p.color) + '</div><p style="color:#8A8278;font-size:14px;line-height:1.5;margin:6px 0 0">' + esc(desc.n || '') + '</p></div></div>';
+    h += '<div style="display:flex;align-items:center;gap:16px;margin-bottom:24px"><div style="width:64px;height:64px;border-radius:32px;background:' + p.color + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:500;flex-shrink:0">' + phaseId + '</div><div><div style="display:flex;align-items:center;gap:8px"><h1 style="font-size:24px;font-weight:500;margin:0">' + p.name + '</h1>' + badge(p.days, p.color) + '</div><p style="color:#8A8278;font-size:14px;line-height:1.5;margin:6px 0 0">' + esc(desc.n || '') + '</p></div></div>';
 
     // Progress bar + step flow
     h += card('<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="font-size:17px;font-weight:700;margin:0">Progress</h3>' + badge(done + '/' + total + ' steps \xb7 ' + pct + '%', pct === 100 ? '#1B6B5A' : p.color) + '</div><div style="height:8px;background:rgba(245,242,236,.06);border-radius:4px;overflow:hidden;margin-bottom:16px"><div style="height:100%;width:' + pct + '%;background:' + (pct === 100 ? '#1B6B5A' : p.color) + ';border-radius:4px;transition:width .3s"></div></div><div style="display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:wrap">' + flow.map(function(s, i) {
@@ -2496,7 +2496,7 @@ function renderPhaseLanding(phaseId) {
     // Articles
     if (desc.arts) {
         h += card('<div style="font-size:12px;font-weight:700;color:rgba(138,130,120,.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Recommended Reading</div>' + desc.arts.map(function(a) {
-            return '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(245,242,236,.03);border-radius:6px;margin-bottom:4px"><span style="font-family:var(--mono);font-size:13px;color:var(--stone)">\u25b8</span><span style="font-size:12px;font-weight:600">' + esc(a.t) + '</span><span style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">\xb7 ' + esc(a.s) + '</span></div>'
+            return '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(245,242,236,.03);border-radius:6px;margin-bottom:4px"><span style="font-family:var(--sans);font-size:13px;color:var(--stone)">\u25b8</span><span style="font-size:12px;font-weight:600">' + esc(a.t) + '</span><span style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">\xb7 ' + esc(a.s) + '</span></div>'
         }).join(''), 'margin-bottom:24px')
     }
 
@@ -2504,7 +2504,7 @@ function renderPhaseLanding(phaseId) {
     if (pct === 100) {
         var msg = phaseId === 1 ? 'You\'ve mapped your AI landscape, surfaced risks, and established governance baselines.' : phaseId === 2 ? 'Your governance infrastructure is in place.' : phaseId === 3 ? 'Risks assessed, scored, and classified.' : 'Governance embedded into operations.';
         var next = phaseId < 4 ? 'phase-' + (phaseId + 1) : '5.0';
-        h += card('<div style="text-align:center"><div style="font-family:var(--mono);font-size:22px;margin-bottom:8px;color:var(--stone)">\u25c8</div><h3 style="font-size:17px;font-weight:700;margin:0 0 4px">Phase ' + phaseId + ' Complete</h3><p style="font-size:13px;color:#B09080">' + esc(msg) + '</p>' + btn(phaseId < 4 ? 'Continue to Phase ' + (phaseId + 1) + ' \u2192' : 'Go to Risk Dashboard \u2192', 'goModule(\'' + next + '\')', p.color, 'margin-top:12px') + '</div>', 'background:rgba(27,107,90,.06);border:2px solid #1B6B5A')
+        h += card('<div style="text-align:center"><div style="font-family:var(--sans);font-size:22px;margin-bottom:8px;color:var(--stone)">\u25c8</div><h3 style="font-size:17px;font-weight:700;margin:0 0 4px">Phase ' + phaseId + ' Complete</h3><p style="font-size:13px;color:#B09080">' + esc(msg) + '</p>' + btn(phaseId < 4 ? 'Continue to Phase ' + (phaseId + 1) + ' \u2192' : 'Go to Risk Dashboard \u2192', 'goModule(\'' + next + '\')', p.color, 'margin-top:12px') + '</div>', 'background:rgba(27,107,90,.06);border:2px solid #1B6B5A')
     }
     return h
 }
@@ -2763,8 +2763,8 @@ function render13() {
 
     // Dual track
     h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">';
-    h += card('<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><div style="width:12px;height:12px;border-radius:6px;background:' + TC.internal + '"></div><h3 style="font-size:15px;font-weight:700;color:' + TC.internal + ';margin:0">Internal Track</h3></div><p style="font-size:12px;color:#8A8278;line-height:1.5;margin-bottom:12px">Risks from AI systems your organization deploys or uses.</p><div style="font-size:24px;font-weight:800;color:' + TC.internal + '">' + intRisks.length + '</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">risks identified</div><div style="margin-top:12px">' + btnS('+ Add Internal Risk', 'showRiskForm(\'internal\')', TC.internal, 'font-size:12px;padding:6px 14px') + '</div>', 'border-top:4px solid ' + TC.internal);
-    h += card('<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><div style="width:12px;height:12px;border-radius:6px;background:' + TC.external + '"></div><h3 style="font-size:15px;font-weight:700;color:' + TC.external + ';margin:0">External Track</h3></div><p style="font-size:12px;color:#8A8278;line-height:1.5;margin-bottom:12px">Risks from AI used by competitors, regulators, or market forces.</p><div style="font-size:24px;font-weight:800;color:' + TC.external + '">' + extRisks.length + '</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">risks identified</div><div style="margin-top:12px">' + btnS('+ Add External Risk', 'showRiskForm(\'external\')', TC.external, 'font-size:12px;padding:6px 14px') + '</div>', 'border-top:4px solid ' + TC.external);
+    h += card('<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><div style="width:12px;height:12px;border-radius:6px;background:' + TC.internal + '"></div><h3 style="font-size:15px;font-weight:700;color:' + TC.internal + ';margin:0">Internal Track</h3></div><p style="font-size:12px;color:#8A8278;line-height:1.5;margin-bottom:12px">Risks from AI systems your organization deploys or uses.</p><div style="font-size:24px;font-weight:500;color:' + TC.internal + '">' + intRisks.length + '</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">risks identified</div><div style="margin-top:12px">' + btnS('+ Add Internal Risk', 'showRiskForm(\'internal\')', TC.internal, 'font-size:12px;padding:6px 14px') + '</div>', 'border-top:4px solid ' + TC.internal);
+    h += card('<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><div style="width:12px;height:12px;border-radius:6px;background:' + TC.external + '"></div><h3 style="font-size:15px;font-weight:700;color:' + TC.external + ';margin:0">External Track</h3></div><p style="font-size:12px;color:#8A8278;line-height:1.5;margin-bottom:12px">Risks from AI used by competitors, regulators, or market forces.</p><div style="font-size:24px;font-weight:500;color:' + TC.external + '">' + extRisks.length + '</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">risks identified</div><div style="margin-top:12px">' + btnS('+ Add External Risk', 'showRiskForm(\'external\')', TC.external, 'font-size:12px;padding:6px 14px') + '</div>', 'border-top:4px solid ' + TC.external);
     h += '</div>';
 
     if (!risks.length) h += '<div style="margin-bottom:20px">' + btn('Load Aurora Example Risks', 'loadExampleRisks()', '#1E6E6E', 'font-size:13px') + '</div>';
@@ -3001,7 +3001,7 @@ function render15() {
     var culture = tri.culture || {};
     var dr = data.decisionRights || {};
     var h = vp('V1.5', 'Culture and Authority: The Foundations of Governance', '8 min') + ctxPanel('1.5');
-    h += badge('Map \xb7 Days 1\u201330', '#1E6E6E') + '<h1 style="font-size:24px;font-weight:800;margin:8px 0 8px">Culture & Decision Rights</h1><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:8px 0 24px">Governance depends on two things: a culture that takes it seriously, and decision rights that give it teeth.</p>';
+    h += badge('Map \xb7 Days 1\u201330', '#1E6E6E') + '<h1 style="font-size:24px;font-weight:500;margin:8px 0 8px">Culture & Decision Rights</h1><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:8px 0 24px">Governance depends on two things: a culture that takes it seriously, and decision rights that give it teeth.</p>';
 
     h += card('<h3 style="font-size:16px;font-weight:700;margin:0 0 8px">Governance Culture Diagnostic</h3><p style="font-size:13px;color:rgba(138,130,120,.7);margin-bottom:16px">Does your organization treat responsible AI as a business priority or a compliance box to be checked?</p>' +
         likert('Leadership treats AI governance as a strategic business priority.', 'triage.culture.priority', culture.priority, 'Strongly disagree', 'Strongly agree') +
@@ -3610,9 +3610,9 @@ function renderOutRiskAssess() {
 
     var h = '<div style="display:flex;justify-content:space-between;margin-bottom:20px"><div><h2 style="font-size:20px;font-weight:700;margin:0 0 4px">Risk Assessment Report</h2><p style="color:rgba(138,130,120,.7);font-size:13px">From Phase 1: Map</p></div>' + btn('\u25be Download PDF', 'printPage()', '', 'font-size:13px') + '</div>';
     h += card('<div style="font-size:12px;font-weight:700;color:' + '#1E6E6E' + ';text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Assessment Summary</div><div style="display:flex;gap:12px;margin-bottom:12px">' +
-        '<div style="flex:1;text-align:center;padding:12px;background:rgba(30,110,110,.06);border-radius:8px"><div style="font-size:20px;font-weight:800;color:' + '#1E6E6E' + '">' + expAvg + '/5</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">AI Exposure</div></div>' +
-        '<div style="flex:1;text-align:center;padding:12px;background:rgba(30,110,110,.06);border-radius:8px"><div style="font-size:20px;font-weight:800;color:' + '#1E6E6E' + '">' + ctrlAvg + '/5</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">Existing Controls</div></div>' +
-        '<div style="flex:1;text-align:center;padding:12px;background:rgba(30,110,110,.06);border-radius:8px"><div style="font-size:20px;font-weight:800;color:' + '#1E6E6E' + '">' + culAvg + '/5</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">Governance Culture</div></div></div>' +
+        '<div style="flex:1;text-align:center;padding:12px;background:rgba(30,110,110,.06);border-radius:8px"><div style="font-size:20px;font-weight:500;color:' + '#1E6E6E' + '">' + expAvg + '/5</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">AI Exposure</div></div>' +
+        '<div style="flex:1;text-align:center;padding:12px;background:rgba(30,110,110,.06);border-radius:8px"><div style="font-size:20px;font-weight:500;color:' + '#1E6E6E' + '">' + ctrlAvg + '/5</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">Existing Controls</div></div>' +
+        '<div style="flex:1;text-align:center;padding:12px;background:rgba(30,110,110,.06);border-radius:8px"><div style="font-size:20px;font-weight:500;color:' + '#1E6E6E' + '">' + culAvg + '/5</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">Governance Culture</div></div></div>' +
         '<p style="font-size:13px;color:#B09080;line-height:1.6">' + risks.length + ' risks identified: ' + highRisks.length + ' high, ' + risks.filter(function(r) {
             return r.severity === 'medium'
         }).length + ' medium, ' + risks.filter(function(r) {
@@ -3691,10 +3691,10 @@ function renderOutGovReady() {
 
     var h = '<div style="display:flex;justify-content:space-between;margin-bottom:20px"><div><h2 style="font-size:20px;font-weight:700;margin:0 0 4px">Governance Readiness Summary</h2><p style="color:rgba(138,130,120,.7);font-size:13px">From Phase 2: Build</p></div>' + btn('\u25be Download PDF', 'printPage()', '', 'font-size:13px') + '</div>';
     h += card('<div style="display:flex;gap:12px">' +
-        '<div style="flex:1;text-align:center;padding:12px;background:rgba(27,107,90,.06);border-radius:8px"><div style="font-size:20px;font-weight:800;color:' + '#8B4513' + '">' + stepsComplete + '/4</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">Steps</div></div>' +
-        '<div style="flex:1;text-align:center;padding:12px;background:rgba(27,107,90,.06);border-radius:8px"><div style="font-size:20px;font-weight:800;color:' + '#8B4513' + '">' + efComplete + '/5</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">Ethical Pillars</div></div>' +
-        '<div style="flex:1;text-align:center;padding:12px;background:rgba(27,107,90,.06);border-radius:8px"><div style="font-size:20px;font-weight:800;color:' + '#8B4513' + '">' + osComplete + '/3</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">Ownership</div></div>' +
-        '<div style="flex:1;text-align:center;padding:12px;background:rgba(27,107,90,.06);border-radius:8px"><div style="font-size:20px;font-weight:800;color:' + '#8B4513' + '">' + skillAvg + '/5</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">Skills Avg</div></div></div>', 'background:rgba(27,107,90,.06);border:2px solid ' + '#8B4513');
+        '<div style="flex:1;text-align:center;padding:12px;background:rgba(27,107,90,.06);border-radius:8px"><div style="font-size:20px;font-weight:500;color:' + '#8B4513' + '">' + stepsComplete + '/4</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">Steps</div></div>' +
+        '<div style="flex:1;text-align:center;padding:12px;background:rgba(27,107,90,.06);border-radius:8px"><div style="font-size:20px;font-weight:500;color:' + '#8B4513' + '">' + efComplete + '/5</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">Ethical Pillars</div></div>' +
+        '<div style="flex:1;text-align:center;padding:12px;background:rgba(27,107,90,.06);border-radius:8px"><div style="font-size:20px;font-weight:500;color:' + '#8B4513' + '">' + osComplete + '/3</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">Ownership</div></div>' +
+        '<div style="flex:1;text-align:center;padding:12px;background:rgba(27,107,90,.06);border-radius:8px"><div style="font-size:20px;font-weight:500;color:' + '#8B4513' + '">' + skillAvg + '/5</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7)">Skills Avg</div></div></div>', 'background:rgba(27,107,90,.06);border:2px solid ' + '#8B4513');
     h += card('<h3 style="font-size:15px;font-weight:700;margin:0 0 8px">Ethical Framework</h3>' + ['fairness', 'humanOversight', 'workforceImpact', 'societalEffects', 'transparency'].map(function(k) {
         var labels = {
             fairness: 'Fairness',
@@ -3813,7 +3813,7 @@ function renderOutAssessedReg() {
     }
     risks.forEach(function(r) {
         var composite = (r.litL || 0) + (r.litI || 0) + (r.litT || 0);
-        h += card('<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px"><h4 style="font-size:14px;font-weight:700;margin:0">' + esc(r.name) + '</h4>' + postiTag(r.category) + sevTag(r.severity) + (r.classification ? badge(respLabel(r.classification), respColor(r.classification)) : '') + (r.ethicalFlag ? badge('Ethical', '#7B4F8A') : '') + '</div><p style="font-size:12px;color:#8A8278">' + esc(r.description) + '</p></div>' + (r.litL ? '<div style="text-align:center;min-width:60px;padding:8px;background:rgba(200,134,10,.08);border-radius:8px"><div style="font-size:18px;font-weight:800;color:' + '#C8860A' + '">' + composite + '</div><div style="font-size:var(--font-control);color:rgba(138,130,120,.7)">/15</div></div>' : '') + '</div>', 'border-left:4px solid ' + (r.classification ? respColor(r.classification) : '#C8860A') + ';margin-bottom:8px')
+        h += card('<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px"><h4 style="font-size:14px;font-weight:700;margin:0">' + esc(r.name) + '</h4>' + postiTag(r.category) + sevTag(r.severity) + (r.classification ? badge(respLabel(r.classification), respColor(r.classification)) : '') + (r.ethicalFlag ? badge('Ethical', '#7B4F8A') : '') + '</div><p style="font-size:12px;color:#8A8278">' + esc(r.description) + '</p></div>' + (r.litL ? '<div style="text-align:center;min-width:60px;padding:8px;background:rgba(200,134,10,.08);border-radius:8px"><div style="font-size:18px;font-weight:500;color:' + '#C8860A' + '">' + composite + '</div><div style="font-size:var(--font-control);color:rgba(138,130,120,.7)">/15</div></div>' : '') + '</div>', 'border-left:4px solid ' + (r.classification ? respColor(r.classification) : '#C8860A') + ';margin-bottom:8px')
     });
     return h
 }
@@ -3838,7 +3838,7 @@ function renderOutRiskClass() {
         h += card('<div style="text-align:center;padding:48px"><p style="color:rgba(138,130,120,.5)">Complete Step 3.3 to classify risks.</p></div>');
         return h
     }
-    h += card('<div style="display:flex;gap:12px;margin-bottom:16px"><div style="flex:1;text-align:center;padding:14px;background:#9B2D3F10;border-radius:8px;border:2px solid #9B2D3F30"><div style="font-size:28px;font-weight:800;color:#9B2D3F">' + manage.length + '</div><div style="font-size:var(--font-readable-sm);color:#9B2D3F;font-weight:600">Manage</div></div><div style="flex:1;text-align:center;padding:14px;background:#B5547A10;border-radius:8px;border:2px solid #B5547A30"><div style="font-size:28px;font-weight:800;color:#B5547A">' + monEnh.length + '</div><div style="font-size:var(--font-readable-sm);color:#B5547A;font-weight:600">Monitor Enhanced</div></div><div style="flex:1;text-align:center;padding:14px;background:#3A8B8B10;border-radius:8px;border:2px solid #3A8B8B30"><div style="font-size:28px;font-weight:800;color:#3A8B8B">' + monitor.length + '</div><div style="font-size:var(--font-readable-sm);color:#3A8B8B;font-weight:600">Monitor</div></div></div>');
+    h += card('<div style="display:flex;gap:12px;margin-bottom:16px"><div style="flex:1;text-align:center;padding:14px;background:#9B2D3F10;border-radius:8px;border:2px solid #9B2D3F30"><div style="font-size:28px;font-weight:500;color:#9B2D3F">' + manage.length + '</div><div style="font-size:var(--font-readable-sm);color:#9B2D3F;font-weight:600">Manage</div></div><div style="flex:1;text-align:center;padding:14px;background:#B5547A10;border-radius:8px;border:2px solid #B5547A30"><div style="font-size:28px;font-weight:500;color:#B5547A">' + monEnh.length + '</div><div style="font-size:var(--font-readable-sm);color:#B5547A;font-weight:600">Monitor Enhanced</div></div><div style="flex:1;text-align:center;padding:14px;background:#3A8B8B10;border-radius:8px;border:2px solid #3A8B8B30"><div style="font-size:28px;font-weight:500;color:#3A8B8B">' + monitor.length + '</div><div style="font-size:var(--font-readable-sm);color:#3A8B8B;font-weight:600">Monitor</div></div></div>');
     [{
         l: 'Manage',
         items: manage,
@@ -3984,7 +3984,7 @@ function renderOutUpdatedReg() {
         return h
     }
     risks.forEach(function(r) {
-        h += card('<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px"><h4 style="font-size:14px;font-weight:700;margin:0">' + esc(r.name) + '</h4>' + postiTag(r.category) + sevTag(r.severity) + trackTag(r.source) + (r.classification ? badge(respLabel(r.classification), respColor(r.classification)) : '') + (r.ethicalFlag ? badge('Ethical', '#7B4F8A') : '') + '</div><p style="font-size:12px;color:#8A8278;margin:4px 0">' + esc(r.description) + '</p>' + (r.responsePlan ? '<p style="font-size:12px;color:#B09080;margin-top:4px"><strong>Plan:</strong> ' + esc(r.responsePlan) + '</p>' : '') + '</div>' + (r.litL ? '<div style="text-align:center;min-width:50px"><div style="font-size:16px;font-weight:800;color:' + '#3D4F5C' + '">' + ((r.litL || 0) + (r.litI || 0) + (r.litT || 0)) + '</div><div style="font-size:var(--font-control);color:rgba(138,130,120,.7)">/15</div></div>' : '') + '</div>', 'border-left:4px solid ' + (r.classification ? respColor(r.classification) : '#ddd') + ';margin-bottom:8px')
+        h += card('<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:4px"><h4 style="font-size:14px;font-weight:700;margin:0">' + esc(r.name) + '</h4>' + postiTag(r.category) + sevTag(r.severity) + trackTag(r.source) + (r.classification ? badge(respLabel(r.classification), respColor(r.classification)) : '') + (r.ethicalFlag ? badge('Ethical', '#7B4F8A') : '') + '</div><p style="font-size:12px;color:#8A8278;margin:4px 0">' + esc(r.description) + '</p>' + (r.responsePlan ? '<p style="font-size:12px;color:#B09080;margin-top:4px"><strong>Plan:</strong> ' + esc(r.responsePlan) + '</p>' : '') + '</div>' + (r.litL ? '<div style="text-align:center;min-width:50px"><div style="font-size:16px;font-weight:500;color:' + '#3D4F5C' + '">' + ((r.litL || 0) + (r.litI || 0) + (r.litT || 0)) + '</div><div style="font-size:var(--font-control);color:rgba(138,130,120,.7)">/15</div></div>' : '') + '</div>', 'border-left:4px solid ' + (r.classification ? respColor(r.classification) : '#ddd') + ';margin-bottom:8px')
     });
     return h
 }
@@ -4068,12 +4068,12 @@ function renderDashboardContent() {
     }
 
     // Main dashboard view
-    var h = badge('Govern \xb7 Ongoing', '#2A5A5A') + '<h1 style="font-size:28px;font-weight:800;line-height:1.2;margin:8px 0 8px">Risk Governance Dashboard</h1><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:8px 0 20px">Your operational governance hub. Monitor risks, track the governance rhythm, and access all reports.</p>';
+    var h = badge('Govern \xb7 Ongoing', '#2A5A5A') + '<h1 style="font-size:28px;font-weight:500;line-height:1.2;margin:8px 0 8px">Risk Governance Dashboard</h1><p style="color:#8A8278;font-size:14px;line-height:1.6;margin:8px 0 20px">Your operational governance hub. Monitor risks, track the governance rhythm, and access all reports.</p>';
 
     // Meeting cards
     h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">';
-    h += card('<div style="font-size:var(--font-readable-sm);font-weight:700;color:rgba(138,130,120,.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Next Risk Pulse</div><div style="font-size:18px;font-weight:800;color:' + '#2A5A5A' + '">' + (rc.pulseFrequency ? rc.pulseFrequency.charAt(0).toUpperCase() + rc.pulseFrequency.slice(1) : 'Not scheduled') + '</div><div style="font-size:12px;color:rgba(138,130,120,.7);margin-top:4px">' + (rc.firstPulse || 'Date not set') + '</div><div style="font-size:12px;color:rgba(138,130,120,.7)">' + esc((rc.pulseAttendees || '').substring(0, 60)) + ((rc.pulseAttendees || '').length > 60 ? '...' : '') + '</div>', 'background:rgba(61,79,92,.08)');
-    h += card('<div style="font-size:var(--font-readable-sm);font-weight:700;color:rgba(138,130,120,.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Next Governance Review</div><div style="font-size:18px;font-weight:800;color:' + '#2A5A5A' + '">' + (gr.meetingFrequency ? gr.meetingFrequency.charAt(0).toUpperCase() + gr.meetingFrequency.slice(1) : 'Not scheduled') + '</div><div style="font-size:12px;color:rgba(138,130,120,.7);margin-top:4px">' + (gr.firstMeeting || 'Date not set') + '</div><div style="font-size:12px;color:rgba(138,130,120,.7)">' + esc(gr.meetingDuration || '') + '</div>', 'background:rgba(61,79,92,.08)');
+    h += card('<div style="font-size:var(--font-readable-sm);font-weight:700;color:rgba(138,130,120,.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Next Risk Pulse</div><div style="font-size:18px;font-weight:500;color:' + '#2A5A5A' + '">' + (rc.pulseFrequency ? rc.pulseFrequency.charAt(0).toUpperCase() + rc.pulseFrequency.slice(1) : 'Not scheduled') + '</div><div style="font-size:12px;color:rgba(138,130,120,.7);margin-top:4px">' + (rc.firstPulse || 'Date not set') + '</div><div style="font-size:12px;color:rgba(138,130,120,.7)">' + esc((rc.pulseAttendees || '').substring(0, 60)) + ((rc.pulseAttendees || '').length > 60 ? '...' : '') + '</div>', 'background:rgba(61,79,92,.08)');
+    h += card('<div style="font-size:var(--font-readable-sm);font-weight:700;color:rgba(138,130,120,.7);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Next Governance Review</div><div style="font-size:18px;font-weight:500;color:' + '#2A5A5A' + '">' + (gr.meetingFrequency ? gr.meetingFrequency.charAt(0).toUpperCase() + gr.meetingFrequency.slice(1) : 'Not scheduled') + '</div><div style="font-size:12px;color:rgba(138,130,120,.7);margin-top:4px">' + (gr.firstMeeting || 'Date not set') + '</div><div style="font-size:12px;color:rgba(138,130,120,.7)">' + esc(gr.meetingDuration || '') + '</div>', 'background:rgba(61,79,92,.08)');
     h += '</div>';
 
     // Risk pipeline (clickable)
@@ -4107,7 +4107,7 @@ function renderDashboardContent() {
         c: '#7B4F8A',
         n: ethical.length
     }].forEach(function(x) {
-        h += card('<div style="text-align:center;cursor:pointer" onclick="UI.activeView=\'' + x.k + '\';render()"><div style="font-size:28px;font-weight:800;color:' + x.c + '">' + x.n + '</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7);font-weight:600">' + x.l.toUpperCase() + '</div></div>', 'border-bottom:3px solid ' + x.c)
+        h += card('<div style="text-align:center;cursor:pointer" onclick="UI.activeView=\'' + x.k + '\';render()"><div style="font-size:28px;font-weight:500;color:' + x.c + '">' + x.n + '</div><div style="font-size:var(--font-readable-sm);color:rgba(138,130,120,.7);font-weight:600">' + x.l.toUpperCase() + '</div></div>', 'border-bottom:3px solid ' + x.c)
     });
     h += '</div>';
 
@@ -4258,7 +4258,7 @@ function printPage() {
     var w = window.open('');
     w.document.write('<html><head><title>' + (title || 'Report') + '</title>' +
         '<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;500;700&display=swap" rel="stylesheet">' +
-        '<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:"DM Sans",sans-serif;max-width:800px;margin:40px auto;padding:0 40px;color:#1a1a1a;line-height:1.7;font-size:14px;background:#fff}' +
+        '<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:"DM Sans",sans-serif;max-width:500px;margin:40px auto;padding:0 40px;color:#1a1a1a;line-height:1.7;font-size:14px;background:#fff}' +
         'h1,h2,h3,h4{color:#1a1a1a}svg{max-width:100%}' +
         '.cd{background:#f9f9f7;border:1px solid #e8e8e8;border-radius:10px;padding:24px;margin-bottom:20px;page-break-inside:avoid}' +
         '.bg{display:inline-block;padding:4px 10px;border-radius:12px;font-size:var(--font-readable-sm);font-weight:700}' +
@@ -4333,20 +4333,20 @@ function renderModuleOverview() {
     h += vp('V0', 'Module Overview: Why Responsible AI Governance Matters Now', '15 min');
     h += vizTimeline(0);
     // Three pillars
-    h += card('<h2 style="font-size:20px;font-weight:700;color:#1E6E6E;margin:0 0 12px">Three Pillars of Responsible AI</h2><p style="font-size:13px;color:var(--stone);line-height:1.6;margin-bottom:16px">Governance efforts fail for predictable reasons. They succeed when three foundations are in place.</p><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">' +
+    h += card('<h2 style="font-size:20px;font-weight:700;color:#1E6E6E;margin:0 0 12px">Three Pillars of Responsible AI</h2><p style="font-size:18px;color:var(--stone);line-height:1.6;margin-bottom:16px">Governance efforts fail for predictable reasons. They succeed when three foundations are in place.</p><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">' +
         card('<div style="font-size:13px;font-weight:700;color:#1E6E6E;margin-bottom:6px">Ethical Foundations</div><p style="font-size:12px;color:var(--stone);line-height:1.5">Before developing specific policies, you need clarity about what your organisation stands for.</p>', 'border-top:4px solid #1E6E6E') +
         card('<div style="font-size:13px;font-weight:700;color:#8B4513;margin-bottom:6px">Accountability &amp; Oversight</div><p style="font-size:12px;color:var(--stone);line-height:1.5">Responsible AI fails when nobody owns it. You need clear answers: Who can approve? Who can halt?</p>', 'border-top:4px solid #8B4513') +
         card('<div style="font-size:13px;font-weight:700;color:#3D4F5C;margin-bottom:6px">Human Impact</div><p style="font-size:12px;color:var(--stone);line-height:1.5">Every AI deployment affects real people. Design for fairness, dignity, and augmentation.</p>', 'border-top:4px solid #3D4F5C') + '</div>', 'background:rgba(30,110,110,.06);border:none;margin-bottom:24px');
     // Phase cards
-    h += card('<h2 style="font-size:20px;font-weight:700;margin:0 0 12px;color:var(--paper)">The 90-Day Plan</h2><p style="font-size:13px;color:var(--stone);line-height:1.6;margin-bottom:16px">Four phases take you from mapping your AI landscape to an embedded governance system.</p>' +
+    h += card('<h2 style="font-size:20px;font-weight:700;margin:0 0 12px;color:var(--paper)">The 90-Day Plan</h2><p style="font-size:18px;color:var(--stone);line-height:1.6;margin-bottom:16px">Four phases take you from mapping your AI landscape to an embedded governance system.</p>' +
         PHASES.slice(0, 4).map(function(p) {
             var desc = p.id === 1 ? 'See the full picture of your AI risk landscape.' : p.id === 2 ? 'Construct governance infrastructure: ethical framework, ownership, cadence.' : p.id === 3 ? 'Run your first risk assessments. Apply the ethical lens, score with LIT, classify.' : 'Make governance operational. Exit plans, rhythm, embed oversight.';
-            return '<div onclick="goModule(\'phase-' + p.id + '\')" style="display:flex;gap:16px;margin-bottom:16px;padding:12px 16px;cursor:pointer;border-radius:8px;transition:background .2s"><div style="width:48px;height:48px;border-radius:24px;background:' + p.color + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;flex-shrink:0">' + p.id + '</div><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-size:15px;font-weight:700;color:var(--paper)">' + p.name + '</span>' + badge(p.days, p.color) + '</div><div style="font-size:13px;color:var(--stone);line-height:1.5;margin-bottom:8px">' + desc + '</div><div style="display:flex;gap:6px;flex-wrap:wrap">' + p.steps.map(function(s) {
+            return '<div onclick="goModule(\'phase-' + p.id + '\')" style="display:flex;gap:16px;margin-bottom:16px;padding:12px 16px;cursor:pointer;border-radius:8px;transition:background .2s"><div style="width:48px;height:48px;border-radius:24px;background:' + p.color + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:500;flex-shrink:0">' + p.id + '</div><div style="flex:1"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-size:15px;font-weight:700;color:var(--paper)">' + p.name + '</span>' + badge(p.days, p.color) + '</div><div style="font-size:13px;color:var(--stone);line-height:1.5;margin-bottom:8px">' + desc + '</div><div style="display:flex;gap:6px;flex-wrap:wrap">' + p.steps.map(function(s) {
                 return '<span onclick="event.stopPropagation();goModule(\'' + s.id + '\')" style="font-size:var(--font-readable-sm);padding:3px 8px;background:' + p.color + '18;color:' + p.color + ';border-radius:4px;font-weight:600;cursor:pointer">' + s.name + '</span>'
             }).join('') + '</div></div></div>'
         }).join(''), 'margin-bottom:24px');
     // Phase 5 + Risk pipeline
-    h += card('<h2 style="font-size:20px;font-weight:700;margin:0 0 12px;color:var(--paper)">Phase 5: Govern \u2014 Ongoing</h2><p style="font-size:13px;color:var(--stone);line-height:1.6;margin-bottom:12px">After the 90-day build, the module transitions into your operational governance dashboard.</p>' + riskViz(risks.some(function(r) {
+    h += card('<h2 style="font-size:20px;font-weight:700;margin:0 0 12px;color:var(--paper)">Phase 5: Govern \u2014 Ongoing</h2><p style="font-size:18px;color:var(--stone);line-height:1.6;margin-bottom:12px">After the 90-day build, the module transitions into your operational governance dashboard.</p>' + riskViz(risks.some(function(r) {
         return r.classification
     }) ? 'managed' : risks.length > 0 ? 'identified' : null, {
         identified: '5.0',
@@ -4383,7 +4383,7 @@ function renderSidebar() {
     sb.style.display = showSidebar ? 'flex' : 'none';
     var mc = document.getElementById('mainContent');
     if (mc) {
-        mc.style.marginLeft = (showSidebar && sidebarOpen) ? '260px' : '0';
+        mc.style.marginLeft = (showSidebar && sidebarOpen) ? '16px' : '0';
     }
     var btn = document.getElementById('sidebarToggle');
     if (btn) btn.style.display = showSidebar ? 'block' : 'none';
@@ -4493,7 +4493,7 @@ function renderOutcome() {
         if (risks.length > 0) {
             h += svgHeatMap();
         }
-        if (exp.currentSystems) h += '<div style="margin-top:16px"><div style="font-family:var(--mono);font-size:var(--font-control);font-weight:var(--weight-readable);letter-spacing:.12em;text-transform:uppercase;color:var(--stone);margin-bottom:6px">Current AI Systems</div><div style="font-size:14px;color:var(--paper);line-height:1.6">' + esc(exp.currentSystems) + '</div></div>';
+        if (exp.currentSystems) h += '<div style="margin-top:16px"><div style="font-family:var(--sans);font-size:var(--font-control);font-weight:var(--weight-readable);letter-spacing:.12em;text-transform:uppercase;color:var(--stone);margin-bottom:6px">Current AI Systems</div><div style="font-size:14px;color:var(--paper);line-height:1.6">' + esc(exp.currentSystems) + '</div></div>';
         h += '<button class="action-btn" onclick="printRiskAssessReport()" style="margin-top:24px">⬇ Export Report</button>';
     } else if (id === 'out-ethicsdoc') {
         h += '<div class="outcome-header"><div class="step-eyebrow">Phase 2 Output</div><div class="section-title">Ethical Framework <em>Document</em></div></div>';
@@ -4521,12 +4521,12 @@ function renderOutcome() {
             h += '<p style="color:var(--stone)">Complete Step 2.1 to generate your ethical framework document.</p>';
         } else {
             h += '<p style="font-size:14px;color:var(--stone);margin-bottom:32px;line-height:1.7">' + filled + '/5 ethical pillars defined. This document captures your organization\'s foundational AI ethics commitments.</p>';
-            if (ef.defaultAutonomy) h += '<div style="padding:16px 20px;border:1px solid var(--rule);margin-bottom:24px;font-family:var(--mono);font-size:var(--font-readable-sm)"><span style="color:var(--gold)">Default Autonomy Position: </span>' + ef.defaultAutonomy + '</div>';
+            if (ef.defaultAutonomy) h += '<div style="padding:16px 20px;border:1px solid var(--rule);margin-bottom:24px;font-family:var(--sans);font-size:var(--font-readable-sm)"><span style="color:var(--gold)">Default Autonomy Position: </span>' + ef.defaultAutonomy + '</div>';
             for (var i = 0; i < pillars.length; i++) {
                 var p = pillars[i];
                 if (ef[p.k]) {
                     h += '<div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--rule)">';
-                    h += '<div style="font-family:var(--mono);font-size:var(--font-control);font-weight:var(--weight-readable);letter-spacing:.15em;text-transform:uppercase;color:var(--ph2);margin-bottom:8px">' + p.t + '</div>';
+                    h += '<div style="font-family:var(--sans);font-size:var(--font-control);font-weight:var(--weight-readable);letter-spacing:.15em;text-transform:uppercase;color:var(--ph2);margin-bottom:8px">' + p.t + '</div>';
                     h += '<div style="font-size:14px;color:var(--paper);line-height:1.7">' + esc(ef[p.k]) + '</div>';
                     h += '</div>';
                 }
@@ -4539,9 +4539,9 @@ function renderOutcome() {
         if (raci.length === 0) {
             h += '<p style="color:var(--stone)">Complete Step 2.2 to build your RACI matrix.</p>';
         } else {
-            h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="border-bottom:1px solid var(--rule)"><th style="text-align:left;padding:10px 14px;font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);letter-spacing:.12em;text-transform:uppercase;color:var(--stone)">Activity</th>';
+            h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr style="border-bottom:1px solid var(--rule)"><th style="text-align:left;padding:10px 14px;font-family:var(--sans);font-size:var(--font-label);font-weight:var(--weight-readable);letter-spacing:.12em;text-transform:uppercase;color:var(--stone)">Activity</th>';
             ['Responsible', 'Accountable', 'Consulted', 'Informed'].forEach(function(l) {
-                h += '<th style="text-align:left;padding:10px 14px;font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);letter-spacing:.12em;text-transform:uppercase;color:var(--ph2)">' + l + '</th>';
+                h += '<th style="text-align:left;padding:10px 14px;font-family:var(--sans);font-size:var(--font-label);font-weight:var(--weight-readable);letter-spacing:.12em;text-transform:uppercase;color:var(--ph2)">' + l + '</th>';
             });
             h += '</tr></thead><tbody>';
             for (var i = 0; i < raci.length; i++) {
@@ -4613,7 +4613,7 @@ function renderOutcome() {
             h += '<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(245,240,236,.06)">';
             h += '<div style="font-family:var(--serif);font-size:24px;font-weight:300;color:' + (score >= 15 ? '#9B2D3F' : score >= 9 ? 'var(--ph3)' : 'var(--ph1)') + ';min-width:48px">' + score + '</div>';
             h += '<div style="flex:1"><div style="font-size:14px;color:var(--paper)">' + esc(r.name) + '</div>';
-            h += '<div style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--stone);margin-top:2px">L:' + (s.likelihood || '?') + ' × I:' + (s.importance || '?') + (r.ethicalFlag ? ' · ⚑ Ethical' : '') + '</div></div>';
+            h += '<div style="font-family:var(--sans);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--stone);margin-top:2px">L:' + (s.likelihood || '?') + ' × I:' + (s.importance || '?') + (r.ethicalFlag ? ' · ⚑ Ethical' : '') + '</div></div>';
             h += '<span class="tag ' + (score >= 15 ? 'tag-high' : score >= 9 ? 'tag-med' : 'tag-low') + '">' + (score >= 15 ? 'Priority' : score >= 9 ? 'Significant' : 'Manageable') + '</span>';
             h += '</div>';
         }
@@ -4678,7 +4678,7 @@ function renderOutcome() {
                 var cl = rc4[r.id];
                 h += '<div class="port-card ' + (cl === 'manage' ? 'red' : 'ph3') + '" style="margin-bottom:12px">';
                 h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="idea-name">' + esc(r.name) + '</div><span class="tag ' + (cl === 'manage' ? 'tag-high' : 'tag-med') + '">' + cl + '</span></div>';
-                if (p.exitDirector) h += '<div style="font-family:var(--mono);font-size:var(--font-control);font-weight:var(--weight-readable);color:var(--gold);margin-bottom:4px">Director: ' + esc(p.exitDirector) + '</div>';
+                if (p.exitDirector) h += '<div style="font-family:var(--sans);font-size:var(--font-control);font-weight:var(--weight-readable);color:var(--gold);margin-bottom:4px">Director: ' + esc(p.exitDirector) + '</div>';
                 if (p.trigger) h += '<div style="font-size:12px;color:var(--stone);margin-bottom:4px"><strong style="color:var(--paper)">Trigger:</strong> ' + esc(p.trigger) + '</div>';
                 if (p.procedure) h += '<div style="font-size:12px;color:var(--stone);margin-bottom:4px"><strong style="color:var(--paper)">Procedure:</strong> ' + esc(p.procedure) + '</div>';
                 if (p.fallback) h += '<div style="font-size:12px;color:var(--stone)"><strong style="color:var(--paper)">Fallback:</strong> ' + esc(p.fallback) + '</div>';
@@ -4694,8 +4694,8 @@ function renderOutcome() {
         h += '<div class="dash-stat" style="border-top:3px solid var(--ph4)"><div class="dash-stat-num" style="color:var(--ph4);font-size:28px">' + (gr.meeting ? gr.meeting : 'Not set') + '</div><div class="dash-stat-label">Standing Meeting</div></div>';
         h += '<div class="dash-stat" style="border-top:3px solid var(--ph4)"><div class="dash-stat-num" style="color:var(--ph4);font-size:28px">' + (gr.reportAudience ? gr.reportAudience : 'Not set') + '</div><div class="dash-stat-label">Report Audience</div></div>';
         h += '</div>';
-        if (gr.escalationTriggers) h += '<div style="margin-bottom:16px"><div style="font-family:var(--mono);font-size:var(--font-control);font-weight:var(--weight-readable);letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Escalation Triggers</div><div style="font-size:14px;color:var(--paper);line-height:1.7">' + esc(gr.escalationTriggers) + '</div></div>';
-        if (eo.deploymentGate) h += '<div style="margin-bottom:16px"><div style="font-family:var(--mono);font-size:var(--font-control);font-weight:var(--weight-readable);letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Deployment Gate Checklist</div><div style="font-size:14px;color:var(--paper);line-height:1.7">' + esc(eo.deploymentGate) + '</div></div>';
+        if (gr.escalationTriggers) h += '<div style="margin-bottom:16px"><div style="font-family:var(--sans);font-size:var(--font-control);font-weight:var(--weight-readable);letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Escalation Triggers</div><div style="font-size:14px;color:var(--paper);line-height:1.7">' + esc(gr.escalationTriggers) + '</div></div>';
+        if (eo.deploymentGate) h += '<div style="margin-bottom:16px"><div style="font-family:var(--sans);font-size:var(--font-control);font-weight:var(--weight-readable);letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Deployment Gate Checklist</div><div style="font-size:14px;color:var(--paper);line-height:1.7">' + esc(eo.deploymentGate) + '</div></div>';
         h += '<button class="action-btn" onclick="printGovFramework()" style="margin-top:24px">⬇ Export Governance Framework</button>';
     } else {
         h += '<div style="padding:40px;text-align:center;color:var(--stone);font-family:var(--serif);font-size:20px;font-style:italic">Output: ' + id + '</div>';
@@ -4745,7 +4745,7 @@ var INSIGHT_FEEDS = [{
             {
                 title: 'The Demand Desert: What AI Job Displacement Really Means',
                 date: '2024-10',
-                url: 'https://www.fastcompany.com/90988000/demand-desert',
+                url: 'https://www.fastcompany.com/90985000/demand-desert',
                 excerpt: 'When AI automates middle-skill work faster than new categories emerge, aggregate demand contracts. We need to name this before we can address it.'
             }
         ]
@@ -5004,8 +5004,8 @@ function renderInsights() {
 
     // Status
     h += '<div id="insightStatusBar" style="padding:10px 48px;min-height:32px;display:flex;align-items:center;gap:12px">';
-    h += '<div id="insightStatusText" style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--stone);letter-spacing:.1em">Showing curated content — click Refresh Live to fetch latest.</div>';
-    h += '<div id="insightSpinner" style="display:none;font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--gold)">&#9679;&#9679;&#9679; Fetching live feeds via AI…</div>';
+    h += '<div id="insightStatusText" style="font-family:var(--sans);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--stone);letter-spacing:.1em">Showing curated content — click Refresh Live to fetch latest.</div>';
+    h += '<div id="insightSpinner" style="display:none;font-family:var(--sans);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--gold)">&#9679;&#9679;&#9679; Fetching live feeds via AI…</div>';
     h += '</div>';
 
     // Cards
@@ -5069,20 +5069,20 @@ function buildInsightCards(filterId, view) {
             h += '<div style="flex:1;min-width:0"><div class="insight-list-title">' + (isPodcast ? '<span style="color:' + f2.color + '">▶ </span>' : '') + esc(it.title) + '</div>';
             if (ex) h += '<div class="insight-list-excerpt">' + esc(ex) + '</div></div>';
             h += '<div class="insight-list-meta">';
-            if (ds) h += '<div style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--stone);white-space:nowrap">' + ds + '</div>';
-            if (isPodcast && it.duration) h += '<div style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--stone);margin-top:3px">\u23f1 ' + esc(it.duration) + '</div>';
+            if (ds) h += '<div style="font-family:var(--sans);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--stone);white-space:nowrap">' + ds + '</div>';
+            if (isPodcast && it.duration) h += '<div style="font-family:var(--sans);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--stone);margin-top:3px">\u23f1 ' + esc(it.duration) + '</div>';
             h += '</div></div>';
         } else {
             h += '<div class="insight-card' + (isPodcast ? ' insight-card--podcast' : '') + '" onclick="window.open(\'' + url + '\',\'_blank\')">';
             if (isPodcast) h += '<div style="height:2px;margin:-22px -20px 14px;background:' + f2.color + ';opacity:.5"></div>';
             h += '<div class="insight-card-header">';
             h += '<span class="insight-badge" style="background:' + f2.color + '18;color:' + f2.color + ';border-color:' + f2.color + '35">' + (isPodcast ? '▶ ' : '') + f2.shortLabel + '</span>';
-            if (ds) h += '<span style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--stone)">' + ds + '</span>';
+            if (ds) h += '<span style="font-family:var(--sans);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--stone)">' + ds + '</span>';
             h += '</div>';
-            h += '<div class="insight-title' + (isPodcast ? ' insight-title--podcast' : '') + '">' + (insightsState.liveLoaded[f2.id] ? '<span style="color:' + f2.color + ';font-size:var(--font-readable-sm);font-family:var(--mono);margin-right:4px;vertical-align:middle">●</span>' : '') + esc(it.title) + '</div>';
+            h += '<div class="insight-title' + (isPodcast ? ' insight-title--podcast' : '') + '">' + (insightsState.liveLoaded[f2.id] ? '<span style="color:' + f2.color + ';font-size:var(--font-readable-sm);font-family:var(--sans);margin-right:4px;vertical-align:middle">●</span>' : '') + esc(it.title) + '</div>';
             if (ex) h += '<div class="insight-excerpt">' + esc(ex) + '</div>';
             h += '<div class="insight-card-foot">';
-            if (isPodcast && it.duration) h += '<span style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--stone)">\u23f1 ' + esc(it.duration) + '</span>';
+            if (isPodcast && it.duration) h += '<span style="font-family:var(--sans);font-size:var(--font-label);font-weight:var(--weight-readable);color:var(--stone)">\u23f1 ' + esc(it.duration) + '</span>';
             else h += '<span></span>';
             h += '<span class="insight-cta">' + (isPodcast ? 'Listen' : 'Read') + ' \u2192</span>';
             h += '</div></div>';
@@ -5353,7 +5353,7 @@ function renderCoachPanel() {
     if (!panel) return;
     var ctx = currentStep ? ('Step ' + currentStep) : 'Overview';
     var h = '<div class="coach-header"><div class="coach-header-title"><span>✦</span> AI Coach</div><button class="coach-close" onclick="toggleCoach()">×</button></div>';
-    h += '<div style="padding:10px 24px;border-bottom:1px solid rgba(245,242,236,.06);background:rgba(245,242,236,.02);flex-shrink:0"><div style="font-family:var(--mono);font-size:var(--font-control);font-weight:var(--weight-readable);letter-spacing:.08em;color:var(--stone)">Context: ' + esc(ctx) + '</div></div>';
+    h += '<div style="padding:10px 24px;border-bottom:1px solid rgba(245,242,236,.06);background:rgba(245,242,236,.02);flex-shrink:0"><div style="font-family:var(--sans);font-size:var(--font-control);font-weight:var(--weight-readable);letter-spacing:.08em;color:var(--stone)">Context: ' + esc(ctx) + '</div></div>';
     h += '<div class="coach-msgs" id="coachMsgsEl">';
     for (var i = 0; i < coachMsgs.length; i++) {
         var m = coachMsgs[i];
@@ -5642,12 +5642,12 @@ function renderModal() {
     ];
     for (var i = 0; i < gphases.length; i++) {
         var gph = gphases[i];
-        h += '<div style="display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:start"><div style="font-family:var(--serif);font-size:24px;font-weight:300;color:var(--gold)">' + gph.n + '</div><div><div style="font-size:14px;color:var(--paper);font-weight:var(--weight-readable);margin-bottom:2px">' + gph.t + '</div><div style="font-size:13px;color:var(--stone);line-height:1.6">' + gph.d + '</div></div></div>';
+        h += '<div style="display:grid;grid-template-columns:32px 1fr;gap:12px;align-items:start"><div style="font-family:var(--serif);font-size:24px;font-weight:300;color:var(--gold)">' + gph.n + '</div><div><div style="font-size:14px;color:var(--paper);font-weight:var(--weight-readable);margin-bottom:2px">' + gph.t + '</div><div style="font-size:18px;color:var(--stone);line-height:1.6">' + gph.d + '</div></div></div>';
     }
     h += '</div></div>';
     h += '<div style="margin-bottom:24px"><div class="section-label" style="margin-bottom:12px">POSTi Risk Framework</div>';
     h += '<p style="font-size:14px;color:var(--stone);line-height:1.75;margin-bottom:8px">Five dimensions used to categorize AI risk throughout the framework:</p>';
-    h += '<div style="font-family:var(--mono);font-size:var(--font-readable-sm);font-weight:var(--weight-readable);color:var(--stone);line-height:2;padding:12px 16px;border:1px solid var(--rule)">';
+    h += '<div style="font-family:var(--sans);font-size:var(--font-readable-sm);font-weight:var(--weight-readable);color:var(--stone);line-height:2;padding:12px 16px;border:1px solid var(--rule)">';
     for (var i = 0; i < POSTI.length; i++) {
         var gp = POSTI[i];
         h += '<span style="color:' + gp.color + '">' + gp.key + '</span> \u2014 ' + gp.name + '<br>';
@@ -5655,7 +5655,7 @@ function renderModal() {
     h += '</div></div>';
     h += '<div style="margin-bottom:24px"><div class="section-label" style="margin-bottom:12px">LIT Scoring</div>';
     h += '<p style="font-size:14px;color:var(--stone);line-height:1.75;margin-bottom:8px">Each risk is scored 1\u20135 on three dimensions in Phase 3:</p>';
-    h += '<div style="font-family:var(--mono);font-size:var(--font-readable-sm);font-weight:var(--weight-readable);color:var(--stone);line-height:2;padding:12px 16px;border:1px solid var(--rule)">L \u2014 Likelihood (how probable)<br>I \u2014 Impact (how severe)<br>T \u2014 Timeframe (how imminent)<br><span style="color:var(--gold)">Composite = L + I + T (max 15)</span></div></div>';
+    h += '<div style="font-family:var(--sans);font-size:var(--font-readable-sm);font-weight:var(--weight-readable);color:var(--stone);line-height:2;padding:12px 16px;border:1px solid var(--rule)">L \u2014 Likelihood (how probable)<br>I \u2014 Impact (how severe)<br>T \u2014 Timeframe (how imminent)<br><span style="color:var(--gold)">Composite = L + I + T (max 15)</span></div></div>';
     h += '<div style="margin-bottom:24px"><div class="section-label" style="margin-bottom:12px">Phase Outputs</div>';
     h += '<p style="font-size:14px;color:var(--stone);line-height:1.75;margin-bottom:16px">Each phase produces output documents accessible from the sidebar or phase landing page.</p>';
     h += '<div style="display:grid;gap:8px">';
@@ -5679,7 +5679,7 @@ function renderModal() {
     for (var i = 0; i < helpOutputs.length; i++) {
         var ho = helpOutputs[i];
         h += '<div style="display:grid;grid-template-columns:140px 1fr;gap:12px;padding:10px 14px;background:rgba(253,248,244,.03);border:1px solid rgba(253,248,244,.08)">';
-        h += '<div style="font-family:var(--mono);font-size:var(--font-label);font-weight:var(--weight-readable);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);padding-top:1px">' + ho.ph + '</div>';
+        h += '<div style="font-family:var(--sans);font-size:var(--font-label);font-weight:var(--weight-readable);letter-spacing:.1em;text-transform:uppercase;color:var(--gold);padding-top:1px">' + ho.ph + '</div>';
         h += '<div style="font-size:13px;color:var(--stone);line-height:1.6">' + ho.items + '</div>';
         h += '</div>';
     }
@@ -5693,7 +5693,7 @@ function renderModal() {
     h += '<div style="margin-bottom:24px"><div class="section-label" style="margin-bottom:12px">Risk Dashboard</div>';
     h += '<p style="font-size:14px;color:var(--stone);line-height:1.75">Phase 5 is the live Risk Dashboard. It shows the risk pipeline (Identified \u2192 Assessed \u2192 Managed \u2192 Resolved) with clickable stage counts, four classification portfolio cards (Manage, Monitor Enhanced, Monitor, Ethical), active management priorities, a coverage heat map across POSTi categories and severity levels, a Data Bank linking to all ten output documents, and key governance rhythm metrics. Click any portfolio card to drill into its risks.</p></div>';
     h += '<div style="margin-bottom:24px"><div class="section-label" style="margin-bottom:12px">Floating Tools \u2014 bottom-right stack</div>';
-    h += '<div style="font-size:14px;color:var(--stone);line-height:2"><span style="color:var(--gold)">✦ AI Coach</span> \u2014 top. Context-aware for your current step. Ask about POSTi, LIT scoring, CARE framework, exit plans, or anything in the governance model.<br><span style="color:var(--paper)">\u25ce Voice</span> \u2014 middle. Hands-free navigation. Say: <span style="font-family:var(--mono);font-size:var(--font-readable-sm)">&ldquo;learn&rdquo; &middot; &ldquo;framework&rdquo; &middot; &ldquo;dashboard&rdquo; &middot; &ldquo;open coach&rdquo; &middot; &ldquo;close&rdquo;</span></div></div>';
+    h += '<div style="font-size:14px;color:var(--stone);line-height:2"><span style="color:var(--gold)">✦ AI Coach</span> \u2014 top. Context-aware for your current step. Ask about POSTi, LIT scoring, CARE framework, exit plans, or anything in the governance model.<br><span style="color:var(--paper)">\u25ce Voice</span> \u2014 middle. Hands-free navigation. Say: <span style="font-family:var(--sans);font-size:var(--font-readable-sm)">&ldquo;learn&rdquo; &middot; &ldquo;framework&rdquo; &middot; &ldquo;dashboard&rdquo; &middot; &ldquo;open coach&rdquo; &middot; &ldquo;close&rdquo;</span></div></div>';
     h += '<div style="margin-bottom:24px"><div class="section-label" style="margin-bottom:12px">Data &amp; Privacy</div>';
     h += '<p style="font-size:14px;color:var(--stone);line-height:1.75">All data is saved to your browser\'s local storage. The AI Coach calls the Anthropic API with your question and current step context only. Use Reset in the nav to clear everything.</p></div>';
     h += '<div style="text-align:center;padding-top:8px"><button class="btn-gold" onclick="closeModal()">Got It</button></div>';

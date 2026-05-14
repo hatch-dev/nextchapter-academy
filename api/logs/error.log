@@ -22,3 +22,1277 @@ Error: Call to undefined function createDefaultTeamForAccount() in C:\xampp\htdo
 Stack trace:
 #0 {main}
 
+[2026-05-14T06:37:06+02:00] API error 20260514063705-6ae8322d
+{"error_id":"20260514063705-6ae8322d","method":"PUT","path":"/pipeline","request_uri":"/nextchapter/api/pipeline","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+PDOException: SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'usr_fab96ebdcd1ea293-0' for key 'unique_user_idx' in C:\xampp\htdocs\nextchapter\api\index.php:1300
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1300): PDOStatement->execute(Array)
+#1 {main}
+
+[2026-05-14T06:37:07+02:00] API error 20260514063707-6884def9
+{"error_id":"20260514063707-6884def9","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:37:08+02:00] API error 20260514063708-1fc0d3db
+{"error_id":"20260514063708-1fc0d3db","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:38:07+02:00] API error 20260514063807-00f7281c
+{"error_id":"20260514063807-00f7281c","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:38:07+02:00] API error 20260514063807-6439e659
+{"error_id":"20260514063807-6439e659","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:38:09+02:00] API error 20260514063809-563a759a
+{"error_id":"20260514063809-563a759a","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:38:10+02:00] API error 20260514063810-066bc458
+{"error_id":"20260514063810-066bc458","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:40:04+02:00] API error 20260514064004-e0aed5df
+{"error_id":"20260514064004-e0aed5df","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:40:23+02:00] API error 20260514064023-eb815aaa
+{"error_id":"20260514064023-eb815aaa","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:40:24+02:00] API error 20260514064024-369d042d
+{"error_id":"20260514064024-369d042d","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:40:49+02:00] API error 20260514064049-ae945ef8
+{"error_id":"20260514064049-ae945ef8","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:40:50+02:00] API error 20260514064050-bbe7e870
+{"error_id":"20260514064050-bbe7e870","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:40:54+02:00] API error 20260514064054-a22bc2b0
+{"error_id":"20260514064054-a22bc2b0","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:40:55+02:00] API error 20260514064055-04aef0d8
+{"error_id":"20260514064055-04aef0d8","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:42:07+02:00] API error 20260514064207-ffcf5bf1
+{"error_id":"20260514064207-ffcf5bf1","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:42:08+02:00] API error 20260514064208-0d46aa7f
+{"error_id":"20260514064208-0d46aa7f","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:43:07+02:00] API error 20260514064307-a1dac3bd
+{"error_id":"20260514064307-a1dac3bd","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:43:08+02:00] API error 20260514064308-b304e75d
+{"error_id":"20260514064308-b304e75d","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:44:47+02:00] API error 20260514064447-cbeef812
+{"error_id":"20260514064447-cbeef812","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:44:48+02:00] API error 20260514064448-a3677257
+{"error_id":"20260514064448-a3677257","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:44:50+02:00] API error 20260514064450-79d59e61
+{"error_id":"20260514064450-79d59e61","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:44:50+02:00] API error 20260514064450-5448744e
+{"error_id":"20260514064450-5448744e","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:45:00+02:00] API error 20260514064500-3e9b43f2
+{"error_id":"20260514064500-3e9b43f2","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:45:01+02:00] API error 20260514064501-29233b4f
+{"error_id":"20260514064501-29233b4f","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:45:13+02:00] API error 20260514064513-347aee99
+{"error_id":"20260514064513-347aee99","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:45:14+02:00] API error 20260514064514-2b011480
+{"error_id":"20260514064514-2b011480","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:51:17+02:00] API error 20260514065117-92b1101b
+{"error_id":"20260514065117-92b1101b","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:51:18+02:00] API error 20260514065118-971faedb
+{"error_id":"20260514065118-971faedb","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:51:52+02:00] API error 20260514065152-af0b2903
+{"error_id":"20260514065152-af0b2903","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:51:52+02:00] API error 20260514065152-0ac0d3ff
+{"error_id":"20260514065152-0ac0d3ff","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:52:01+02:00] API error 20260514065201-79f37330
+{"error_id":"20260514065201-79f37330","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:52:02+02:00] API error 20260514065202-ee4fc98b
+{"error_id":"20260514065202-ee4fc98b","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:52:08+02:00] API error 20260514065208-e1a67268
+{"error_id":"20260514065208-e1a67268","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:52:10+02:00] API error 20260514065210-711c746b
+{"error_id":"20260514065210-711c746b","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:52:19+02:00] API error 20260514065219-f5e40da6
+{"error_id":"20260514065219-f5e40da6","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:52:20+02:00] API error 20260514065220-587580c4
+{"error_id":"20260514065220-587580c4","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:54:40+02:00] API error 20260514065440-a64d8226
+{"error_id":"20260514065440-a64d8226","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:54:40+02:00] API error 20260514065440-6eb2eb57
+{"error_id":"20260514065440-6eb2eb57","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:54:48+02:00] API error 20260514065448-bb9a50e2
+{"error_id":"20260514065448-bb9a50e2","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:54:49+02:00] API error 20260514065449-16138137
+{"error_id":"20260514065449-16138137","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:54:54+02:00] API error 20260514065454-e52973f8
+{"error_id":"20260514065454-e52973f8","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:54:54+02:00] API error 20260514065454-b09e74c7
+{"error_id":"20260514065454-b09e74c7","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:55:06+02:00] API error 20260514065506-f1223600
+{"error_id":"20260514065506-f1223600","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:55:07+02:00] API error 20260514065507-d3b564ec
+{"error_id":"20260514065507-d3b564ec","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:55:16+02:00] API error 20260514065516-23b5246f
+{"error_id":"20260514065516-23b5246f","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:55:17+02:00] API error 20260514065517-98e9a93b
+{"error_id":"20260514065517-98e9a93b","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:55:23+02:00] API error 20260514065523-e822a2ed
+{"error_id":"20260514065523-e822a2ed","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:55:24+02:00] API error 20260514065524-6b04a6e6
+{"error_id":"20260514065524-6b04a6e6","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:55:30+02:00] API error 20260514065530-b404e4e7
+{"error_id":"20260514065530-b404e4e7","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:55:30+02:00] API error 20260514065530-bb0d2be4
+{"error_id":"20260514065530-bb0d2be4","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:55:37+02:00] API error 20260514065537-6719601d
+{"error_id":"20260514065537-6719601d","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:55:38+02:00] API error 20260514065538-e238f40e
+{"error_id":"20260514065538-e238f40e","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:55:47+02:00] API error 20260514065547-a1298d12
+{"error_id":"20260514065547-a1298d12","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:55:47+02:00] API error 20260514065547-9168d417
+{"error_id":"20260514065547-9168d417","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:57:37+02:00] API error 20260514065737-75c6cf60
+{"error_id":"20260514065737-75c6cf60","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T06:57:37+02:00] API error 20260514065737-52c87ff4
+{"error_id":"20260514065737-52c87ff4","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:00:12+02:00] API error 20260514070012-b73519e4
+{"error_id":"20260514070012-b73519e4","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:00:13+02:00] API error 20260514070013-91acb9c4
+{"error_id":"20260514070013-91acb9c4","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:00:18+02:00] API error 20260514070018-7c3132e2
+{"error_id":"20260514070018-7c3132e2","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:00:18+02:00] API error 20260514070018-f78519d3
+{"error_id":"20260514070018-f78519d3","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:00:38+02:00] API error 20260514070038-d48cdd2f
+{"error_id":"20260514070038-d48cdd2f","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:00:38+02:00] API error 20260514070038-04fb405a
+{"error_id":"20260514070038-04fb405a","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:02:45+02:00] API error 20260514070245-67898736
+{"error_id":"20260514070245-67898736","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:02:46+02:00] API error 20260514070246-271bfb2f
+{"error_id":"20260514070246-271bfb2f","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:03:47+02:00] API error 20260514070347-0547cb49
+{"error_id":"20260514070347-0547cb49","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:03:48+02:00] API error 20260514070348-ba0fc17c
+{"error_id":"20260514070348-ba0fc17c","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:04:22+02:00] API error 20260514070422-a70c3002
+{"error_id":"20260514070422-a70c3002","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:04:22+02:00] API error 20260514070422-a4fcd944
+{"error_id":"20260514070422-a4fcd944","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:04:24+02:00] API error 20260514070424-eed60634
+{"error_id":"20260514070424-eed60634","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:04:25+02:00] API error 20260514070425-2bceed35
+{"error_id":"20260514070425-2bceed35","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:04:28+02:00] API error 20260514070428-b605ad71
+{"error_id":"20260514070428-b605ad71","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:04:28+02:00] API error 20260514070428-e7edaaa1
+{"error_id":"20260514070428-e7edaaa1","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:04:31+02:00] API error 20260514070431-f34bc0d2
+{"error_id":"20260514070431-f34bc0d2","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:04:31+02:00] API error 20260514070431-533b0420
+{"error_id":"20260514070431-533b0420","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:04:35+02:00] API error 20260514070435-79a16694
+{"error_id":"20260514070435-79a16694","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:04:35+02:00] API error 20260514070435-ef09615e
+{"error_id":"20260514070435-ef09615e","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:04:44+02:00] API error 20260514070444-d89e5648
+{"error_id":"20260514070444-d89e5648","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:04:44+02:00] API error 20260514070444-ece81810
+{"error_id":"20260514070444-ece81810","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:04:53+02:00] API error 20260514070453-47c0f157
+{"error_id":"20260514070453-47c0f157","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:04:54+02:00] API error 20260514070454-a0d163ff
+{"error_id":"20260514070454-a0d163ff","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:04:55+02:00] API error 20260514070455-5e394b6e
+{"error_id":"20260514070455-5e394b6e","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:04:55+02:00] API error 20260514070455-971862a2
+{"error_id":"20260514070455-971862a2","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:05:40+02:00] API error 20260514070540-81452ed7
+{"error_id":"20260514070540-81452ed7","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:05:40+02:00] API error 20260514070540-82b9c440
+{"error_id":"20260514070540-82b9c440","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:05:41+02:00] API error 20260514070541-1e0b01ec
+{"error_id":"20260514070541-1e0b01ec","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:05:42+02:00] API error 20260514070542-25657d5d
+{"error_id":"20260514070542-25657d5d","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:10:02+02:00] API error 20260514071002-0e4f0379
+{"error_id":"20260514071002-0e4f0379","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:10:02+02:00] API error 20260514071002-5fb7e862
+{"error_id":"20260514071002-5fb7e862","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:11:39+02:00] API error 20260514071139-c6465298
+{"error_id":"20260514071139-c6465298","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:11:39+02:00] API error 20260514071139-429f11bc
+{"error_id":"20260514071139-429f11bc","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:11:40+02:00] API error 20260514071140-83e46368
+{"error_id":"20260514071140-83e46368","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:11:41+02:00] API error 20260514071141-debab8a1
+{"error_id":"20260514071141-debab8a1","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:11:42+02:00] API error 20260514071142-b065cd19
+{"error_id":"20260514071142-b065cd19","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:11:42+02:00] API error 20260514071142-b9881bb4
+{"error_id":"20260514071142-b9881bb4","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:11:45+02:00] API error 20260514071145-9e7c132a
+{"error_id":"20260514071145-9e7c132a","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:11:45+02:00] API error 20260514071145-1014fe85
+{"error_id":"20260514071145-1014fe85","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:12:27+02:00] API error 20260514071227-8fec0697
+{"error_id":"20260514071227-8fec0697","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:12:28+02:00] API error 20260514071228-ce3b5297
+{"error_id":"20260514071228-ce3b5297","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:12:30+02:00] API error 20260514071230-3147bdc9
+{"error_id":"20260514071230-3147bdc9","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:12:31+02:00] API error 20260514071231-6fb2a097
+{"error_id":"20260514071231-6fb2a097","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:12:33+02:00] API error 20260514071233-130e930f
+{"error_id":"20260514071233-130e930f","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:12:34+02:00] API error 20260514071234-5a50787d
+{"error_id":"20260514071234-5a50787d","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:13:10+02:00] API error 20260514071310-3a6f02a9
+{"error_id":"20260514071310-3a6f02a9","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:13:11+02:00] API error 20260514071311-b259a678
+{"error_id":"20260514071311-b259a678","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:13:13+02:00] API error 20260514071313-45afa988
+{"error_id":"20260514071313-45afa988","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:13:14+02:00] API error 20260514071314-16ce51cc
+{"error_id":"20260514071314-16ce51cc","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:15:04+02:00] API error 20260514071504-07dccaaf
+{"error_id":"20260514071504-07dccaaf","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:15:05+02:00] API error 20260514071505-b2469ab7
+{"error_id":"20260514071505-b2469ab7","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:19:58+02:00] API error 20260514071958-aee94984
+{"error_id":"20260514071958-aee94984","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:19:59+02:00] API error 20260514071959-58866cf5
+{"error_id":"20260514071959-58866cf5","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:24:06+02:00] API error 20260514072406-b55ce69c
+{"error_id":"20260514072406-b55ce69c","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:24:08+02:00] API error 20260514072408-85e2abbd
+{"error_id":"20260514072408-85e2abbd","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:24:16+02:00] API error 20260514072416-5a18c4a0
+{"error_id":"20260514072416-5a18c4a0","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:24:16+02:00] API error 20260514072416-4f49f4f1
+{"error_id":"20260514072416-4f49f4f1","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:27:56+02:00] API error 20260514072756-f54b72e0
+{"error_id":"20260514072756-f54b72e0","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:27:58+02:00] API error 20260514072758-d44466f5
+{"error_id":"20260514072758-d44466f5","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:28:59+02:00] API error 20260514072859-20ecb311
+{"error_id":"20260514072859-20ecb311","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:29:02+02:00] API error 20260514072902-2dfe5564
+{"error_id":"20260514072902-2dfe5564","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:29:03+02:00] API error 20260514072903-fcfe1816
+{"error_id":"20260514072903-fcfe1816","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:37:26+02:00] API error 20260514073726-5f3f6c73
+{"error_id":"20260514073726-5f3f6c73","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:37:26+02:00] API error 20260514073726-f4ae0974
+{"error_id":"20260514073726-f4ae0974","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:38:36+02:00] API error 20260514073836-84c62e5a
+{"error_id":"20260514073836-84c62e5a","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:38:37+02:00] API error 20260514073837-ad49cfe1
+{"error_id":"20260514073837-ad49cfe1","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:39:56+02:00] API error 20260514073956-fe8e1e6a
+{"error_id":"20260514073956-fe8e1e6a","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:39:58+02:00] API error 20260514073958-9d126802
+{"error_id":"20260514073958-9d126802","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:41:51+02:00] API error 20260514074151-446e28b5
+{"error_id":"20260514074151-446e28b5","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:41:52+02:00] API error 20260514074152-196959ea
+{"error_id":"20260514074152-196959ea","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:42:08+02:00] API error 20260514074208-8be1552c
+{"error_id":"20260514074208-8be1552c","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:42:09+02:00] API error 20260514074209-700fe3d7
+{"error_id":"20260514074209-700fe3d7","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:42:18+02:00] API error 20260514074218-bfc862d0
+{"error_id":"20260514074218-bfc862d0","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:42:19+02:00] API error 20260514074219-71666728
+{"error_id":"20260514074219-71666728","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:42:53+02:00] API error 20260514074253-7e72ffd0
+{"error_id":"20260514074253-7e72ffd0","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:42:54+02:00] API error 20260514074254-8f4c1ddc
+{"error_id":"20260514074254-8f4c1ddc","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:43:11+02:00] API error 20260514074311-36ada7c1
+{"error_id":"20260514074311-36ada7c1","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:43:11+02:00] API error 20260514074311-b18feb7c
+{"error_id":"20260514074311-b18feb7c","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:43:49+02:00] API error 20260514074349-a7cc0d8d
+{"error_id":"20260514074349-a7cc0d8d","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:43:50+02:00] API error 20260514074350-4235f320
+{"error_id":"20260514074350-4235f320","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:56:48+02:00] API error 20260514075648-75a8d9d7
+{"error_id":"20260514075648-75a8d9d7","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:56:48+02:00] API error 20260514075648-de91f6e3
+{"error_id":"20260514075648-de91f6e3","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:57:06+02:00] API error 20260514075706-26e8da21
+{"error_id":"20260514075706-26e8da21","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:57:07+02:00] API error 20260514075707-9cd90330
+{"error_id":"20260514075707-9cd90330","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:57:35+02:00] API error 20260514075735-33ba9910
+{"error_id":"20260514075735-33ba9910","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:57:35+02:00] API error 20260514075735-be1348de
+{"error_id":"20260514075735-be1348de","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:57:43+02:00] API error 20260514075743-0756d385
+{"error_id":"20260514075743-0756d385","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:57:43+02:00] API error 20260514075743-f9f72859
+{"error_id":"20260514075743-f9f72859","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:58:42+02:00] API error 20260514075842-3f022d62
+{"error_id":"20260514075842-3f022d62","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:58:43+02:00] API error 20260514075843-c5879119
+{"error_id":"20260514075843-c5879119","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:59:09+02:00] API error 20260514075909-e88776c9
+{"error_id":"20260514075909-e88776c9","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:59:10+02:00] API error 20260514075910-5bd605f9
+{"error_id":"20260514075910-5bd605f9","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:59:49+02:00] API error 20260514075949-a05fbb39
+{"error_id":"20260514075949-a05fbb39","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T07:59:49+02:00] API error 20260514075949-ff889923
+{"error_id":"20260514075949-ff889923","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:01:33+02:00] API error 20260514080133-d45e1e92
+{"error_id":"20260514080133-d45e1e92","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:01:34+02:00] API error 20260514080134-600256ad
+{"error_id":"20260514080134-600256ad","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:02:02+02:00] API error 20260514080202-49be1f14
+{"error_id":"20260514080202-49be1f14","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:02:02+02:00] API error 20260514080202-70a3f529
+{"error_id":"20260514080202-70a3f529","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:02:29+02:00] API error 20260514080229-b5bbe5cf
+{"error_id":"20260514080229-b5bbe5cf","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:02:29+02:00] API error 20260514080229-cb46575f
+{"error_id":"20260514080229-cb46575f","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:02:46+02:00] API error 20260514080246-3530cdb8
+{"error_id":"20260514080246-3530cdb8","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:02:46+02:00] API error 20260514080246-38b6013b
+{"error_id":"20260514080246-38b6013b","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:04:17+02:00] API error 20260514080417-d57f95d0
+{"error_id":"20260514080417-d57f95d0","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:04:18+02:00] API error 20260514080418-5c144c12
+{"error_id":"20260514080418-5c144c12","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:07:43+02:00] API error 20260514080743-20e6df85
+{"error_id":"20260514080743-20e6df85","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:07:44+02:00] API error 20260514080744-5ab5913a
+{"error_id":"20260514080744-5ab5913a","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:08:56+02:00] API error 20260514080856-e5a556ac
+{"error_id":"20260514080856-e5a556ac","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:08:56+02:00] API error 20260514080856-2dde36ea
+{"error_id":"20260514080856-2dde36ea","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:09:41+02:00] API error 20260514080941-a329a9c5
+{"error_id":"20260514080941-a329a9c5","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:09:42+02:00] API error 20260514080942-933b6b20
+{"error_id":"20260514080942-933b6b20","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:09:56+02:00] API error 20260514080956-108b0031
+{"error_id":"20260514080956-108b0031","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:09:56+02:00] API error 20260514080956-820514da
+{"error_id":"20260514080956-820514da","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:11:33+02:00] API error 20260514081133-13c55719
+{"error_id":"20260514081133-13c55719","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:11:34+02:00] API error 20260514081134-3591d008
+{"error_id":"20260514081134-3591d008","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:12:33+02:00] API error 20260514081233-a64ce775
+{"error_id":"20260514081233-a64ce775","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:12:34+02:00] API error 20260514081234-4de74206
+{"error_id":"20260514081234-4de74206","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:13:30+02:00] API error 20260514081330-ed1e0afe
+{"error_id":"20260514081330-ed1e0afe","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:13:31+02:00] API error 20260514081331-82108f18
+{"error_id":"20260514081331-82108f18","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:14:28+02:00] API error 20260514081428-e7fca289
+{"error_id":"20260514081428-e7fca289","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:14:29+02:00] API error 20260514081429-7132b8bf
+{"error_id":"20260514081429-7132b8bf","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:16:45+02:00] API error 20260514081645-dc6d1fd4
+{"error_id":"20260514081645-dc6d1fd4","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:17:30+02:00] API error 20260514081730-1a459d2d
+{"error_id":"20260514081730-1a459d2d","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:17:31+02:00] API error 20260514081731-66040895
+{"error_id":"20260514081731-66040895","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:18:53+02:00] API error 20260514081853-c1b8d172
+{"error_id":"20260514081853-c1b8d172","method":"GET","path":"/module-data","request_uri":"/nextchapter/api/module-data?module_key=responsible_ai_governance","query_string":"module_key=responsible_ai_governance","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1324): normalizeResponsibleAiData(Array)
+#1 {main}
+
+[2026-05-14T08:18:54+02:00] API error 20260514081854-31a7bec0
+{"error_id":"20260514081854-31a7bec0","method":"PUT","path":"/module-data","request_uri":"/nextchapter/api/module-data","query_string":"","remote_addr":"::1","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","session_hash":"45a008d2eb7ae6ef"}
+Error: Call to undefined function array_is_list() in C:\xampp\htdocs\nextchapter\api\index.php:503
+Stack trace:
+#0 C:\xampp\htdocs\nextchapter\api\index.php(1344): normalizeResponsibleAiData(Array)
+#1 {main}
+
