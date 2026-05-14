@@ -108,10 +108,6 @@ var userForm = {
     scope: 'Assigned work'
 };
 
-function $(id) {
-    return document.getElementById(id)
-}
-
 function uid() {
     return Math.random().toString(36).slice(2, 10)
 }
