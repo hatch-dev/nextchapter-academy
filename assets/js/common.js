@@ -15,9 +15,236 @@ function initializeTeamChatOnce() {
   }
 }
 
+var commonCoachLoaded = false;
+var commonCoachLoading = false;
+var commonCoachLocalKey = 'nextchapter-ai-coach-history';
+var commonCoachWelcome = {
+  role: 'assistant',
+  text: 'Welcome. I can help across your NextChapter modules, including the AI Innovation Pipeline and Responsible AI Governance. Ask about the current step, your decisions, or what to do next.'
+};
+
+function commonCoachEscape(text) {
+  if (!text) return '';
+  var div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function commonCoachNormalize(messages) {
+  var list = Array.isArray(messages) ? messages : [];
+  var normalized = [];
+  for (var i = 0; i < list.length; i++) {
+    var item = list[i] || {};
+    var role = item.role === 'ai' ? 'assistant' : item.role;
+    if (role !== 'user' && role !== 'assistant') continue;
+    var text = item.text || item.message || '';
+    if (!String(text).trim()) continue;
+    normalized.push({
+      role: role,
+      text: String(text),
+      created_at: item.created_at || item.createdAt || null
+    });
+  }
+  return normalized;
+}
+
+function commonCoachSetMessages(messages) {
+  window.coachMsgs = commonCoachNormalize(messages);
+  try {
+    localStorage.setItem(commonCoachLocalKey, JSON.stringify(window.coachMsgs));
+  } catch (e) {}
+  return window.coachMsgs;
+}
+
+function commonCoachLoadFallback() {
+  try {
+    return commonCoachNormalize(JSON.parse(localStorage.getItem(commonCoachLocalKey) || '[]'));
+  } catch (e) {
+    return [];
+  }
+}
+
+function commonCoachApiGet(path) {
+  if (typeof window.apiGet === 'function') return window.apiGet(path);
+  return fetch((window.API_BASE || '/nextchapter/api') + path, {
+    credentials: 'include'
+  }).then(function(r) {
+    return r.json().then(function(j) {
+      if (!r.ok || j.ok === false) throw new Error(j.error || 'Request failed');
+      return j.data !== undefined ? j.data : j;
+    });
+  });
+}
+
+function commonCoachApiPost(path, body) {
+  if (typeof window.apiPost === 'function') return window.apiPost(path, body);
+  return fetch((window.API_BASE || '/nextchapter/api') + path, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body || {})
+  }).then(function(r) {
+    return r.json().then(function(j) {
+      if (!r.ok || j.ok === false) throw new Error(j.error || 'Request failed');
+      return j.data !== undefined ? j.data : j;
+    });
+  });
+}
+
+function commonCoachApiDelete(path) {
+  if (typeof window.apiDel === 'function') return window.apiDel(path);
+  return fetch((window.API_BASE || '/nextchapter/api') + path, {
+    method: 'DELETE',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }).then(function(r) {
+    return r.json().then(function(j) {
+      if (!r.ok || j.ok === false) throw new Error(j.error || 'Request failed');
+      return j.data !== undefined ? j.data : j;
+    });
+  });
+}
+
+function commonCoachModuleLabel() {
+  var title = (document.title || '').replace(/\s+\u2014.*$/, '').trim();
+  return title || 'NextChapter module';
+}
+
+function commonCoachContext() {
+  var phaseName = window.currentPhase && window.currentPhase.name ? window.currentPhase.name : '';
+  var step = window.currentStep ? ' Step ' + window.currentStep + (phaseName ? ' (' + phaseName + ')' : '') : ' overview';
+  return 'Module: ' + commonCoachModuleLabel() + '.' + ' User is working on:' + step + '.';
+}
+
+function commonCoachEnsureLoaded() {
+  if (commonCoachLoaded || commonCoachLoading || !window.currentUser) return;
+  commonCoachLoading = true;
+  var fallback = commonCoachLoadFallback();
+  if (fallback.length) {
+    commonCoachSetMessages(fallback);
+  }
+  commonCoachApiGet('/ai/coach-history').then(function(res) {
+    commonCoachSetMessages((res && res.messages) || []);
+    commonCoachLoaded = true;
+    if (window.coachOpen && typeof window.renderCoachPanel === 'function') window.renderCoachPanel();
+  }).catch(function() {
+    commonCoachLoaded = true;
+  }).finally(function() {
+    commonCoachLoading = false;
+  });
+}
+
+function toggleCoach() {
+  window.coachOpen = !window.coachOpen;
+  var fab = document.getElementById('coachFab');
+  var pulse = document.getElementById('fabPulse');
+  var panel = document.getElementById('coachPanel');
+  if (fab) fab.className = 'coach-fab' + (window.coachOpen ? ' open' : '');
+  if (pulse) pulse.style.display = window.coachOpen ? 'none' : 'block';
+  if (panel) panel.className = 'coach-panel' + (window.coachOpen ? ' open' : '');
+  if (window.coachOpen) {
+    commonCoachEnsureLoaded();
+    renderCoachPanel();
+  }
+}
+
+function renderCoachPanel() {
+  var panel = document.getElementById('coachPanel');
+  if (!panel) return;
+  commonCoachEnsureLoaded();
+
+  var messages = commonCoachNormalize(window.coachMsgs);
+  var html = '<div class="coach-header"><div class="coach-header-title"><span>&#10022;</span> AI Coach</div><button class="coach-close" onclick="toggleCoach()">&times;</button></div>';
+  html += '<div class="coach-msgs" id="coachMsgsEl">';
+
+  if (!messages.length) {
+    messages = [commonCoachWelcome];
+  }
+
+  for (var i = 0; i < messages.length; i++) {
+    var msg = messages[i];
+    var cls = msg.role === 'user' ? 'user' : 'ai';
+    html += '<div class="coach-msg ' + cls + '"><div class="coach-sender">' + (cls === 'ai' ? 'AI Coach' : 'You') + '</div>' + commonCoachEscape(msg.text) + '</div>';
+  }
+
+  html += '</div>';
+  html += '<div class="coach-presets">';
+  var presets = ['What should I focus on next?', 'Challenge my current thinking', 'Summarize this step', 'What risks am I missing?'];
+  for (var p = 0; p < presets.length; p++) {
+    html += '<button class="coach-preset" onclick="sendCoachPreset(\'' + commonCoachEscape(presets[p]) + '\')">' + commonCoachEscape(presets[p]) + '</button>';
+  }
+  html += '</div>';
+  html += '<div class="coach-input-row"><textarea id="coachInput" placeholder="Ask across any module..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();sendCoach()}"></textarea><button class="coach-send" onclick="sendCoach()">Send</button></div>';
+  panel.innerHTML = html;
+
+  var scroller = document.getElementById('coachMsgsEl');
+  if (scroller) scroller.scrollTop = scroller.scrollHeight;
+}
+
+function sendCoachPreset(text) {
+  var input = document.getElementById('coachInput');
+  if (input) input.value = text;
+  sendCoach();
+}
+
+function sendCoach() {
+  var input = document.getElementById('coachInput');
+  if (!input || !input.value.trim()) return;
+  var userText = input.value.trim();
+  input.value = '';
+
+  var messages = commonCoachNormalize(window.coachMsgs);
+  messages.push({
+    role: 'user',
+    text: userText
+  });
+  commonCoachSetMessages(messages);
+  renderCoachPanel();
+
+  commonCoachApiPost('/ai/coach', {
+    message: userText,
+    context: commonCoachContext()
+  }).then(function(res) {
+    if (res && Array.isArray(res.messages)) {
+      commonCoachSetMessages(res.messages);
+    } else {
+      messages = commonCoachNormalize(window.coachMsgs);
+      messages.push({
+        role: 'assistant',
+        text: (res && res.text) ? res.text : 'Could not generate response. Try again.'
+      });
+      commonCoachSetMessages(messages);
+    }
+    renderCoachPanel();
+  }).catch(function() {
+    messages = commonCoachNormalize(window.coachMsgs);
+    messages.push({
+      role: 'assistant',
+      text: 'Connection error. Please try again.'
+    });
+    commonCoachSetMessages(messages);
+    renderCoachPanel();
+  });
+}
+
+function clearCoachHistory() {
+  if (!confirm('Clear AI Coach chat history?')) return;
+  commonCoachApiDelete('/ai/coach-history').then(function() {
+    commonCoachSetMessages([]);
+    renderCoachPanel();
+  }).catch(function(e) {
+    alert(e.message || 'Unable to clear chat history');
+  });
+}
+
 var teamChatInitInterval = setInterval(function() {
   refreshTeamChatVisibility();
   initializeTeamChatOnce();
+  commonCoachEnsureLoaded();
 }, 200);
 
 function commonNotesEscape(text) {

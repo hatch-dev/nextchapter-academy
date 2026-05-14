@@ -831,13 +831,65 @@ function huggingFaceChat(array $messages): string {
     return trim($text);
 }
 
+function ensureAiCoachSchema(): void {
+    getDB()->exec("
+        CREATE TABLE IF NOT EXISTS ai_coach_messages (
+            id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            user_id VARCHAR(36) NOT NULL,
+            account_id VARCHAR(36) NOT NULL,
+            role VARCHAR(20) NOT NULL,
+            message TEXT NOT NULL,
+            context TEXT DEFAULT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            INDEX idx_user_created (user_id, created_at),
+            INDEX idx_account_created (account_id, created_at)
+        )
+    ");
+}
+
+function addAiCoachMessage(string $userId, string $accountId, string $role, string $message, ?string $context = null): void {
+    ensureAiCoachSchema();
+    getDB()->prepare("
+        INSERT INTO ai_coach_messages (user_id, account_id, role, message, context)
+        VALUES (?, ?, ?, ?, ?)
+    ")->execute([$userId, $accountId, $role, $message, $context]);
+}
+
+function aiCoachHistory(string $userId, int $limit = 100): array {
+    ensureAiCoachSchema();
+    $limit = max(1, min(200, $limit));
+    $stmt = getDB()->prepare("
+        SELECT role, message AS text, context, created_at
+        FROM ai_coach_messages
+        WHERE user_id = ?
+        ORDER BY created_at DESC, id DESC
+        LIMIT {$limit}
+    ");
+    $stmt->execute([$userId]);
+    return array_reverse($stmt->fetchAll());
+}
+
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $path = routePath();
 
 try {
 
+if ($method === 'GET' && $path === '/ai/coach-history') {
+    $user = requireDashboardUser();
+    ok([
+        'messages' => aiCoachHistory($user['id']),
+    ]);
+}
+
+if ($method === 'DELETE' && $path === '/ai/coach-history') {
+    $user = requireDashboardUser();
+    ensureAiCoachSchema();
+    getDB()->prepare("DELETE FROM ai_coach_messages WHERE user_id = ?")->execute([$user['id']]);
+    ok(['messages' => []]);
+}
+
 if ($method === 'POST' && $path === '/ai/coach') {
-    requireDashboardUser();
+    $user = requireDashboardUser();
     $body = jsonBody();
     $message = trim((string)($body['message'] ?? ''));
     $context = trim((string)($body['context'] ?? ''));
@@ -846,14 +898,24 @@ if ($method === 'POST' && $path === '/ai/coach') {
         err('message is required');
     }
 
-    $systemPrompt = "";
-    $userPrompt = $message;
+    $systemPrompt = "You are the AI Coach for Faisal Hoque's NextChapter AI modules. Support the user across all modules, including AI Innovation Pipeline and Responsible AI Governance. Be direct, practical, strategic, and context-aware. Maximum 150 words per response. No bullets unless absolutely essential.";
+    $userPrompt = ($context !== '' ? $context . "\n\n" : '') . $message;
+    $history = aiCoachHistory($user['id'], 12);
+    $chatMessages = [['role' => 'system', 'content' => $systemPrompt]];
+    foreach ($history as $item) {
+        if (in_array($item['role'], ['user', 'assistant'], true)) {
+            $chatMessages[] = ['role' => $item['role'], 'content' => (string)$item['text']];
+        }
+    }
+    $chatMessages[] = ['role' => 'user', 'content' => $userPrompt];
+
+    addAiCoachMessage($user['id'], $user['account_id'], 'user', $message, $context !== '' ? $context : null);
+    $text = huggingFaceChat($chatMessages);
+    addAiCoachMessage($user['id'], $user['account_id'], 'assistant', $text, null);
 
     ok([
-        'text' => huggingFaceChat([
-            ['role' => 'system', 'content' => $systemPrompt],
-            ['role' => 'user', 'content' => $userPrompt],
-        ]),
+        'text' => $text,
+        'messages' => aiCoachHistory($user['id']),
     ]);
 }
 
