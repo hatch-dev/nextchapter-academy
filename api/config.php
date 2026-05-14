@@ -43,6 +43,11 @@ define('DB_NAME', getenv('DB_NAME') ?: 'nextchapter_db');
 define('DB_USER', getenv('DB_USER') ?: 'root');
 define('DB_PASS', getenv('DB_PASS') ?: '');
 
+// ---- Hugging Face API ----
+// Keep this value in .env only. Never expose it in browser JavaScript.
+define('HUGGINGFACE_API_KEY', getenv('HUGGINGFACE_API_KEY') ?: '');
+define('HUGGINGFACE_CHAT_MODEL', getenv('HUGGINGFACE_CHAT_MODEL') ?: 'katanemo/Arch-Router-1.5B:hf-inference');
+
 // ---- Allowed frontend origins (CORS) ----
 // Add your domain(s) here, e.g. 'https://yourapp.com'
 define('ALLOWED_ORIGINS', [
