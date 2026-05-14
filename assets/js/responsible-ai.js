@@ -4443,7 +4443,7 @@ function updateSidebarState() {
     var btn = document.getElementById('sidebarToggle');
     if (btn) {
         btn.style.display = showSidebar ? 'block' : 'none';
-        btn.style.left = sidebarOpen ? '270px' : '16px';
+        btn.style.left = sidebarOpen ? '16px' : '16px';
     }
 }
 
