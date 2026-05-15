@@ -43,6 +43,25 @@ const TeamChat = (function() {
     }
   }
 
+  async function refreshTeams() {
+    const activeTeam = state.activeTeam;
+    const teams = await loadTeams();
+    if (activeTeam && teams.some(t => t.id === activeTeam)) {
+      state.activeTeam = activeTeam;
+    } else {
+      state.activeTeam = teams.length > 0 ? teams[0].id : null;
+    }
+    if (state.activeTeam) {
+      await loadTeamMembers(state.activeTeam);
+      await loadMessages(state.activeTeam);
+    }
+    render();
+    if (typeof renderGChatPanel === 'function' && typeof gchatOpen !== 'undefined' && gchatOpen) {
+      renderGChatPanel();
+    }
+    return state.teams;
+  }
+
   // Create a new team
   async function createTeam(name, description) {
     try {
@@ -562,6 +581,7 @@ const TeamChat = (function() {
   return {
     init,
     loadTeams,
+    refreshTeams,
     loadTeamMembers,
     createTeam,
     setActiveTeam,

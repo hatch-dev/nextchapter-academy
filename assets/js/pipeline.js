@@ -1011,7 +1011,7 @@ function profileInitials() {
 
 function renderProfileMenu() {
     var name = esc(currentUser ? (currentUser.name || currentUser.email || 'Account') : 'Account');
-    return '<div class="profile-menu"><button class="profile-trigger" type="button" aria-label="Account menu">' + esc(profileInitials()) + '</button><div class="profile-panel" id="profilePanel"><div class="profile-name">' + name + '</div><button class="profile-item" onclick="closeProfileMenu();openHelp()">Help</button><button class="profile-item" onclick="closeProfileMenu();clearData()">Reset</button><button class="profile-item" onclick="closeProfileMenu();go(`users`)">Users</button><button class="profile-item" onclick="closeProfileMenu();go(`billing`)">Billing</button><button class="profile-item" onclick="closeProfileMenu();signOut()">Sign Out</button></div></div>'
+    return '<div class="profile-menu"><button class="profile-trigger" type="button" aria-label="Account menu">' + esc(profileInitials()) + '</button><div class="profile-panel" id="profilePanel"><div class="profile-name">' + name + '</div><button class="profile-item" onclick="closeProfileMenu();openProfileEditor()">Edit Profile</button><button class="profile-item" onclick="closeProfileMenu();openHelp()">Help</button><button class="profile-item" onclick="closeProfileMenu();clearData()">Reset</button><button class="profile-item" onclick="closeProfileMenu();go(`users`)">Users</button><button class="profile-item" onclick="closeProfileMenu();go(`billing`)">Billing</button><button class="profile-item" onclick="closeProfileMenu();signOut()">Sign Out</button></div></div>'
 }
 
 function toggleModuleMenu(ev) {
@@ -2090,7 +2090,7 @@ function milestone(sid) {
 }
 
 function vp(code, title, dur) {
-    return '<div class="vp"><div style="width:48px;height:48px;border-radius:24px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><span style="font-size:20px;color:#fff;margin-left:3px">\u25b6</span></div><div><div style="font-size:16px;font-weight:700;color:#fff">' + esc(title) + '</div><div style="font-size:18px;color:var(--paper);margin-top:2px">' + esc(dur) + ' \xb7 ' + esc(code) + '</div></div></div>'
+    return '<div class="vp" data-vp-id="' + esc(code) + '" role="button" tabindex="0" onclick="toggleVpAudio(this,\'' + esc(code) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();toggleVpAudio(this,\'' + esc(code) + '\')}"><div style="width:48px;height:48px;border-radius:24px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0"><span class="js-vp-icon" style="font-size:20px;color:#fff;margin-left:3px">\u25b6</span></div><div><div style="font-size:16px;font-weight:700;color:#fff">' + esc(title) + '</div><div style="font-size:18px;color:var(--paper);margin-top:2px">' + esc(dur) + ' \xb7 ' + esc(code) + '</div></div></div>'
 }
 
 function syncRequiredButtons(el) {

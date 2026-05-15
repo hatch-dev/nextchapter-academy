@@ -3168,7 +3168,21 @@ nav {
 	margin-bottom: 24px;
 	display: flex;
 	align-items: center;
-	gap: 16px
+	gap: 16px;
+	cursor: pointer;
+	transition: border-color .2s, background .2s
+}
+
+.vp:hover,
+.vp:focus-visible {
+	background: rgba(245, 242, 236, .07);
+	border-color: rgba(184, 137, 42, .35);
+	outline: none
+}
+
+.vp.is-playing {
+	background: rgba(184, 137, 42, .1);
+	border-color: rgba(184, 137, 42, .45)
 }
 
 textarea,

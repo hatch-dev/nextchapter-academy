@@ -3190,6 +3190,22 @@ select option {
 	color: #1B6B5A
 }
 
+.vp {
+	cursor: pointer;
+	transition: border-color .2s, background .2s
+}
+
+.vp:hover,
+.vp:focus-visible {
+	background: rgba(30, 110, 110, .1) !important;
+	outline: none
+}
+
+.vp.is-playing {
+	background: rgba(30, 110, 110, .14) !important;
+	border: 1px solid rgba(30, 110, 110, .38)
+}
+
 .gate-btn.fail {
 	border-color: #9B2D3F;
 	background: rgba(155, 45, 63, .1);

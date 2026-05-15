@@ -325,7 +325,7 @@ function profileInitials() {
 
 function renderProfileMenu() {
     var name = esc(currentUser ? (currentUser.name || currentUser.email || 'Account') : 'Account');
-    return '<div class="profile-menu"><button class="profile-trigger" type="button" aria-label="Account menu">' + esc(profileInitials()) + '</button><div class="profile-panel" id="profilePanel"><div class="profile-name">' + name + '</div><button class="profile-item" onclick="closeProfileMenu();openHelp()">Help</button><button class="profile-item" onclick="closeProfileMenu();clearData()">Reset</button><button class="profile-item" onclick="closeProfileMenu();openAccountPage(\'users\')">Users</button><button class="profile-item" onclick="closeProfileMenu();openAccountPage(\'billing\')">Billing</button><button class="profile-item" onclick="closeProfileMenu();signOut()">Sign Out</button></div></div>'
+    return '<div class="profile-menu"><button class="profile-trigger" type="button" aria-label="Account menu">' + esc(profileInitials()) + '</button><div class="profile-panel" id="profilePanel"><div class="profile-name">' + name + '</div><button class="profile-item" onclick="closeProfileMenu();openProfileEditor()">Edit Profile</button><button class="profile-item" onclick="closeProfileMenu();openHelp()">Help</button><button class="profile-item" onclick="closeProfileMenu();clearData()">Reset</button><button class="profile-item" onclick="closeProfileMenu();openAccountPage(\'users\')">Users</button><button class="profile-item" onclick="closeProfileMenu();openAccountPage(\'billing\')">Billing</button><button class="profile-item" onclick="closeProfileMenu();signOut()">Sign Out</button></div></div>'
 }
 
 function openAccountPage(page) {
@@ -1963,7 +1963,7 @@ function likSet(path, n) {
 }
 
 function vp(code, title, dur) {
-    return '<div style="background:rgba(30,110,110,.06);border-radius:10px;padding:20px;margin-bottom:24px"><div style="display:flex;align-items:center;gap:12px"><div style="width:40px;height:40px;border-radius:20px;background:' + '#1E6E6E' + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px">\u25b6</div><div><div style="font-size:14px;font-weight:600">' + esc(title) + '</div>' + badge(code + ' \xb7 ' + dur, '#1E6E6E') + '</div></div></div>'
+    return '<div class="vp" data-vp-id="' + esc(code) + '" role="button" tabindex="0" onclick="toggleVpAudio(this,\'' + esc(code) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();toggleVpAudio(this,\'' + esc(code) + '\')}" style="background:rgba(30,110,110,.06);border-radius:10px;padding:20px;margin-bottom:24px"><div style="display:flex;align-items:center;gap:12px"><div style="width:40px;height:40px;border-radius:20px;background:' + '#1E6E6E' + ';color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px"><span class="js-vp-icon">\u25b6</span></div><div><div style="font-size:14px;font-weight:600">' + esc(title) + '</div>' + badge(code + ' \xb7 ' + dur, '#1E6E6E') + '</div></div></div>'
 }
 
 function exToggle(key, title, content) {

@@ -1,3 +1,196 @@
+var vpAudioState = {
+  src: 'https://samplelib.com/mp3/sample-9s.mp3',
+  audio: null,
+  currentId: null,
+  currentEl: null
+};
+
+function resetVpAudioUi() {
+  document.querySelectorAll('.vp.is-playing').forEach(function(el) {
+    el.classList.remove('is-playing');
+    var icon = el.querySelector('.js-vp-icon');
+    if (icon) icon.textContent = '\u25b6';
+  });
+}
+
+function setVpAudioPlaying(el, id) {
+  resetVpAudioUi();
+  if (el) {
+    el.classList.add('is-playing');
+    var icon = el.querySelector('.js-vp-icon');
+    if (icon) icon.textContent = '\u275a\u275a';
+  }
+  vpAudioState.currentEl = el || null;
+  vpAudioState.currentId = id;
+}
+
+function getVpAudio() {
+  if (!vpAudioState.audio) {
+    vpAudioState.audio = new Audio(vpAudioState.src);
+    vpAudioState.audio.preload = 'auto';
+    vpAudioState.audio.volume = 1;
+    vpAudioState.audio.addEventListener('ended', function() {
+      resetVpAudioUi();
+      vpAudioState.currentId = null;
+      vpAudioState.currentEl = null;
+    });
+  }
+  return vpAudioState.audio;
+}
+
+function stopVpAudio() {
+  var audio = getVpAudio();
+  audio.pause();
+  resetVpAudioUi();
+  vpAudioState.currentId = null;
+  vpAudioState.currentEl = null;
+}
+
+function toggleVpAudio(el, id) {
+  id = String(id || '');
+  var audio = getVpAudio();
+
+  if (vpAudioState.currentId === id && !audio.paused) {
+    audio.pause();
+    resetVpAudioUi();
+    return;
+  }
+
+  if (vpAudioState.currentId !== id) {
+    stopVpAudio();
+    audio.currentTime = 0;
+  }
+
+  setVpAudioPlaying(el, id);
+  audio.play().catch(function() {
+    resetVpAudioUi();
+    vpAudioState.currentId = null;
+    vpAudioState.currentEl = null;
+  });
+}
+
+var profileEditorForm = {};
+var profileEditorError = '';
+var profileEditorNotice = '';
+var profileEditorSaving = false;
+
+function profileEditorEscape(text) {
+  if (!text) return '';
+  var div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function profileEditorField(label, key, value, placeholder, type) {
+  return '<div class="field"><label class="field-label">' + profileEditorEscape(label) + '</label><input class="field-input" type="' + (type || 'text') + '" value="' + profileEditorEscape(value || '') + '" placeholder="' + profileEditorEscape(placeholder || '') + '" oninput="setProfileEditorField(\'' + key + '\',this.value)"></div>';
+}
+
+function profileEditorReadOnlyField(label, value) {
+  return '<div class="field"><label class="field-label">' + profileEditorEscape(label) + '</label><input class="field-input" type="email" value="' + profileEditorEscape(value || '') + '" readonly disabled style="opacity:.7;cursor:not-allowed"></div>';
+}
+
+function profileEditorArea(label, key, value, placeholder) {
+  return '<div class="field"><label class="field-label">' + profileEditorEscape(label) + '</label><textarea class="field-ta" rows="3" placeholder="' + profileEditorEscape(placeholder || '') + '" oninput="setProfileEditorField(\'' + key + '\',this.value)">' + profileEditorEscape(value || '') + '</textarea></div>';
+}
+
+function setProfileEditorField(key, value) {
+  profileEditorForm[key] = value;
+}
+
+function openProfileEditor() {
+  var user = window.currentUser || {};
+  var account = window.currentAccount || {};
+  profileEditorForm = {
+    name: user.name || '',
+    email: user.email || '',
+    role: user.role || account.contact_role || '',
+    scope: user.scope || '',
+    company_name: account.company_name || '',
+    contact_phone: account.contact_phone || ''
+  };
+  profileEditorError = '';
+  profileEditorNotice = '';
+  profileEditorSaving = false;
+  renderProfileEditor();
+}
+
+function closeProfileEditor() {
+  var root = document.getElementById('modalRoot');
+  if (root) root.innerHTML = '';
+}
+
+function renderProfileEditor() {
+  var root = document.getElementById('modalRoot');
+  if (!root) return;
+  var isOwner = !!(window.currentUser && window.currentUser.is_account_owner);
+  var h = '<div class="modal-bg" onclick="if(event.target===this)closeProfileEditor()"><div class="modal">';
+  h += '<h3>Edit Profile</h3>';
+  h += '<p class="sub">Update your account identity and workspace profile details.</p>';
+  if (profileEditorError) h += '<div style="color:#FCA5A5;margin-bottom:14px;font-size:14px">' + profileEditorEscape(profileEditorError) + '</div>';
+  if (profileEditorNotice) h += '<div style="color:#86EFAC;margin-bottom:14px;font-size:14px">' + profileEditorEscape(profileEditorNotice) + '</div>';
+  h += profileEditorField('Full name', 'name', profileEditorForm.name, 'Jane Doe');
+  h += profileEditorReadOnlyField('Email', profileEditorForm.email);
+  h += profileEditorField('Role / title', 'role', profileEditorForm.role, 'Owner, COO, Innovation Lead');
+  h += profileEditorArea('Scope', 'scope', profileEditorForm.scope, 'Assigned work, modules, responsibilities...');
+  if (isOwner) {
+    h += '<div class="section-label" style="margin-top:20px;margin-bottom:12px">Workspace</div>';
+    h += profileEditorField('Company', 'company_name', profileEditorForm.company_name, 'Company name');
+    h += profileEditorField('Phone', 'contact_phone', profileEditorForm.contact_phone, '+1 555 010 1000');
+  }
+  h += '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px">';
+  h += '<button class="btn-ghost" onclick="closeProfileEditor()">Cancel</button>';
+  h += '<button class="btn-gold" onclick="saveProfileEditor()" ' + (profileEditorSaving ? 'disabled' : '') + '>' + (profileEditorSaving ? 'Saving...' : 'Save Profile') + '</button>';
+  h += '</div></div></div>';
+  root.innerHTML = h;
+}
+
+function saveProfileEditor() {
+  if (profileEditorSaving) return;
+  profileEditorSaving = true;
+  profileEditorError = '';
+  profileEditorNotice = '';
+  renderProfileEditor();
+
+  var payload = {
+    name: (profileEditorForm.name || '').trim(),
+    email: ((window.currentUser && window.currentUser.email) || profileEditorForm.email || '').trim(),
+    role: (profileEditorForm.role || '').trim(),
+    scope: (profileEditorForm.scope || '').trim(),
+    company_name: (profileEditorForm.company_name || '').trim(),
+    contact_phone: (profileEditorForm.contact_phone || '').trim()
+  };
+
+  commonCoachApiPut('/profile', payload).then(function(res) {
+    var user = res && res.user ? res.user : res;
+    if (user && user.id) {
+      window.currentUser = user;
+      window.currentAccount = user.account || window.currentAccount;
+      if (typeof currentUser !== 'undefined') currentUser = window.currentUser;
+      if (typeof currentAccount !== 'undefined') currentAccount = window.currentAccount;
+      if (typeof workspaceUsers !== 'undefined' && Array.isArray(workspaceUsers)) {
+        for (var i = 0; i < workspaceUsers.length; i++) {
+          if (workspaceUsers[i].id === user.id) workspaceUsers[i] = user;
+        }
+      }
+      if (typeof syncBillingForm === 'function') syncBillingForm();
+      if (window.TeamChat && typeof TeamChat.refreshTeams === 'function') {
+        TeamChat.refreshTeams();
+      } else if (window.TeamChat && typeof TeamChat.init === 'function') {
+        TeamChat.init(user);
+      }
+    }
+    profileEditorSaving = false;
+    profileEditorNotice = 'Profile updated.';
+    renderProfileEditor();
+    if (typeof render === 'function') render();
+    setTimeout(closeProfileEditor, 650);
+  }).catch(function(e) {
+    profileEditorSaving = false;
+    profileEditorError = e.message || 'Unable to update profile';
+    renderProfileEditor();
+  });
+}
+
 function refreshTeamChatVisibility() {
   var fab = document.getElementById('teamChatFab');
   if (!fab) return;
@@ -80,6 +273,23 @@ function commonCoachApiPost(path, body) {
   if (typeof window.apiPost === 'function') return window.apiPost(path, body);
   return fetch((window.API_BASE || '/nextchapter/api') + path, {
     method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body || {})
+  }).then(function(r) {
+    return r.json().then(function(j) {
+      if (!r.ok || j.ok === false) throw new Error(j.error || 'Request failed');
+      return j.data !== undefined ? j.data : j;
+    });
+  });
+}
+
+function commonCoachApiPut(path, body) {
+  if (typeof window.apiPut === 'function') return window.apiPut(path, body);
+  return fetch((window.API_BASE || '/nextchapter/api') + path, {
+    method: 'PUT',
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json'

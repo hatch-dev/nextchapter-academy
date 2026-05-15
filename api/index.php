@@ -1111,6 +1111,78 @@ if ($method === 'GET' && $path === '/account') {
     ok($user['account']);
 }
 
+if ($method === 'PUT' && $path === '/profile') {
+    $user = requireAuth();
+    $body = jsonBody();
+    $name = trim((string)($body['name'] ?? ''));
+    $email = strtolower(trim((string)($body['email'] ?? '')));
+    $role = trim((string)($body['role'] ?? ''));
+    $scope = trim((string)($body['scope'] ?? ''));
+    $company = trim((string)($body['company_name'] ?? ''));
+    $phone = trim((string)($body['contact_phone'] ?? ''));
+
+    if ($name === '' || $email === '') {
+        err('Name and email are required');
+    }
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        err('Valid email required');
+    }
+
+    $db = getDB();
+    $check = $db->prepare("SELECT id FROM users WHERE email = ? AND id <> ? LIMIT 1");
+    $check->execute([$email, $user['id']]);
+    if ($check->fetch()) {
+        err('That email is already in use', 409);
+    }
+
+    $db->beginTransaction();
+    try {
+        $db->prepare("
+            UPDATE users
+            SET name = ?, email = ?, role = ?, scope = ?, initials = ?
+            WHERE id = ? AND account_id = ?
+        ")->execute([
+            $name,
+            $email,
+            $role !== '' ? $role : ($user['role'] ?? 'User'),
+            $scope !== '' ? $scope : ($user['scope'] ?? 'Assigned work'),
+            initialsFor($name),
+            $user['id'],
+            $user['account_id'],
+        ]);
+
+        if (!empty($user['is_account_owner'])) {
+            $companyName = $company !== '' ? $company : ($user['account']['company_name'] ?? '');
+            $db->prepare("
+                UPDATE accounts
+                SET company_name = ?, contact_name = ?, contact_email = ?, contact_phone = ?, contact_role = ?
+                WHERE id = ?
+            ")->execute([
+                $companyName,
+                $name,
+                $email,
+                $phone !== '' ? $phone : null,
+                $role !== '' ? $role : null,
+                $user['account_id'],
+            ]);
+
+            $teamName = trim($companyName) !== '' ? trim($companyName) . ' Team' : 'Team';
+            $db->prepare("
+                UPDATE teams
+                SET name = ?
+                WHERE account_id = ? AND created_by = ? AND description = 'Default team for your workspace.'
+            ")->execute([$teamName, $user['account_id'], $user['id']]);
+        }
+
+        $db->commit();
+    } catch (Throwable $e) {
+        $db->rollBack();
+        err('Unable to update profile', 500);
+    }
+
+    ok(['user' => userWithAccountById($user['id'])]);
+}
+
 if ($method === 'GET' && $path === '/billing/products') {
     requireOwner();
     ok(stripeListCatalog());
