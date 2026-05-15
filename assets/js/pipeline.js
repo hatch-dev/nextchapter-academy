@@ -2125,6 +2125,13 @@ document.addEventListener('input', function(e) {
 document.addEventListener('change', function(e) {
     if (e.target && e.target.matches && e.target.matches('input,textarea,select')) syncRequiredButtons(e.target)
 }, true);
+document.addEventListener('click', function(e) {
+    if (!moduleMenuOpen) return;
+    var menu = e.target && e.target.closest ? e.target.closest('.nav-menu') : null;
+    if (menu && menu.querySelector && menu.querySelector('#modulePanel')) return;
+    moduleMenuOpen = false;
+    render();
+});
 
 function doneBtn(onclick, disabled, label) {
     return '<div class="js-done-wrap" style="margin-top:24px;padding-top:20px;border-top:1px solid rgba(245,242,236,.06)">' + btn(label || '\u2713 Mark Complete & Continue \u2192', onclick, 'bd', 'padding:14px 20px;font-size:15px', disabled) + '<p class="js-required-msg" style="font-size:var(--font-16);color:rgba(138,130,120,.5);margin-top:8px;text-align:center;display:' + (disabled ? 'block' : 'none') + '">Complete required fields (*) first.</p></div>'
