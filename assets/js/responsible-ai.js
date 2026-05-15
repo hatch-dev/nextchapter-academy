@@ -5829,6 +5829,13 @@ function processVoice(text) {
 
 // Init
 initApp();
+document.addEventListener('click', function(e) {
+    if (!moduleMenuOpen) return;
+    var menu = e.target && e.target.closest ? e.target.closest('.nav-menu') : null;
+    if (menu && menu.querySelector && menu.querySelector('#modulePanel')) return;
+    moduleMenuOpen = false;
+    render();
+});
 // Auto-expand textareas
 document.addEventListener('input', function(e) {
     if (e.target.tagName === 'TEXTAREA') {
